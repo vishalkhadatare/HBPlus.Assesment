@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "HBPlus Secure Access Portal",
+    "slug": "hbplus-secure-access",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/images/logo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./src/assets/images/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F8FAFC"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "fit.hbplus.secureaccess",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.REVERSED_CLIENT_ID"
+            ]
+          }
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/images/logo.png",
+        "backgroundColor": "#1D4ED8"
+      },
+      "package": "fit.hbplus.secureaccess",
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
+    },
+    "web": {
+      "favicon": "./public/favicon.svg",
+      "bundler": "metro"
+    }
+  }
+}

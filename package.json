@@ -1,0 +1,27 @@
+{
+  "name": "hbplus-secure-access",
+  "version": "1.0.0",
+  "description": "HBPlus Secure Access Portal - Cross-Platform Google Authentication with Exact Domain Restriction",
+  "private": true,
+  "workspaces": [
+    "apps/server",
+    "apps/client"
+  ],
+  "scripts": {
+    "start": "npm --prefix apps/server start",
+    "dev:server": "npm --prefix apps/server run dev",
+    "dev:client": "npm --prefix apps/client run web",
+    "web": "npm --prefix apps/client run web",
+    "android": "npm --prefix apps/client run android",
+    "ios": "npm --prefix apps/client run ios",
+    "build:client": "npm --prefix apps/client run build",
+    "test:server": "npm --prefix apps/server test",
+    "test:client": "npm --prefix apps/client test",
+    "test": "npm run test:server && npm run test:client",
+    "lint": "eslint \"apps/**/*.js\" \"apps/**/*.jsx\""
+  },
+  "devDependencies": {
+    "eslint": "^9.21.0",
+    "prettier": "^3.5.2"
+  }
+}
