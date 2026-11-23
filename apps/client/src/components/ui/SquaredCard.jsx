@@ -18,15 +18,20 @@ export function SquaredCard({
     {
       backgroundColor: theme.cardTint,
       borderRadius: CARD_RADIUS,
-      shadowColor: theme.role === 'admin' ? '#0E3B5C' : '#00775B',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: theme.role === 'admin' ? 0.08 : 0.07,
-      shadowRadius: 24,
+      borderWidth: 1,
+      borderColor: theme.role === 'admin' ? '#E2E8F0' : 'rgba(178, 234, 219, 0.72)',
+      shadowColor: theme.role === 'admin' ? '#0F172A' : '#00775B',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: theme.role === 'admin' ? 0.07 : 0.08,
+      shadowRadius: 28,
       elevation: 0
     },
     Platform.OS === 'web' && {
       backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)'
+      WebkitBackdropFilter: 'blur(12px)',
+      boxShadow: theme.role === 'admin'
+        ? '0 18px 48px rgba(15,23,42,0.10)'
+        : '0 18px 48px rgba(0,119,91,0.10)'
     },
     style
   ];

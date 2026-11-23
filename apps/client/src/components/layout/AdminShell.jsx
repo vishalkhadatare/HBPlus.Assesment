@@ -217,29 +217,40 @@ function AdminShellContent({ onSignOut }) {
 
         {/* Content Area */}
         <View style={styles.contentColumn}>
-          {/* Top Bar: Search, Status Dot, Notifications, Badge, Profile */}
+          {/* Top Bar: Search / Brand, Status Dot, Notifications, Badge, Profile */}
           <View style={styles.topBar}>
-            {/* Search with Command Palette Hint */}
-            <View style={styles.searchBox}>
-              <Icon name="search" size={16} color="#64748B" />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search people, audit logs, commands..."
-                placeholderTextColor="#94A3B8"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-              <View style={styles.shortcutPill}>
-                <Text style={styles.shortcutText}>⌘K</Text>
+            {!isDesktop && !isTablet ? (
+              <View style={styles.mobileTopBrand}>
+                <HBLogo size={32} />
+                <View style={styles.mobileRoleBadge}>
+                  <Icon name="shieldCheck" size={12} color="#EA580C" strokeWidth={2.4} />
+                  <Text style={styles.mobileRoleText}>Admin</Text>
+                </View>
               </View>
-            </View>
+            ) : (
+              <View style={styles.searchBox}>
+                <Icon name="search" size={16} color="#64748B" />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search people, audit logs, commands..."
+                  placeholderTextColor="#94A3B8"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+                <View style={styles.shortcutPill}>
+                  <Text style={styles.shortcutText}>⌘K</Text>
+                </View>
+              </View>
+            )}
 
             {/* Right Top Bar Actions */}
             <View style={styles.topBarRight}>
               {/* Live System Status Dot */}
               <View style={styles.statusDotRow}>
                 <View style={styles.pulsingDot} />
-                <Text style={styles.statusDotText}>Systems Operational</Text>
+                <Text style={styles.statusDotText}>
+                  {isDesktop || isTablet ? 'Systems Operational' : 'Online'}
+                </Text>
               </View>
 
               {/* Notification Bell */}
@@ -248,18 +259,17 @@ function AdminShellContent({ onSignOut }) {
                 <View style={styles.unreadBadgeDot} />
               </TouchableOpacity>
 
-              {/* Admin Badge */}
-              <View style={styles.adminRolePill}>
-                <Icon name="shieldCheck" size={14} color="#FFFFFF" strokeWidth={2.4} />
-                <Text style={styles.adminRolePillText}>Admin</Text>
-              </View>
-
-              {/* Mobile Logout if on phone */}
-              {!isDesktop && !isTablet ? (
-                <TouchableOpacity onPress={onSignOut} style={styles.iconCircleBtn}>
+              {/* Admin Badge on Desktop */}
+              {isDesktop || isTablet ? (
+                <View style={styles.adminRolePill}>
+                  <Icon name="shieldCheck" size={14} color="#EA580C" strokeWidth={2.4} />
+                  <Text style={styles.adminRolePillText}>Admin</Text>
+                </View>
+              ) : (
+                <TouchableOpacity onPress={onSignOut} style={styles.iconCircleBtn} activeOpacity={0.7}>
                   <Icon name="logout" size={18} color="#EF4444" />
                 </TouchableOpacity>
-              ) : null}
+              )}
             </View>
           </View>
 
@@ -272,7 +282,26 @@ function AdminShellContent({ onSignOut }) {
           ) : null}
 
           {/* Main Scrollable View */}
-          <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollContentInner}>
+          <ScrollView
+            style={styles.scrollContent}
+            contentContainerStyle={[
+              styles.scrollContentInner,
+              !isDesktop && !isTablet && { paddingHorizontal: 16, paddingBottom: 110 }
+            ]}
+            showsVerticalScrollIndicator={false}
+          >
+            {!isDesktop && !isTablet ? (
+              <View style={styles.mobileSearchBox}>
+                <Icon name="search" size={16} color="#64748B" />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search people, audit logs, commands..."
+                  placeholderTextColor="#94A3B8"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+              </View>
+            ) : null}
             {activeTab === 'overview' && (
               <>
                 {/* 4 KPI Cards Row (Compact, 44px rows, Tabular Mono Numbers) */}
@@ -382,82 +411,84 @@ function AdminShellContent({ onSignOut }) {
                   </View>
 
                   {/* Table Content */}
-                  <View style={styles.tableBody}>
-                    {/* Header Row */}
-                    <View style={styles.tableHeadRow}>
-                      <Text style={[styles.tableTh, { flex: 2 }]}>EMPLOYEE</Text>
-                      <Text style={[styles.tableTh, { flex: 1.5 }]}>DEPARTMENT</Text>
-                      <Text style={[styles.tableTh, { flex: 1 }]}>ROLE</Text>
-                      <Text style={[styles.tableTh, { flex: 1 }]}>STATUS</Text>
-                      <Text style={[styles.tableTh, { flex: 1, textAlign: 'right' }]}>ACTION</Text>
-                    </View>
-
-                    {filteredUsers.map((item) => (
-                      <View key={item.id} style={styles.tableTr}>
-                        <View style={[styles.tableTd, { flex: 2 }]}>
-                          <Text style={styles.userName}>{item.name}</Text>
-                          <Text style={styles.userEmail}>{item.email}</Text>
-                        </View>
-                        <Text style={[styles.tableTdText, { flex: 1.5 }]}>{item.dept}</Text>
-                        <View style={{ flex: 1 }}>
-                          <View
-                            style={[
-                              styles.roleBadgeCell,
-                              item.role === 'Admin'
-                                ? { backgroundColor: '#EA580C' }
-                                : { backgroundColor: '#E2E8F0' }
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.roleBadgeCellText,
-                                item.role === 'Admin' ? { color: '#FFFFFF' } : { color: '#334155' }
-                              ]}
-                            >
-                              {item.role}
-                            </Text>
-                          </View>
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <View
-                            style={[
-                              styles.statusBadgeCell,
-                              item.status === 'Active'
-                                ? { backgroundColor: '#ECFDF5' }
-                                : { backgroundColor: '#EFF6FF' }
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.statusBadgeCellText,
-                                item.status === 'Active' ? { color: '#059669' } : { color: '#2563EB' }
-                              ]}
-                            >
-                              {item.status}
-                            </Text>
-                          </View>
-                        </View>
-                        <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end', gap: 6 }}>
-                          <TouchableOpacity
-                            style={styles.rowActionBtn}
-                            onPress={() => showToast(`Password reset link dispatched for ${item.name}`)}
-                            activeOpacity={0.7}
-                            accessibilityLabel="Reset"
-                          >
-                            <Icon name="refresh" size={13} color="#64748B" />
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={styles.rowActionBtn}
-                            onPress={() => showToast(`Updated role permissions for ${item.name}`)}
-                            activeOpacity={0.7}
-                            accessibilityLabel="Edit Role"
-                          >
-                            <Icon name="shieldCheck" size={13} color="#EA580C" />
-                          </TouchableOpacity>
-                        </View>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View style={styles.tableBody}>
+                      {/* Header Row */}
+                      <View style={styles.tableHeadRow}>
+                        <Text style={[styles.tableTh, { width: 180 }]}>EMPLOYEE</Text>
+                        <Text style={[styles.tableTh, { width: 140 }]}>DEPARTMENT</Text>
+                        <Text style={[styles.tableTh, { width: 90 }]}>ROLE</Text>
+                        <Text style={[styles.tableTh, { width: 90 }]}>STATUS</Text>
+                        <Text style={[styles.tableTh, { width: 80, textAlign: 'right' }]}>ACTION</Text>
                       </View>
-                    ))}
-                  </View>
+
+                      {filteredUsers.map((item) => (
+                        <View key={item.id} style={styles.tableTr}>
+                          <View style={[styles.tableTd, { width: 180 }]}>
+                            <Text style={styles.userName}>{item.name}</Text>
+                            <Text style={styles.userEmail}>{item.email}</Text>
+                          </View>
+                          <Text style={[styles.tableTdText, { width: 140 }]}>{item.dept}</Text>
+                          <View style={{ width: 90 }}>
+                            <View
+                              style={[
+                                styles.roleBadgeCell,
+                                item.role === 'Admin'
+                                  ? { backgroundColor: '#EA580C' }
+                                  : { backgroundColor: '#E2E8F0' }
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.roleBadgeCellText,
+                                  item.role === 'Admin' ? { color: '#FFFFFF' } : { color: '#334155' }
+                                ]}
+                              >
+                                {item.role}
+                              </Text>
+                            </View>
+                          </View>
+                          <View style={{ width: 90 }}>
+                            <View
+                              style={[
+                                styles.statusBadgeCell,
+                                item.status === 'Active'
+                                  ? { backgroundColor: '#ECFDF5' }
+                                  : { backgroundColor: '#EFF6FF' }
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.statusBadgeCellText,
+                                  item.status === 'Active' ? { color: '#059669' } : { color: '#2563EB' }
+                                ]}
+                              >
+                                {item.status}
+                              </Text>
+                            </View>
+                          </View>
+                          <View style={{ width: 80, flexDirection: 'row', justifyContent: 'flex-end', gap: 6 }}>
+                            <TouchableOpacity
+                              style={styles.rowActionBtn}
+                              onPress={() => showToast(`Password reset link dispatched for ${item.name}`)}
+                              activeOpacity={0.7}
+                              accessibilityLabel="Reset"
+                            >
+                              <Icon name="refresh" size={13} color="#64748B" />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.rowActionBtn}
+                              onPress={() => showToast(`Updated role permissions for ${item.name}`)}
+                              activeOpacity={0.7}
+                              accessibilityLabel="Edit Role"
+                            >
+                              <Icon name="shieldCheck" size={13} color="#EA580C" />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  </ScrollView>
                 </SquaredCard>
 
                 {/* Pending Approvals & Live Audit Feed Row */}
@@ -656,7 +687,7 @@ function AdminShellContent({ onSignOut }) {
                       <Icon
                         name={item.icon}
                         size={20}
-                        color={isActive ? '#00B386' : '#64748B'}
+                        color={isActive ? '#EA580C' : '#64748B'}
                         strokeWidth={isActive ? 2.4 : 1.8}
                       />
                       {item.badge ? (
@@ -898,6 +929,39 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#64748B'
   },
+  mobileTopBrand: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  mobileRoleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6
+  },
+  mobileRoleText: {
+    color: '#EA580C',
+    fontSize: 11,
+    fontWeight: '700'
+  },
+  mobileSearchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: CARD_RADIUS,
+    paddingHorizontal: 12,
+    height: 42,
+    width: '100%',
+    marginBottom: 6
+  },
   topBarRight: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -984,13 +1048,13 @@ const styles = StyleSheet.create({
   kpiRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 14
+    gap: 12
   },
   kpiCard: {
     flex: 1,
-    minWidth: 200,
-    padding: 16,
-    gap: 6
+    minWidth: 140,
+    padding: 14,
+    gap: 4
   },
   kpiOverline: {
     fontSize: 11,
@@ -1029,14 +1093,16 @@ const styles = StyleSheet.create({
   },
   chartCardLarge: {
     flex: 2,
-    minWidth: 320,
-    padding: 20,
+    minWidth: 280,
+    width: '100%',
+    padding: 18,
     gap: 14
   },
   chartCardSmall: {
     flex: 1,
-    minWidth: 260,
-    padding: 20,
+    minWidth: 280,
+    width: '100%',
+    padding: 18,
     gap: 14
   },
   cardHeader: {
@@ -1171,8 +1237,9 @@ const styles = StyleSheet.create({
   },
   approvalsCard: {
     flex: 1,
-    minWidth: 320,
-    padding: 20,
+    minWidth: 280,
+    width: '100%',
+    padding: 18,
     gap: 12
   },
   approvalItem: {
@@ -1227,8 +1294,9 @@ const styles = StyleSheet.create({
   },
   auditCard: {
     flex: 1,
-    minWidth: 320,
-    padding: 20,
+    minWidth: 280,
+    width: '100%',
+    padding: 18,
     gap: 12
   },
   auditList: {
@@ -1279,17 +1347,18 @@ const styles = StyleSheet.create({
   },
   // Phone Bottom Bar
   phoneBottomBar: {
-    height: 64,
+    height: 60,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#EDE4DA',
+    borderTopColor: '#E2E8F0',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
     position: 'absolute',
     bottom: 0,
     left: 0,
-    right: 0
+    right: 0,
+    zIndex: 90
   },
   phoneBottomTab: {
     alignItems: 'center',
@@ -1310,7 +1379,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -8,
-    backgroundColor: '#EF4444',
+    backgroundColor: '#EA580C',
     borderRadius: 8,
     paddingHorizontal: 4,
     height: 14,

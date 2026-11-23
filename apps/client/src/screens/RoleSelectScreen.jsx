@@ -50,6 +50,10 @@ export function RoleSelectScreen() {
 
         {/* Two Clean, Large Choice Buttons */}
         <View style={styles.cardArea}>
+            <View style={styles.introBlock}>
+              <Text style={styles.eyebrow}>HBPlus workspace</Text>
+              <Text style={styles.heading}>Choose how you want to continue</Text>
+            </View>
           {/* Admin Choice Button */}
           <TouchableOpacity
             style={styles.roleCard}
@@ -64,6 +68,7 @@ export function RoleSelectScreen() {
 
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>Admin</Text>
+              <Text style={styles.cardDescription}>Manage people, approvals and reports</Text>
             </View>
 
             <View style={styles.trailingArrow}>
@@ -85,6 +90,7 @@ export function RoleSelectScreen() {
 
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>User</Text>
+              <Text style={styles.cardDescription}>Access your workspace, tasks and payroll</Text>
             </View>
 
             <View style={styles.trailingArrow}>
@@ -179,27 +185,53 @@ const styles = StyleSheet.create({
   logoArea: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 40
+    marginBottom: 24
   },
   cardArea: {
     width: '100%',
     gap: 16
   },
+  introBlock: {
+    alignItems: 'center',
+    marginBottom: 4
+  },
+  eyebrow: {
+    color: '#64748B',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginBottom: 6
+  },
+  heading: {
+    color: '#0F172A',
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    textAlign: 'center'
+  },
   roleCard: {
     width: '100%',
-    height: 72,
+    minHeight: 82,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.78)',
-    ...(Platform.OS === 'web' ? { backdropFilter: 'blur(12px)' } : {}),
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    ...(Platform.OS === 'web'
+      ? {
+          backdropFilter: 'blur(12px)',
+          boxShadow: '0 12px 36px rgba(15,23,42,0.08)',
+          transition: 'transform 160ms ease, box-shadow 160ms ease'
+        }
+      : {}),
     borderRadius: CARD_RADIUS,
     paddingHorizontal: 20,
-    borderWidth: 0,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 18,
-    elevation: 0,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 2,
     cursor: 'pointer'
   },
   adminIconTile: {
@@ -229,6 +261,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0F172A',
     letterSpacing: -0.2
+  },
+  cardDescription: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: '#64748B',
+    marginTop: 3
   },
   trailingArrow: {
     width: 32,

@@ -762,9 +762,9 @@ const styles = StyleSheet.create({
     flex: 1
   },
   scrollInner: {
-    paddingHorizontal: 24,
-    paddingBottom: 100,
-    gap: 20
+    paddingHorizontal: 20,
+    paddingBottom: 140,
+    gap: 16
   },
   // Hero Today Card
   heroCard: {

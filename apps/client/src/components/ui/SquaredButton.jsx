@@ -47,7 +47,7 @@ export function SquaredButton({
     styles.baseButton,
     {
       borderRadius: CARD_RADIUS,
-      height: 56
+      height: 52
     },
     // Primary gradient / fill
     !isGoogle && !isSecondary && {

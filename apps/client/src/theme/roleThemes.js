@@ -81,7 +81,7 @@ export const ROLE_THEME = {
     rowHeight: 60,
     gap: 20,
     motion: { duration: 320, spring: 'bouncy' },
-    identityStrip: '#FFB020',
+    identityStrip: '#00B386',
     sidebarBg: 'rgba(255, 255, 255, 0.85)',
     sidebarText: '#0F172A',
     activeNavHighlight: '#00B386',

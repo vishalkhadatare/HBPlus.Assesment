@@ -34,8 +34,11 @@ export function SquaredInput({
           {
             backgroundColor: isFocused ? theme.inputFocusFill : theme.inputFill,
             borderRadius: CARD_RADIUS,
-            borderBottomColor: isFocused ? theme.primary : 'transparent',
-            borderBottomWidth: 2
+            borderColor: isFocused ? theme.primary : '#E2E8F0',
+            borderWidth: isFocused ? 2 : 1,
+            ...(Platform.OS === 'web'
+              ? { boxShadow: isFocused ? `0 0 0 4px ${theme.role === 'admin' ? 'rgba(234,88,12,0.10)' : 'rgba(0,179,134,0.10)'}` : 'none' }
+              : {})
           }
         ]}
       >
@@ -65,6 +68,10 @@ export function SquaredInput({
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
           autoCorrect={false}
+          autoComplete={secureTextEntry ? 'password' : 'email'}
+          textContentType={secureTextEntry ? 'password' : 'emailAddress'}
+          accessibilityLabel={label}
+          accessibilityHint={placeholder}
           editable={editable}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
@@ -101,7 +108,7 @@ const styles = StyleSheet.create({
     color: '#334155'
   },
   inputContainer: {
-    height: 48,
+    height: 52,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,

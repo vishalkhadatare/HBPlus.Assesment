@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   Platform,
   useWindowDimensions,
-  Animated
+  Animated,
+  ScrollView
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth.js';
 import { RoleThemeProvider, useRoleTheme } from '../theme/roleThemes.js';
@@ -143,7 +144,12 @@ function UserLoginInner() {
       </TouchableOpacity>
 
       {/* Centered Single Card over warm mint-cream background (Section 4) */}
-      <View style={styles.centerArea}>
+      <ScrollView
+        style={styles.centerScroll}
+        contentContainerStyle={styles.centerArea}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <Animated.View
           style={[
             styles.cardWrapper,
@@ -224,7 +230,7 @@ function UserLoginInner() {
             />
           </SquaredCard>
         </Animated.View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -263,6 +269,9 @@ const styles = StyleSheet.create({
     borderRadius: 190,
     backgroundColor: 'rgba(255, 176, 32, 0.08)',
     ...(Platform.OS === 'web' ? { filter: 'blur(50px)' } : {})
+  },
+  centerScroll: {
+    flex: 1
   },
   backBtn: {
     position: 'absolute',

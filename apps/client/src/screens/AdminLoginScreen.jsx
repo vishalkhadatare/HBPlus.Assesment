@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   Platform,
   useWindowDimensions,
-  Animated
+  Animated,
+  ScrollView
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth.js';
 import { RoleThemeProvider, useRoleTheme } from '../theme/roleThemes.js';
@@ -214,7 +215,12 @@ function AdminLoginInner() {
           </View>
 
           {/* Overlapping Form Area */}
-          <View style={styles.phoneLowerArea}>
+          <ScrollView
+            style={styles.phoneLowerScroll}
+            contentContainerStyle={styles.phoneLowerArea}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
             <Animated.View
               style={[
                 styles.phoneFormWrapper,
@@ -263,7 +269,7 @@ function AdminLoginInner() {
                 />
               </SquaredCard>
             </Animated.View>
-          </View>
+          </ScrollView>
         </View>
       )}
     </View>
@@ -422,8 +428,10 @@ const styles = StyleSheet.create({
     color: '#ECFBF6',
     letterSpacing: -0.3
   },
+  phoneLowerScroll: {
+    flex: 1
+  },
   phoneLowerArea: {
-    flex: 1,
     paddingHorizontal: 20,
     marginTop: -28,
     alignItems: 'center'
