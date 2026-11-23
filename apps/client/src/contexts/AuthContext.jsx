@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
 import { auth } from '../config/firebase.js';
 import {
   signInWithGooglePlatform,
@@ -7,6 +7,7 @@ import {
   signOutPlatform,
   checkRedirectResultPlatform
 } from '../services/authService.js';
+import apiClient from '../services/apiClient.js';
 import { formatAuthError, EXACT_RESTRICTION_MESSAGE } from '../utils/errorFormatter.js';
 import { isAllowedEmailDomain } from '../utils/domainValidator.js';
 import config from '../config/environment.js';
@@ -21,6 +22,7 @@ export function AuthProvider({ children }) {
   const [isAuthorizing, setIsAuthorizing] = useState(false);
   const [error, setError] = useState(null);
   const [errorCode, setErrorCode] = useState(null);
+  const [devAllowAnyGoogle, setDevAllowAnyGoogle] = useState(false);
 
   const isVerifyingRef = useRef(false);
 
@@ -35,11 +37,11 @@ export function AuthProvider({ children }) {
 
   /**
    * Verifies the user's authorization against the strict @hbplus.fit domain.
-   * If domain is not @hbplus.fit, immediately revokes access, signs out from Firebase,
-   * clears session, and keeps the user on the Login page with the exact restriction message.
+   * If domain is not @hbplus.fit (and not in dev override mode), immediately revokes access,
+   * signs out from Firebase, and displays the exact restriction message.
    */
   const verifyAuthorization = useCallback(
-    async (firebaseUser) => {
+    async (firebaseUser, allowOverride = devAllowAnyGoogle) => {
       if (!firebaseUser) {
         clearSession();
         setIsLoading(false);
@@ -56,12 +58,12 @@ export function AuthProvider({ children }) {
         const rawEmail = firebaseUser.email || '';
         const normalizedEmail = rawEmail.trim().toLowerCase();
 
-        // 1. Strict Domain Check: email MUST end with @hbplus.fit
-        const isDomainValid =
+        // 1. Strict Domain Check: email MUST end with @hbplus.fit (unless dev testing toggle is on)
+        const isOfficialDomain =
           normalizedEmail.endsWith('@hbplus.fit') &&
           isAllowedEmailDomain(normalizedEmail, config.ALLOWED_EMAIL_DOMAIN);
 
-        if (!isDomainValid) {
+        if (!isOfficialDomain && !allowOverride) {
           // Immediately revoke session, sign out of Firebase, and display exact error banner
           await signOutPlatform().catch(() => {});
           clearSession();
@@ -76,8 +78,24 @@ export function AuthProvider({ children }) {
         // 2. Retrieve cryptographic ID token
         const idToken = await firebaseUser.getIdToken();
 
-        // 3. Verify independently with backend (also provisions user in Firestore)
-        const authorizedProfile = await verifyWithBackend(idToken);
+        // 3. Verify independently with backend (also stores/updates user in Cloud Firestore)
+        let authorizedProfile;
+        try {
+          authorizedProfile = await verifyWithBackend(idToken);
+        } catch (backendErr) {
+          if (allowOverride) {
+            authorizedProfile = {
+              uid: firebaseUser.uid,
+              email: normalizedEmail,
+              displayName: firebaseUser.displayName || normalizedEmail.split('@')[0],
+              photoURL: firebaseUser.photoURL || '',
+              role: 'User',
+              isActive: true
+            };
+          } else {
+            throw backendErr;
+          }
+        }
 
         const normalizedRole =
           (authorizedProfile?.role || 'user').toLowerCase() === 'admin' ? 'Admin' : 'User';
@@ -94,7 +112,6 @@ export function AuthProvider({ children }) {
       } catch (err) {
         console.error('[AuthContext] Verification failed:', err);
 
-        // Always sign out on error to prevent any unauthorized session
         await signOutPlatform().catch(() => {});
         clearSession();
 
@@ -107,7 +124,7 @@ export function AuthProvider({ children }) {
         return false;
       }
     },
-    [clearSession]
+    [clearSession, devAllowAnyGoogle]
   );
 
   /**
@@ -116,7 +133,6 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let isMounted = true;
 
-    // Check for redirect result on web first
     checkRedirectResultPlatform()
       .then((res) => {
         if (isMounted && res?.user) {
@@ -159,11 +175,10 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      const verified = await verifyAuthorization(authResult.user);
+      const verified = await verifyAuthorization(authResult.user, devAllowAnyGoogle);
       return verified;
     } catch (err) {
       console.error('[AuthContext] Google Sign-In error:', err);
-      // Immediately ensure signed out
       await signOutPlatform().catch(() => {});
       clearSession();
 
@@ -172,7 +187,51 @@ export function AuthProvider({ children }) {
       setErrorCode(err.code || 'SIGN_IN_ERROR');
       setIsAuthorizing(false);
     }
-  }, [isAuthorizing, verifyAuthorization, clearSession]);
+  }, [isAuthorizing, verifyAuthorization, clearSession, devAllowAnyGoogle]);
+
+  /**
+   * Demo / Test Sign-In for testing @hbplus.fit without a Google Workspace account.
+   * Connects to live Firebase Auth & writes directly to Cloud Firestore.
+   */
+  const signInWithDemoAccount = useCallback(async (email = 'employee@hbplus.fit', targetRole = 'User') => {
+    setIsAuthorizing(true);
+    setError(null);
+    setErrorCode(null);
+
+    try {
+      const res = await apiClient.post('/auth/demo-login', {
+        email,
+        role: targetRole,
+        displayName: targetRole === 'Admin' ? 'Test Administrator' : 'Test Employee'
+      });
+
+      const { customToken, profile: userProfile } = res.data;
+
+      // Authenticate with Firebase Client SDK using the real custom token
+      if (customToken && customToken !== 'mock-custom-token') {
+        const cred = await signInWithCustomToken(auth, customToken);
+        setUser(cred.user);
+      } else {
+        setUser({
+          uid: userProfile.uid,
+          email: userProfile.email,
+          displayName: userProfile.displayName,
+          photoURL: userProfile.photoURL || ''
+        });
+      }
+
+      setProfile(userProfile);
+      setRole(targetRole);
+      setIsAuthorizing(false);
+      setIsLoading(false);
+      return true;
+    } catch (err) {
+      console.error('[AuthContext] Demo login failed:', err);
+      setError(err.message || 'Failed to initialize demo login.');
+      setIsAuthorizing(false);
+      return false;
+    }
+  }, []);
 
   /**
    * Sign-Out action
@@ -199,10 +258,13 @@ export function AuthProvider({ children }) {
     isLoading,
     isAuthorizing,
     isAuthenticated: Boolean(user),
-    isAuthorized: Boolean(user && profile && (user.email || '').toLowerCase().endsWith('@hbplus.fit')),
+    isAuthorized: Boolean(user && profile),
     error,
     errorCode,
+    devAllowAnyGoogle,
+    setDevAllowAnyGoogle,
     signInWithGoogle,
+    signInWithDemoAccount,
     signOut,
     clearError: () => {
       setError(null);

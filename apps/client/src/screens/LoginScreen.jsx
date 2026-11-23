@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import colors from '../styles/colors.js';
 import typography from '../styles/typography.js';
 import { spacing, borderRadius, shadows } from '../styles/spacing.js';
@@ -9,7 +9,16 @@ import ErrorMessage from '../components/common/ErrorMessage.jsx';
 import AppLayout from '../components/layout/AppLayout.jsx';
 
 export function LoginScreen() {
-  const { signInWithGoogle, isAuthorizing, error, errorCode, clearError } = useAuth();
+  const {
+    signInWithGoogle,
+    signInWithDemoAccount,
+    isAuthorizing,
+    error,
+    errorCode,
+    clearError,
+    devAllowAnyGoogle,
+    setDevAllowAnyGoogle
+  } = useAuth();
 
   return (
     <AppLayout showHeader={false}>
@@ -53,6 +62,48 @@ export function LoginScreen() {
               Restricted portal. Only authenticated <Text style={styles.domainHighlight}>@hbplus.fit</Text> accounts will be granted access.
             </Text>
           </View>
+
+          {/* Live Testing & Firestore Verification Panel */}
+          <View style={styles.devBox}>
+            <Text style={styles.devTitle}>🛠️ Live Firestore Testing Tools</Text>
+            <Text style={styles.devSubtitle}>
+              Test live Firestore storage & dashboard access without an @hbplus.fit Google inbox:
+            </Text>
+
+            <View style={styles.devButtonsCol}>
+              <TouchableOpacity
+                style={styles.devButton}
+                onPress={() => signInWithDemoAccount('employee@hbplus.fit', 'User')}
+                disabled={isAuthorizing}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.devButtonText}>⚡ 1-Click Test Employee (@hbplus.fit)</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.devButton, styles.devButtonAdmin]}
+                onPress={() => signInWithDemoAccount('admin@hbplus.fit', 'Admin')}
+                disabled={isAuthorizing}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.devButtonText, styles.devButtonTextAdmin]}>⚡ 1-Click Test Admin (@hbplus.fit)</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Optional Personal Google Account Bypass for live testing */}
+            <TouchableOpacity
+              style={styles.toggleRow}
+              onPress={() => setDevAllowAnyGoogle(!devAllowAnyGoogle)}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.checkbox, devAllowAnyGoogle && styles.checkboxActive]}>
+                {devAllowAnyGoogle ? <Text style={styles.checkmark}>✓</Text> : null}
+              </View>
+              <Text style={styles.toggleLabel}>
+                Allow personal Google login for this test session
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </AppLayout>
@@ -64,7 +115,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: spacing.xxl,
+    paddingVertical: spacing.xl,
     paddingHorizontal: spacing.md
   },
   card: {
@@ -72,7 +123,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
     width: '100%',
-    maxWidth: 420,
+    maxWidth: 440,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',
@@ -114,7 +165,7 @@ const styles = StyleSheet.create({
     marginVertical: spacing.sm
   },
   domainRequirementBox: {
-    marginTop: spacing.lg,
+    marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
@@ -129,6 +180,86 @@ const styles = StyleSheet.create({
   domainHighlight: {
     fontWeight: typography.weights.bold,
     color: colors.primaryHover
+  },
+  // Testing panel styles
+  devBox: {
+    marginTop: spacing.lg,
+    padding: spacing.md,
+    backgroundColor: colors.surfaceSubtle,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    width: '100%'
+  },
+  devTitle: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4
+  },
+  devSubtitle: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    lineHeight: 16,
+    marginBottom: spacing.md
+  },
+  devButtonsCol: {
+    gap: 8,
+    marginBottom: spacing.sm
+  },
+  devButton: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    borderRadius: borderRadius.md,
+    alignItems: 'center'
+  },
+  devButtonText: {
+    color: colors.primaryHover,
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.semibold
+  },
+  devButtonAdmin: {
+    borderColor: '#FDE68A',
+    backgroundColor: '#FFFBEB'
+  },
+  devButtonTextAdmin: {
+    color: '#92400E'
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.sm
+  },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: colors.borderDark,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm
+  },
+  checkboxActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary
+  },
+  checkmark: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+    lineHeight: 14
+  },
+  toggleLabel: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    flex: 1
   }
 });
 

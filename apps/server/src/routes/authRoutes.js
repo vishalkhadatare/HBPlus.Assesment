@@ -17,4 +17,10 @@ router.post('/verify', authLimiter, authenticate, AuthController.verify);
  */
 router.get('/me', authenticate, AuthController.getMe);
 
+/**
+ * POST /api/auth/demo-login
+ * Development testing endpoint to test @hbplus.fit login & Firestore synchronization.
+ */
+router.post('/demo-login', AuthController.demoLogin);
+
 export default router;

@@ -22,8 +22,15 @@ export function initFirebaseAdmin() {
   try {
     // 1. Service account JSON file path
     if (config.FIREBASE_SERVICE_ACCOUNT_KEY_PATH) {
-      const resolvedPath = path.resolve(process.cwd(), config.FIREBASE_SERVICE_ACCOUNT_KEY_PATH);
-      if (fs.existsSync(resolvedPath)) {
+      const candidatePaths = [
+        path.resolve(process.cwd(), config.FIREBASE_SERVICE_ACCOUNT_KEY_PATH),
+        path.resolve(process.cwd(), 'apps/server', config.FIREBASE_SERVICE_ACCOUNT_KEY_PATH),
+        path.resolve(process.cwd(), 'serviceAccountKey.json'),
+        path.resolve(process.cwd(), 'apps/server/serviceAccountKey.json')
+      ];
+      const resolvedPath = candidatePaths.find((p) => fs.existsSync(p));
+
+      if (resolvedPath) {
         const serviceAccount = JSON.parse(fs.readFileSync(resolvedPath, 'utf8'));
         appInstance = admin.initializeApp({
           credential: admin.credential.cert(serviceAccount),
