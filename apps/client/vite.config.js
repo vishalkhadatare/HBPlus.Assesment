@@ -19,6 +19,7 @@ export default defineConfig({
     host: true
   },
   define: {
+    global: 'globalThis',
     'process.env': {}
   }
 });

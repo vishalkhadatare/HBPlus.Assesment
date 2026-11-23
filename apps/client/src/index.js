@@ -1,3 +1,7 @@
+if (typeof window !== 'undefined') {
+  window.global = window;
+}
+
 import { AppRegistry, Platform } from 'react-native';
 import App from './App.jsx';
 

@@ -55,10 +55,68 @@ export function ProgressRing({
 /**
  * Modern Attendance Trend Chart
  */
-export function AttendanceTrendChart({ data = [94, 98, 97, 95, 99, 86, 92] }) {
+export function AttendanceTrendChart({
+  data = [94, 98, 97, 95, 99, 86, 92],
+  showCard = true
+}) {
   const { colors } = useTheme();
   const [selectedDay, setSelectedDay] = useState(4); // default to Friday
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  const bars = (
+    <View style={styles.barsContainer}>
+      {data.map((value, idx) => {
+        const heightPercent = `${value}%`;
+        const isSelected = selectedDay === idx;
+        return (
+          <TouchableOpacity
+            key={idx}
+            style={styles.barColumn}
+            onPress={() => setSelectedDay(idx)}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.barValue,
+                {
+                  color: isSelected ? '#EA580C' : '#64748B',
+                  fontWeight: isSelected ? '700' : '500'
+                }
+              ]}
+            >
+              {value}%
+            </Text>
+            <View style={[styles.barTrack, { backgroundColor: '#F3EAE1' }]}>
+              <View
+                style={[
+                  styles.barFill,
+                  {
+                    height: heightPercent,
+                    backgroundColor: isSelected ? '#EA580C' : '#D4B8A3'
+                  }
+                ]}
+              />
+            </View>
+            <Text
+              style={[
+                styles.barLabel,
+                {
+                  color: isSelected ? '#EA580C' : (colors?.textMuted || '#64748B'),
+                  fontWeight: isSelected ? '700' : '500'
+                }
+              ]}
+            >
+              {days[idx]}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+
+  if (!showCard) {
+    return bars;
+  }
 
   return (
     <GlassCard style={styles.chartCard}>
@@ -75,55 +133,7 @@ export function AttendanceTrendChart({ data = [94, 98, 97, 95, 99, 86, 92] }) {
           <Text style={[styles.rateText, { color: colors.successText }]}>97.4% Avg</Text>
         </View>
       </View>
-
-      <View style={styles.barsContainer}>
-        {data.map((value, idx) => {
-          const heightPercent = `${value}%`;
-          const isSelected = selectedDay === idx;
-          return (
-            <TouchableOpacity
-              key={idx}
-              style={styles.barColumn}
-              onPress={() => setSelectedDay(idx)}
-              activeOpacity={0.8}
-            >
-              <Text
-                style={[
-                  styles.barValue,
-                  {
-                    color: isSelected ? '#EA580C' : '#64748B',
-                    fontWeight: isSelected ? '700' : '500'
-                  }
-                ]}
-              >
-                {value}%
-              </Text>
-              <View style={[styles.barTrack, { backgroundColor: '#F3EAE1' }]}>
-                <View
-                  style={[
-                    styles.barFill,
-                    {
-                      height: heightPercent,
-                      backgroundColor: isSelected ? '#EA580C' : '#D4B8A3'
-                    }
-                  ]}
-                />
-              </View>
-              <Text
-                style={[
-                  styles.barLabel,
-                  {
-                    color: isSelected ? colors.text : colors.textMuted,
-                    fontWeight: isSelected ? '700' : '500'
-                  }
-                ]}
-              >
-                {days[idx]}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      {bars}
     </GlassCard>
   );
 }
@@ -137,19 +147,13 @@ export function DepartmentDistributionChart({
     { name: 'Product & Design', count: 18, color: '#F97316', percent: 20 },
     { name: 'Operations & Fitness', count: 20, color: '#8B5CF6', percent: 22 },
     { name: 'People & Admin', count: 12, color: '#F5A524', percent: 13 }
-  ]
+  ],
+  showCard = true
 }) {
   const { colors } = useTheme();
 
-  return (
-    <GlassCard style={styles.chartCard}>
-      <Text style={[styles.chartTitle, { color: colors.text }]}>
-        Workforce Distribution
-      </Text>
-      <Text style={[styles.chartSubtitle, { color: colors.textMuted }]}>
-        Active headcount across 4 core departments (92 total)
-      </Text>
-
+  const visual = (
+    <View style={{ width: '100%' }}>
       {/* Stacked Ratio Bar */}
       <View style={styles.stackedBar}>
         {departments.map((dept, i) => (
@@ -171,18 +175,53 @@ export function DepartmentDistributionChart({
         {departments.map((dept, i) => (
           <View key={i} style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: dept.color }]} />
-            <Text style={[styles.legendName, { color: colors.textMuted }]}>
+            <Text style={[styles.legendName, { color: colors?.textMuted || '#64748B' }]}>
               {dept.name}
             </Text>
-            <Text style={[styles.legendValue, { color: colors.text }]}>
+            <Text style={[styles.legendValue, { color: colors?.text || '#0F172A' }]}>
               {dept.count} ({dept.percent}%)
             </Text>
           </View>
         ))}
       </View>
+    </View>
+  );
+
+  if (!showCard) {
+    return visual;
+  }
+
+  return (
+    <GlassCard style={styles.chartCard}>
+      <Text style={[styles.chartTitle, { color: colors.text }]}>
+        Workforce Distribution
+      </Text>
+      <Text style={[styles.chartSubtitle, { color: colors.textMuted }]}>
+        Active headcount across 4 core departments (92 total)
+      </Text>
+      {visual}
     </GlassCard>
   );
 }
+
+/**
+ * Default composite chart component
+ */
+export function SimpleCharts({ type = 'trend', showCard = false, ...props }) {
+  if (type === 'donut' || type === 'distribution') {
+    return <DepartmentDistributionChart showCard={showCard} {...props} />;
+  }
+  if (type === 'ring' || type === 'progress') {
+    return <ProgressRing {...props} />;
+  }
+  return <AttendanceTrendChart showCard={showCard} {...props} />;
+}
+
+SimpleCharts.ProgressRing = ProgressRing;
+SimpleCharts.AttendanceTrendChart = AttendanceTrendChart;
+SimpleCharts.DepartmentDistributionChart = DepartmentDistributionChart;
+
+export default SimpleCharts;
 
 const styles = StyleSheet.create({
   chartCard: {
@@ -281,9 +320,3 @@ const styles = StyleSheet.create({
     fontFamily: "'JetBrains Mono', monospace"
   }
 });
-
-export default {
-  ProgressRing,
-  AttendanceTrendChart,
-  DepartmentDistributionChart
-};
