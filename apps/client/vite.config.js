@@ -7,7 +7,7 @@ export default defineConfig({
     alias: {
       'react-native': 'react-native-web'
     },
-    extensions: ['.web.jsx', '.web.js', '.jsx', '.js', '.json']
+    extensions: ['.web.tsx', '.web.jsx', '.web.js', '.tsx', '.ts', '.jsx', '.js', '.json']
   },
   build: {
     rollupOptions: {
