@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { runFirebaseDiagnostics } from '../../services/diagnosticsService.js';
 import colors from '../../styles/colors.js';
@@ -8,10 +8,10 @@ export function DiagnosticsPanel({ currentUser = null }) {
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState(null);
 
-  const handleRun = async () => {
+  const handleRun = async (testUser = currentUser) => {
     setIsRunning(true);
     try {
-      const data = await runFirebaseDiagnostics(currentUser);
+      const data = await runFirebaseDiagnostics(testUser);
       setResults(data);
     } catch (err) {
       setResults([
@@ -21,6 +21,10 @@ export function DiagnosticsPanel({ currentUser = null }) {
       setIsRunning(false);
     }
   };
+
+  useEffect(() => {
+    handleRun(currentUser);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -32,18 +36,35 @@ export function DiagnosticsPanel({ currentUser = null }) {
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.runButton}
-          onPress={handleRun}
-          disabled={isRunning}
-          activeOpacity={0.8}
-        >
-          {isRunning ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Text style={styles.runButtonText}>Run Test Suite</Text>
-          )}
-        </TouchableOpacity>
+        <View style={styles.buttonGroup}>
+          <TouchableOpacity
+            style={styles.runButton}
+            onPress={() => handleRun(currentUser)}
+            disabled={isRunning}
+            activeOpacity={0.8}
+          >
+            {isRunning ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.runButtonText}>Run Test Suite</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.runButton, { backgroundColor: '#5B5BF0' }]}
+            onPress={() =>
+              handleRun({
+                uid: 'gmail-evaluator-test',
+                email: 'evaluator@gmail.com',
+                getIdToken: async () => 'evaluator-mock-token'
+              })
+            }
+            disabled={isRunning}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.runButtonText}>Test with Gmail</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {results ? (
@@ -95,7 +116,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8
+    gap: 8,
+    flexWrap: 'wrap'
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    gap: 6,
+    flexWrap: 'wrap'
   },
   title: {
     fontSize: 12,

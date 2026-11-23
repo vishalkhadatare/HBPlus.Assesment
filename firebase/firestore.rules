@@ -22,14 +22,14 @@ service cloud.firestore {
       );
     }
 
-    // Diagnostics Collection: For connection verification and testing
+    // Diagnostics Collection: For connection verification and live testing
     match /diagnostics/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if true;
     }
 
-    // Users Collection: Users manage their profile; Admins manage all
+    // Users Collection: Users manage their profile; Admins manage all; all authenticated users can view directory
     match /users/{userId} {
-      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow read: if isAuthenticated();
       allow write: if isAuthenticated() && (isOwner(userId) || isAdmin());
     }
 

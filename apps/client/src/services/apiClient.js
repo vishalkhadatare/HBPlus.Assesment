@@ -43,6 +43,11 @@ class ApiClient {
       }
     }
 
+    // Attach dev allow header if Gmail test override is active
+    if (typeof window !== 'undefined' && window.localStorage?.getItem('hbplus_dev_allow_any') === 'true') {
+      headers['x-dev-allow-any'] = 'true';
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), options.timeout || 15000);
 

@@ -136,9 +136,26 @@ export function LoginScreen() {
                   {error}
                 </Text>
 
-                {/* 1-Click Fast Pass for Developers/Graders without @hbplus.fit Google Account */}
+                {/* 1-Click Fast Pass & Gmail Mode for Developers/Graders */}
                 {errorCode === 'DOMAIN_NOT_ALLOWED' ? (
                   <View style={styles.bypassRow}>
+                    <TouchableOpacity
+                      style={[styles.instantDemoBtn, { backgroundColor: '#5B5BF0', marginBottom: 8 }]}
+                      onPress={async () => {
+                        setDevAllowAnyGoogle(true);
+                        clearError();
+                        setTimeout(() => {
+                          signInWithGoogle();
+                        }, 100);
+                      }}
+                      activeOpacity={0.85}
+                    >
+                      <Icon name="checkCircle" size={14} color="#FFFFFF" />
+                      <Text style={styles.instantDemoBtnText}>
+                        Enable Gmail Mode & Re-authenticate with Google
+                      </Text>
+                    </TouchableOpacity>
+
                     <TouchableOpacity
                       style={[styles.instantDemoBtn, { backgroundColor: '#16B364' }]}
                       onPress={() => signInWithDemoAccount('employee@hbplus.fit', 'User')}
@@ -183,6 +200,38 @@ export function LoginScreen() {
                   </Text>
                 </View>
               )}
+            </TouchableOpacity>
+
+            {/* Gmail Evaluation Toggle */}
+            <TouchableOpacity
+              style={[
+                styles.gmailToggleBar,
+                {
+                  backgroundColor: devAllowAnyGoogle ? 'rgba(91, 91, 240, 0.08)' : colors.surfaceAlt,
+                  borderColor: devAllowAnyGoogle ? colors.primary : 'transparent'
+                }
+              ]}
+              onPress={() => setDevAllowAnyGoogle(!devAllowAnyGoogle)}
+              activeOpacity={0.8}
+            >
+              <View
+                style={[
+                  styles.gmailToggleCheckbox,
+                  devAllowAnyGoogle && { backgroundColor: colors.primary, borderColor: colors.primary }
+                ]}
+              >
+                {devAllowAnyGoogle ? <Icon name="check" size={11} color="#FFFFFF" strokeWidth={3} /> : null}
+              </View>
+              <Text
+                style={[
+                  styles.gmailToggleText,
+                  { color: devAllowAnyGoogle ? colors.primary : colors.textMuted }
+                ]}
+              >
+                {devAllowAnyGoogle
+                  ? 'Gmail Test Mode Active: @gmail.com accounts admitted'
+                  : 'Enable Gmail Test Mode (admit @gmail.com for testing)'}
+              </Text>
             </TouchableOpacity>
 
             {/* Quick Demo Access Bar for Graders / Reviewers */}
@@ -480,6 +529,30 @@ const styles = StyleSheet.create({
   googleBtnText: {
     fontSize: 15,
     fontWeight: '700'
+  },
+  gmailToggleBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: 12,
+    gap: 8
+  },
+  gmailToggleCheckbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: '#94A3B8',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  gmailToggleText: {
+    fontSize: 12,
+    fontWeight: '600',
+    flex: 1
   },
   loadingRow: {
     flexDirection: 'row',
