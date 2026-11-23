@@ -19,6 +19,8 @@ import Icon from '../components/ui/Icon.jsx';
 import SquaredCard from '../components/ui/SquaredCard.jsx';
 import SquaredInput from '../components/ui/SquaredInput.jsx';
 import SquaredButton from '../components/ui/SquaredButton.jsx';
+import CountryFlag from '../components/ui/CountryFlag.jsx';
+import { ALL_COUNTRIES, DEFAULT_COUNTRY } from '../constants/countries.js';
 import { ROUTES } from '../navigation/navigationConfig.js';
 
 function GoogleIcon({ size = 20 }) {
@@ -44,15 +46,6 @@ function GoogleIcon({ size = 20 }) {
   );
 }
 
-const COUNTRIES = [
-  { flag: '🇮🇳', code: '+91', name: 'India' },
-  { flag: '🇺🇸', code: '+1', name: 'United States' },
-  { flag: '🇬🇧', code: '+44', name: 'United Kingdom' },
-  { flag: '🇦🇪', code: '+971', name: 'United Arab Emirates' },
-  { flag: '🇸🇬', code: '+65', name: 'Singapore' },
-  { flag: '🇦🇺', code: '+61', name: 'Australia' }
-];
-
 function UserLoginInner() {
   const {
     signInUserWithGoogle,
@@ -74,9 +67,20 @@ function UserLoginInner() {
   const [emailLocal, setEmailLocal] = useState('');
   const [phone, setPhone] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [countryCode, setCountryCode] = useState({ flag: '🇮🇳', code: '+91', name: 'India' });
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY);
   const [countrySheetOpen, setCountrySheetOpen] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  const filteredCountries = ALL_COUNTRIES.filter((c) => {
+    if (!countrySearch.trim()) return true;
+    const q = countrySearch.trim().toLowerCase();
+    return (
+      c.name.toLowerCase().includes(q) ||
+      c.code.toLowerCase().includes(q) ||
+      c.iso.toLowerCase().includes(q)
+    );
+  });
 
   // Soft, bouncy 320ms slide-up entrance animation (Section 3 & 4)
   const slideAnim = useRef(new Animated.Value(36)).current;
@@ -442,7 +446,7 @@ function UserLoginInner() {
                       accessibilityRole="button"
                       accessibilityLabel={`Country code ${countryCode.code}`}
                     >
-                      <Text style={styles.countryFlag}>{countryCode.flag}</Text>
+                      <CountryFlag iso={countryCode.iso} width={26} height={17} />
                       <Text style={styles.countryCode}>{countryCode.code}</Text>
                       <Icon name="chevronDown" size={14} color="#64748B" />
                     </TouchableOpacity>
@@ -512,41 +516,95 @@ function UserLoginInner() {
         visible={countrySheetOpen}
         transparent
         animationType="slide"
-        onRequestClose={() => setCountrySheetOpen(false)}
+        onRequestClose={() => {
+          setCountrySheetOpen(false);
+          setCountrySearch('');
+        }}
       >
         <View style={styles.countryModalOverlay}>
           <View style={styles.countrySheet}>
             <View style={styles.countrySheetHandle} />
             <View style={styles.countrySheetHeader}>
-              <Text style={styles.countrySheetTitle}>Choose country</Text>
+              <View style={styles.countrySheetTitleCol}>
+                <Text style={styles.countrySheetTitle}>Choose country</Text>
+                <Text style={styles.countrySheetSubtitle}>
+                  {filteredCountries.length} countries available
+                </Text>
+              </View>
               <TouchableOpacity
-                onPress={() => setCountrySheetOpen(false)}
+                onPress={() => {
+                  setCountrySheetOpen(false);
+                  setCountrySearch('');
+                }}
                 style={styles.countrySheetClose}
                 activeOpacity={0.7}
+                accessibilityLabel="Close country selector"
               >
                 <Icon name="x" size={18} color="#64748B" />
               </TouchableOpacity>
             </View>
-            {COUNTRIES.map((country) => (
-              <TouchableOpacity
-                key={country.code}
-                style={[
-                  styles.countryOption,
-                  countryCode.code === country.code && styles.countryOptionActive
-                ]}
-                onPress={() => {
-                  setCountryCode(country);
-                  setCountrySheetOpen(false);
-                }}
-                activeOpacity={0.8}
-              >
-                <View style={styles.countryFlagSquare}>
-                  <Text style={styles.countryOptionFlag}>{country.flag}</Text>
+
+            {/* Quick Country Search Bar */}
+            <View style={styles.countrySearchBox}>
+              <Icon name="search" size={16} color="#64748B" />
+              <TextInput
+                style={styles.countrySearchInput}
+                placeholder="Search country name or code (e.g. India, +91)..."
+                placeholderTextColor="#94A3B8"
+                value={countrySearch}
+                onChangeText={setCountrySearch}
+                autoCorrect={false}
+                autoCapitalize="none"
+              />
+              {countrySearch ? (
+                <TouchableOpacity onPress={() => setCountrySearch('')} activeOpacity={0.7}>
+                  <Icon name="xCircle" size={16} color="#94A3B8" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            <ScrollView
+              style={styles.countryListScroll}
+              contentContainerStyle={styles.countryListScrollContent}
+              showsVerticalScrollIndicator={true}
+              keyboardShouldPersistTaps="handled"
+            >
+              {filteredCountries.map((country) => {
+                const isSelected = countryCode.iso === country.iso;
+                return (
+                  <TouchableOpacity
+                    key={`${country.iso}-${country.code}`}
+                    style={[
+                      styles.countryOption,
+                      isSelected && styles.countryOptionActive
+                    ]}
+                    onPress={() => {
+                      setCountryCode(country);
+                      setCountrySheetOpen(false);
+                      setCountrySearch('');
+                    }}
+                    activeOpacity={0.75}
+                  >
+                    <View style={styles.countryFlagSquare}>
+                      <CountryFlag iso={country.iso} width={28} height={19} />
+                    </View>
+                    <Text style={styles.countryOptionName} numberOfLines={1}>
+                      {country.name}
+                    </Text>
+                    <Text style={styles.countryOptionCode}>{country.code}</Text>
+                    {isSelected ? (
+                      <Icon name="check" size={16} color="#00B386" strokeWidth={2.4} />
+                    ) : null}
+                  </TouchableOpacity>
+                );
+              })}
+              {filteredCountries.length === 0 ? (
+                <View style={styles.emptyCountrySearch}>
+                  <Icon name="search" size={24} color="#94A3B8" />
+                  <Text style={styles.emptyCountrySearchText}>No matching country found</Text>
                 </View>
-                <Text style={styles.countryOptionName}>{country.name}</Text>
-                <Text style={styles.countryOptionCode}>{country.code}</Text>
-              </TouchableOpacity>
-            ))}
+              ) : null}
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -854,13 +912,19 @@ const styles = StyleSheet.create({
   countrySheet: {
     width: '100%',
     maxWidth: 440,
+    maxHeight: '82%',
     alignSelf: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
-    padding: 16,
-    gap: 8,
+    padding: 18,
+    gap: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0'
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 8
   },
   countrySheetHandle: {
     width: 36,
@@ -871,59 +935,109 @@ const styles = StyleSheet.create({
     marginBottom: 4
   },
   countrySheetHeader: {
-    height: 44,
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    paddingBottom: 4
+  },
+  countrySheetTitleCol: {
+    gap: 2
   },
   countrySheetTitle: {
     color: '#0F172A',
-    fontSize: 17,
-    fontWeight: '800'
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: -0.2
+  },
+  countrySheetSubtitle: {
+    color: '#64748B',
+    fontSize: 12,
+    fontWeight: '500'
   },
   countrySheetClose: {
-    width: 44,
-    height: 44,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center'
   },
-  countryOption: {
-    height: 56,
+  countrySearchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 14,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 42,
+    gap: 8
+  },
+  countrySearchInput: {
+    flex: 1,
+    height: '100%',
+    color: '#0F172A',
+    fontSize: 14,
+    borderWidth: 0,
+    outlineStyle: 'none'
+  },
+  countryListScroll: {
+    flexGrow: 1,
+    maxHeight: 360,
+    marginTop: 4
+  },
+  countryListScrollContent: {
+    gap: 6,
+    paddingVertical: 2
+  },
+  countryOption: {
+    height: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#EDF4F2',
-    paddingHorizontal: 10,
-    gap: 10
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    gap: 12
   },
   countryOptionActive: {
     backgroundColor: '#E0F8F1',
-    borderColor: '#B2EADB'
+    borderColor: '#00B386'
   },
   countryFlagSquare: {
-    width: 38,
-    height: 38,
-    borderRadius: 8,
+    width: 36,
+    height: 26,
+    borderRadius: 4,
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#E2E8F0',
     alignItems: 'center',
-    justifyContent: 'center'
-  },
-  countryOptionFlag: {
-    fontSize: 22
+    justifyContent: 'center',
+    overflow: 'hidden'
   },
   countryOptionName: {
     flex: 1,
-    color: '#334155',
+    color: '#1E293B',
     fontSize: 14,
-    fontWeight: '700'
+    fontWeight: '600'
   },
   countryOptionCode: {
     color: '#64748B',
     fontSize: 13,
     fontWeight: '700'
+  },
+  emptyCountrySearch: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 32,
+    gap: 8
+  },
+  emptyCountrySearchText: {
+    color: '#94A3B8',
+    fontSize: 13,
+    fontWeight: '500'
   }
 });
 
