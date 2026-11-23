@@ -4,6 +4,15 @@ import { Platform } from 'react-native';
 import { auth, db } from '../config/firebase.js';
 import config from '../config/environment.js';
 
+const withTimeout = (promise, ms, operationName) => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`${operationName} timed out after ${ms / 1000}s (check Firestore rules & network)`)), ms)
+    )
+  ]);
+};
+
 /**
  * Runs comprehensive live diagnostic suite for Firebase Auth & Firestore connectivity.
  */
@@ -61,21 +70,21 @@ export async function runFirebaseDiagnostics(currentUser = null) {
   const uid = user?.uid || 'guest-diagnostic-test';
   try {
     if (user) {
-      idToken = await user.getIdToken(true);
+      idToken = await withTimeout(user.getIdToken(true), 6000, 'Token refresh');
       const email = user.email || '';
       const isDomainOk = email.toLowerCase().endsWith('@hbplus.fit');
       results.push({
         id: 'auth',
         name: 'Auth Check',
         status: 'PASS',
-        message: `UID: ${user.uid.slice(0, 8)}... | Email: ${email} (${isDomainOk ? '@hbplus.fit verified' : 'External'}) | Token fetched`
+        message: `UID: ${user.uid.slice(0, 8)}... | Email: ${email} (${isDomainOk ? '@hbplus.fit verified' : 'External domain'}) | Token valid`
       });
     } else {
       results.push({
         id: 'auth',
         name: 'Auth Check',
         status: 'WARN',
-        message: 'No user signed in. Running unauthenticated test suite.'
+        message: 'No user signed in. Log in or click "Employee Demo" to test authenticated Firestore operations.'
       });
     }
   } catch (err) {
@@ -83,7 +92,7 @@ export async function runFirebaseDiagnostics(currentUser = null) {
       id: 'auth',
       name: 'Auth Check',
       status: 'FAIL',
-      message: `Token fetch error: [${err.code || 'unknown'}] ${err.message}`
+      message: `Token error: [${err.code || 'unknown'}] ${err.message}`
     });
   }
 
@@ -91,13 +100,17 @@ export async function runFirebaseDiagnostics(currentUser = null) {
   try {
     const diagRef = doc(db, 'diagnostics', uid);
     const startWrite = Date.now();
-    await setDoc(diagRef, {
-      uid,
-      email: user?.email || 'guest@hbplus.fit',
-      platform: Platform.OS,
-      timestamp: new Date().toISOString(),
-      serverTs: serverTimestamp()
-    });
+    await withTimeout(
+      setDoc(diagRef, {
+        uid,
+        email: user?.email || 'guest@hbplus.fit',
+        platform: Platform.OS,
+        timestamp: new Date().toISOString(),
+        serverTs: serverTimestamp()
+      }),
+      6000,
+      'Firestore write'
+    );
     const writeMs = Date.now() - startWrite;
     results.push({
       id: 'firestore_write',
@@ -111,7 +124,7 @@ export async function runFirebaseDiagnostics(currentUser = null) {
       name: 'Firestore Write Test',
       status: 'FAIL',
       code: err.code || 'unknown',
-      message: `Error [${err.code || 'unknown'}]: ${err.message}`
+      message: `Write error [${err.code || 'timeout'}]: ${err.message}`
     });
   }
 
@@ -119,7 +132,7 @@ export async function runFirebaseDiagnostics(currentUser = null) {
   try {
     const diagRef = doc(db, 'diagnostics', uid);
     const startRead = Date.now();
-    const snap = await getDoc(diagRef);
+    const snap = await withTimeout(getDoc(diagRef), 6000, 'Firestore read');
     const readMs = Date.now() - startRead;
     if (snap.exists()) {
       results.push({
@@ -142,7 +155,7 @@ export async function runFirebaseDiagnostics(currentUser = null) {
       name: 'Firestore Read-Back Test',
       status: 'FAIL',
       code: err.code || 'unknown',
-      message: `Error [${err.code || 'unknown'}]: ${err.message}`
+      message: `Read error [${err.code || 'timeout'}]: ${err.message}`
     });
   }
 
@@ -150,9 +163,11 @@ export async function runFirebaseDiagnostics(currentUser = null) {
   if (idToken) {
     try {
       const restUrl = `https://firestore.googleapis.com/v1/projects/${config.firebase.projectId}/databases/(default)/documents/diagnostics/${uid}`;
-      const res = await fetch(restUrl, {
-        headers: { Authorization: `Bearer ${idToken}` }
-      });
+      const res = await withTimeout(
+        fetch(restUrl, { headers: { Authorization: `Bearer ${idToken}` } }),
+        6000,
+        'REST API call'
+      );
       const data = await res.json();
       if (res.ok) {
         results.push({
@@ -174,7 +189,7 @@ export async function runFirebaseDiagnostics(currentUser = null) {
         id: 'rest_api',
         name: 'Firestore REST API Test',
         status: 'FAIL',
-        message: `Network error reaching Google REST API: ${err.message}`
+        message: `REST API error: ${err.message}`
       });
     }
   }

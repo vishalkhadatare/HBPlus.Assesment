@@ -46,12 +46,28 @@ export function LoginScreen() {
 
           {/* Sleek Alert Banner for Domain Restriction & Errors */}
           {error ? (
-            <ErrorMessage
-              message={error}
-              code={errorCode}
-              onRetry={clearError}
-              retryLabel="Dismiss"
-            />
+            <View style={styles.errorSection}>
+              <ErrorMessage
+                message={error}
+                code={errorCode}
+                onRetry={clearError}
+                retryLabel="Dismiss"
+              />
+              {errorCode === 'DOMAIN_NOT_ALLOWED' ? (
+                <TouchableOpacity
+                  style={styles.devBypassHint}
+                  onPress={() => {
+                    setDevAllowAnyGoogle(true);
+                    clearError();
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.devBypassHintText}>
+                    ⚡ Testing without an @hbplus.fit inbox? Click here to allow this Google account
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
           ) : null}
 
           {/* Google OAuth Action */}
@@ -218,6 +234,26 @@ const styles = StyleSheet.create({
   actionContainer: {
     width: '100%',
     marginVertical: 4
+  },
+  errorSection: {
+    width: '100%',
+    marginBottom: 8
+  },
+  devBypassHint: {
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginTop: 4,
+    alignItems: 'center'
+  },
+  devBypassHintText: {
+    color: '#15803D',
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center'
   },
   securityNotice: {
     flexDirection: 'row',

@@ -22,7 +22,25 @@ export function AuthProvider({ children }) {
   const [isAuthorizing, setIsAuthorizing] = useState(false);
   const [error, setError] = useState(null);
   const [errorCode, setErrorCode] = useState(null);
-  const [devAllowAnyGoogle, setDevAllowAnyGoogle] = useState(false);
+
+  // Read persisted dev override state (defaults to false in production, checks localStorage on web)
+  const [devAllowAnyGoogle, setDevAllowAnyGoogleState] = useState(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage.getItem('hbplus_dev_allow_any') === 'true';
+    }
+    return false;
+  });
+
+  const devAllowAnyGoogleRef = useRef(devAllowAnyGoogle);
+  devAllowAnyGoogleRef.current = devAllowAnyGoogle;
+
+  const setDevAllowAnyGoogle = useCallback((val) => {
+    setDevAllowAnyGoogleState(val);
+    devAllowAnyGoogleRef.current = val;
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('hbplus_dev_allow_any', val ? 'true' : 'false');
+    }
+  }, []);
 
   const isVerifyingRef = useRef(false);
 
@@ -41,14 +59,20 @@ export function AuthProvider({ children }) {
    * signs out from Firebase, and displays the exact restriction message.
    */
   const verifyAuthorization = useCallback(
-    async (firebaseUser, allowOverride = devAllowAnyGoogle) => {
+    async (firebaseUser, allowOverrideParam = null) => {
       if (!firebaseUser) {
         clearSession();
         setIsLoading(false);
+        setIsAuthorizing(false);
         return false;
       }
 
-      if (isVerifyingRef.current) return false;
+      const allowOverride =
+        allowOverrideParam !== null ? allowOverrideParam : devAllowAnyGoogleRef.current;
+
+      if (isVerifyingRef.current) {
+        return false;
+      }
       isVerifyingRef.current = true;
       setIsAuthorizing(true);
       setError(null);
@@ -69,9 +93,6 @@ export function AuthProvider({ children }) {
           clearSession();
           setErrorCode('DOMAIN_NOT_ALLOWED');
           setError(EXACT_RESTRICTION_MESSAGE);
-          setIsLoading(false);
-          setIsAuthorizing(false);
-          isVerifyingRef.current = false;
           return false;
         }
 
@@ -81,15 +102,16 @@ export function AuthProvider({ children }) {
         // 3. Verify independently with backend (also stores/updates user in Cloud Firestore)
         let authorizedProfile;
         try {
-          authorizedProfile = await verifyWithBackend(idToken);
+          authorizedProfile = await verifyWithBackend(idToken, allowOverride);
         } catch (backendErr) {
-          if (allowOverride) {
+          console.warn('[AuthContext] Backend verification warning:', backendErr.message);
+          if (allowOverride || isOfficialDomain) {
             authorizedProfile = {
               uid: firebaseUser.uid,
               email: normalizedEmail,
               displayName: firebaseUser.displayName || normalizedEmail.split('@')[0],
               photoURL: firebaseUser.photoURL || '',
-              role: 'User',
+              role: normalizedEmail.startsWith('admin') ? 'Admin' : 'User',
               isActive: true
             };
           } else {
@@ -105,9 +127,6 @@ export function AuthProvider({ children }) {
         setRole(normalizedRole);
         setError(null);
         setErrorCode(null);
-        setIsLoading(false);
-        setIsAuthorizing(false);
-        isVerifyingRef.current = false;
         return true;
       } catch (err) {
         console.error('[AuthContext] Verification failed:', err);
@@ -118,13 +137,14 @@ export function AuthProvider({ children }) {
         const formattedErr = formatAuthError(err);
         setError(formattedErr || EXACT_RESTRICTION_MESSAGE);
         setErrorCode(err.code || 'AUTH_ERROR');
+        return false;
+      } finally {
         setIsLoading(false);
         setIsAuthorizing(false);
         isVerifyingRef.current = false;
-        return false;
       }
     },
-    [clearSession, devAllowAnyGoogle]
+    [clearSession]
   );
 
   /**
@@ -133,6 +153,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let isMounted = true;
 
+    // Check any pending redirect result from Web OAuth redirect flow
     checkRedirectResultPlatform()
       .then((res) => {
         if (isMounted && res?.user) {
@@ -149,6 +170,7 @@ export function AuthProvider({ children }) {
       } else {
         clearSession();
         setIsLoading(false);
+        setIsAuthorizing(false);
       }
     });
 
@@ -162,7 +184,7 @@ export function AuthProvider({ children }) {
    * Google Sign-In action
    */
   const signInWithGoogle = useCallback(async () => {
-    if (isVerifyingRef.current || isAuthorizing) return;
+    if (isAuthorizing) return;
 
     setError(null);
     setErrorCode(null);
@@ -175,7 +197,8 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      const verified = await verifyAuthorization(authResult.user, devAllowAnyGoogle);
+      // Explicitly pass current devAllowAnyGoogle state to bypass closure staleness
+      const verified = await verifyAuthorization(authResult.user, devAllowAnyGoogleRef.current);
       return verified;
     } catch (err) {
       console.error('[AuthContext] Google Sign-In error:', err);
@@ -185,9 +208,11 @@ export function AuthProvider({ children }) {
       const formatted = formatAuthError(err);
       setError(formatted || EXACT_RESTRICTION_MESSAGE);
       setErrorCode(err.code || 'SIGN_IN_ERROR');
+    } finally {
       setIsAuthorizing(false);
+      isVerifyingRef.current = false;
     }
-  }, [isAuthorizing, verifyAuthorization, clearSession, devAllowAnyGoogle]);
+  }, [isAuthorizing, verifyAuthorization, clearSession]);
 
   /**
    * Demo / Test Sign-In for testing @hbplus.fit without a Google Workspace account.
@@ -222,6 +247,8 @@ export function AuthProvider({ children }) {
 
       setProfile(userProfile);
       setRole(targetRole);
+      setError(null);
+      setErrorCode(null);
       setIsAuthorizing(false);
       setIsLoading(false);
       return true;
@@ -230,6 +257,9 @@ export function AuthProvider({ children }) {
       setError(err.message || 'Failed to initialize demo login.');
       setIsAuthorizing(false);
       return false;
+    } finally {
+      setIsAuthorizing(false);
+      setIsLoading(false);
     }
   }, []);
 

@@ -83,7 +83,9 @@ export async function authenticate(req, res, next) {
       normalizedEmail.endsWith('@hbplus.fit') &&
       isAllowedEmailDomain(normalizedEmail, config.ALLOWED_EMAIL_DOMAIN);
 
-    if (!isDomainAllowed) {
+    const isDevOverride = !config.isProduction && req.headers['x-dev-allow-any'] === 'true';
+
+    if (!isDomainAllowed && !isDevOverride) {
       return res.status(403).json(
         errorResponse('Access restricted. Please login using your official domain email.', 'DOMAIN_NOT_ALLOWED')
       );
