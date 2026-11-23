@@ -25,10 +25,17 @@ service cloud.firestore {
       return inDomain() && request.auth.uid == uid;
     }
 
+    function canCreateOwnVerifiedDomainProfile(uid) {
+      return signedIn()
+        && request.auth.uid == uid
+        && request.auth.token.email != null
+        && request.auth.token.email.matches('.*@hbplus[.]fit$');
+    }
+
     // Users Collection: Users view own profile; Admins list & manage all
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow create: if false; // only Cloud Functions / Server provision users
+      allow create: if canCreateOwnVerifiedDomainProfile(uid);
       allow update: if isAdmin()
                     || (isOwner(uid) && !('role' in request.resource.data.diff(resource.data).affectedKeys()));
       allow delete: if isAdmin();

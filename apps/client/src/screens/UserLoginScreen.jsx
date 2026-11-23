@@ -7,7 +7,9 @@ import {
   Platform,
   useWindowDimensions,
   Animated,
-  ScrollView
+  ScrollView,
+  Modal,
+  TextInput
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth.js';
 import { RoleThemeProvider, useRoleTheme } from '../theme/roleThemes.js';
@@ -42,8 +44,23 @@ function GoogleIcon({ size = 20 }) {
   );
 }
 
+const COUNTRIES = [
+  { flag: '🇮🇳', code: '+91', name: 'India' },
+  { flag: '🇺🇸', code: '+1', name: 'United States' },
+  { flag: '🇬🇧', code: '+44', name: 'United Kingdom' },
+  { flag: '🇦🇪', code: '+971', name: 'United Arab Emirates' },
+  { flag: '🇸🇬', code: '+65', name: 'Singapore' },
+  { flag: '🇦🇺', code: '+61', name: 'Australia' }
+];
+
 function UserLoginInner() {
-  const { signInUserWithGoogle, signInUserWithPassword, navigate } = useAuth();
+  const {
+    signInUserWithGoogle,
+    signInUserWithPassword,
+    signUpEmployee,
+    sendPasswordReset,
+    navigate
+  } = useAuth();
   const theme = useRoleTheme();
   const { width } = useWindowDimensions();
 
@@ -52,6 +69,14 @@ function UserLoginInner() {
   const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState(null);
+  const [mode, setMode] = useState('login'); // 'login' | 'signup'
+  const [fullName, setFullName] = useState('');
+  const [emailLocal, setEmailLocal] = useState('');
+  const [phone, setPhone] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [countryCode, setCountryCode] = useState({ flag: '🇮🇳', code: '+91', name: 'India' });
+  const [countrySheetOpen, setCountrySheetOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Soft, bouncy 320ms slide-up entrance animation (Section 3 & 4)
   const slideAnim = useRef(new Animated.Value(36)).current;
@@ -125,6 +150,87 @@ function UserLoginInner() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    const cleanEmail = mode === 'signup'
+      ? `${emailLocal.trim().toLowerCase()}@hbplus.fit`
+      : (email || '').trim().toLowerCase();
+
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setError('Enter your employee email first.');
+      triggerShake();
+      return;
+    }
+
+    setError(null);
+    setSuccessMessage('');
+    setLoading(true);
+    try {
+      await sendPasswordReset(cleanEmail);
+      setSuccessMessage(`Password reset link sent to ${cleanEmail}`);
+    } catch (err) {
+      setError(err.message || 'Could not send the reset email.');
+      triggerShake();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUp = async () => {
+    if (loading || loadingGoogle) return;
+    setError(null);
+    setSuccessMessage('');
+
+    if (!fullName.trim()) {
+      setError('Please enter the employee name.');
+      triggerShake();
+      return;
+    }
+    if (!emailLocal.trim()) {
+      setError('Please enter the employee email name.');
+      triggerShake();
+      return;
+    }
+    if (!phone.trim()) {
+      setError('Please enter the mobile number.');
+      triggerShake();
+      return;
+    }
+    if (!password) {
+      setError('Please enter a password.');
+      triggerShake();
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      triggerShake();
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await signUpEmployee({
+        fullName,
+        emailLocal,
+        phone: `${countryCode.code} ${phone.trim()}`,
+        countryCode: countryCode.code,
+        password
+      });
+      setSuccessMessage(
+        `Account created for ${result.email}. Check your employee inbox to verify the email before signing in.`
+      );
+      setFullName('');
+      setEmailLocal('');
+      setPhone('');
+      setPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      setError(err.message || 'Could not create the employee account.');
+      triggerShake();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* 4px Amber Identity Strip across the top (Section 3) */}
@@ -135,18 +241,43 @@ function UserLoginInner() {
 
       {/* Back Button */}
       <TouchableOpacity
-        style={styles.backBtn}
+        style={[styles.backBtn, width < 900 && styles.phoneBackBtn]}
         onPress={() => navigate(ROUTES.ROLE_SELECT)}
         activeOpacity={0.8}
         accessibilityLabel="Back to Role Select"
       >
-        <Icon name="arrowLeft" size={18} color="#0F172A" />
+        <Icon name="arrowLeft" size={18} color={width < 900 ? '#FFFFFF' : '#0F172A'} />
       </TouchableOpacity>
+
+      {width < 900 ? (
+        <View style={styles.phoneHeaderBand}>
+          {Platform.OS === 'web' ? (
+            <img
+              src="/src/assets/illustrations/user-workspace.svg"
+              alt=""
+              style={{
+                width: 210,
+                height: 112,
+                objectFit: 'contain',
+                marginBottom: -2,
+                display: 'block'
+              }}
+            />
+          ) : null}
+          <View style={styles.phoneTitleRow}>
+            <Icon name="userCircle" size={22} color="#FFB020" strokeWidth={2.4} />
+            <Text style={styles.phoneTitleText}>User</Text>
+          </View>
+        </View>
+      ) : null}
 
       {/* Centered Single Card over warm mint-cream background (Section 4) */}
       <ScrollView
         style={styles.centerScroll}
-        contentContainerStyle={styles.centerArea}
+        contentContainerStyle={[
+          styles.centerArea,
+          width < 900 && styles.phoneCenterArea
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -159,31 +290,33 @@ function UserLoginInner() {
             }
           ]}
         >
-          {/* Centered Small Logo & Title with UserCircle Icon */}
-          <View style={styles.brandHeader}>
-            <HBLogo size={56} />
-            {Platform.OS === 'web' ? (
-              <img
-                src="/src/assets/illustrations/user-workspace.svg"
-                alt="User workspace illustration"
-                style={{
-                  width: width >= 600 ? 220 : 170,
-                  height: width >= 600 ? 118 : 92,
-                  objectFit: 'contain',
-                  marginTop: -6,
-                  marginBottom: -6,
-                  display: 'block'
-                }}
-              />
-            ) : null}
-            <View style={styles.titleRow}>
-              <Icon name="userCircle" size={24} color="#FFB020" strokeWidth={2.4} />
-              <Text style={styles.titleText}>User</Text>
+          {/* Desktop brand header */}
+          {width >= 900 ? (
+            <View style={styles.brandHeader}>
+              <HBLogo size={56} />
+              {Platform.OS === 'web' ? (
+                <img
+                  src="/src/assets/illustrations/user-workspace.svg"
+                  alt="User workspace illustration"
+                  style={{
+                    width: 220,
+                    height: 118,
+                    objectFit: 'contain',
+                    marginTop: -6,
+                    marginBottom: -6,
+                    display: 'block'
+                  }}
+                />
+              ) : null}
+              <View style={styles.titleRow}>
+                <Icon name="userCircle" size={24} color="#FFB020" strokeWidth={2.4} />
+                <Text style={styles.titleText}>User</Text>
+              </View>
+              <View style={styles.userBadgePill}>
+                <Text style={styles.userBadgeText}>Workspace</Text>
+              </View>
             </View>
-            <View style={styles.userBadgePill}>
-              <Text style={styles.userBadgeText}>Workspace</Text>
-            </View>
-          </View>
+          ) : null}
 
           <SquaredCard style={styles.userCard}>
             {error ? (
@@ -192,59 +325,231 @@ function UserLoginInner() {
                 <Text style={styles.errorText}>{error}</Text>
               </View>
             ) : null}
+            {successMessage ? (
+              <View style={styles.successBox}>
+                <Icon name="checkCircle" size={16} color="#0B7A42" />
+                <Text style={styles.successText}>{successMessage}</Text>
+              </View>
+            ) : null}
 
-            {/* 1. Continue with Google Button first */}
-            <SquaredButton
-              title="Continue with Google"
-              variant="google"
-              icon={<GoogleIcon size={20} />}
-              onPress={handleGoogleSignIn}
-              loading={loadingGoogle}
-              disabled={loading}
-            />
+            {mode === 'login' ? (
+              <>
+                <SquaredButton
+                  title="Continue with Google"
+                  variant="google"
+                  icon={<GoogleIcon size={20} />}
+                  onPress={handleGoogleSignIn}
+                  loading={loadingGoogle}
+                  disabled={loading}
+                />
 
-            {/* 2. Simple "or" Divider (1px line at ~10% opacity of role's colour) */}
-            <View style={styles.dividerRow}>
-              <View style={[styles.dividerLine, { backgroundColor: 'rgba(0, 179, 134, 0.15)' }]} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={[styles.dividerLine, { backgroundColor: 'rgba(0, 179, 134, 0.15)' }]} />
-            </View>
+                <View style={styles.dividerRow}>
+                  <View style={[styles.dividerLine, { backgroundColor: 'rgba(0, 179, 134, 0.15)' }]} />
+                  <Text style={styles.dividerText}>or</Text>
+                  <View style={[styles.dividerLine, { backgroundColor: 'rgba(0, 179, 134, 0.15)' }]} />
+                </View>
 
-            {/* 3. Email & Password Inputs */}
-            <SquaredInput
-              label="Email"
-              iconName="mail"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="employee@hbplus.fit"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              editable={!loading && !loadingGoogle}
-            />
+                <SquaredInput
+                  label="Email"
+                  iconName="mail"
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="employee@hbplus.fit"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  editable={!loading && !loadingGoogle}
+                />
 
-            <SquaredInput
-              label="Password"
-              iconName="lock"
-              value={password}
-              onChangeText={setPassword}
-              placeholder="••••••••"
-              secureTextEntry={true}
-              showPasswordToggle={true}
-              editable={!loading && !loadingGoogle}
-              onSubmitEditing={handleEmailSignIn}
-            />
+                <SquaredInput
+                  label="Password"
+                  iconName="lock"
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="••••••••"
+                  secureTextEntry={true}
+                  showPasswordToggle={true}
+                  editable={!loading && !loadingGoogle}
+                  onSubmitEditing={handleEmailSignIn}
+                />
 
-            {/* 4. Sign in Button (User Gradient) */}
-            <SquaredButton
-              title="Sign in"
-              onPress={handleEmailSignIn}
-              loading={loading}
-              disabled={loadingGoogle}
-              style={{ marginTop: 6 }}
-            />
+                <TouchableOpacity
+                  style={styles.forgotButton}
+                  onPress={handleForgotPassword}
+                  activeOpacity={0.7}
+                  disabled={loading}
+                >
+                  <Text style={styles.forgotText}>Forgot password?</Text>
+                </TouchableOpacity>
+
+                <SquaredButton
+                  title="Sign in"
+                  onPress={handleEmailSignIn}
+                  loading={loading}
+                  disabled={loadingGoogle}
+                  style={{ marginTop: 2 }}
+                />
+
+                <View style={styles.accountSwitchRow}>
+                  <Text style={styles.accountSwitchText}>New employee?</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setMode('signup');
+                      setError(null);
+                      setSuccessMessage('');
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.accountSwitchAction}>Create account</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <>
+                <SquaredInput
+                  label="Employee name"
+                  iconName="user"
+                  value={fullName}
+                  onChangeText={setFullName}
+                  placeholder="Enter full name"
+                  editable={!loading}
+                />
+
+                <View style={styles.fieldWrapper}>
+                  <Text style={styles.fieldLabel}>Email</Text>
+                  <View style={styles.emailDomainRow}>
+                    <TextInput
+                      value={emailLocal}
+                      onChangeText={(value) => setEmailLocal(value.replace(/[^a-zA-Z0-9._-]/g, '').toLowerCase())}
+                      placeholder="employee.name"
+                      placeholderTextColor="#94A3B8"
+                      style={styles.emailLocalInput}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={!loading}
+                      accessibilityLabel="Employee email name"
+                    />
+                    <Text style={styles.fixedDomain}>@hbplus.fit</Text>
+                  </View>
+                </View>
+
+                <View style={styles.fieldWrapper}>
+                  <Text style={styles.fieldLabel}>Mobile number</Text>
+                  <View style={styles.phoneRow}>
+                    <TouchableOpacity
+                      style={styles.countryButton}
+                      onPress={() => setCountrySheetOpen(true)}
+                      activeOpacity={0.8}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Country code ${countryCode.code}`}
+                    >
+                      <Text style={styles.countryFlag}>{countryCode.flag}</Text>
+                      <Text style={styles.countryCode}>{countryCode.code}</Text>
+                      <Icon name="chevronDown" size={14} color="#64748B" />
+                    </TouchableOpacity>
+                    <TextInput
+                      value={phone}
+                      onChangeText={(value) => setPhone(value.replace(/[^0-9]/g, '').slice(0, 15))}
+                      placeholder="Mobile number"
+                      placeholderTextColor="#94A3B8"
+                      keyboardType="phone-pad"
+                      style={styles.phoneInput}
+                      editable={!loading}
+                      accessibilityLabel="Mobile number"
+                    />
+                  </View>
+                </View>
+
+                <SquaredInput
+                  label="Password"
+                  iconName="lock"
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Minimum 8 characters"
+                  secureTextEntry={true}
+                  showPasswordToggle={true}
+                  editable={!loading}
+                />
+
+                <SquaredInput
+                  label="Confirm password"
+                  iconName="lock"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Re-enter password"
+                  secureTextEntry={true}
+                  showPasswordToggle={true}
+                  editable={!loading}
+                  onSubmitEditing={handleSignUp}
+                />
+
+                <SquaredButton
+                  title="Create account"
+                  onPress={handleSignUp}
+                  loading={loading}
+                  style={{ marginTop: 2 }}
+                />
+
+                <View style={styles.accountSwitchRow}>
+                  <Text style={styles.accountSwitchText}>Already registered?</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setMode('login');
+                      setError(null);
+                      setSuccessMessage('');
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.accountSwitchAction}>Sign in</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
           </SquaredCard>
         </Animated.View>
       </ScrollView>
+
+      <Modal
+        visible={countrySheetOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setCountrySheetOpen(false)}
+      >
+        <View style={styles.countryModalOverlay}>
+          <View style={styles.countrySheet}>
+            <View style={styles.countrySheetHandle} />
+            <View style={styles.countrySheetHeader}>
+              <Text style={styles.countrySheetTitle}>Choose country</Text>
+              <TouchableOpacity
+                onPress={() => setCountrySheetOpen(false)}
+                style={styles.countrySheetClose}
+                activeOpacity={0.7}
+              >
+                <Icon name="x" size={18} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+            {COUNTRIES.map((country) => (
+              <TouchableOpacity
+                key={country.code}
+                style={[
+                  styles.countryOption,
+                  countryCode.code === country.code && styles.countryOptionActive
+                ]}
+                onPress={() => {
+                  setCountryCode(country);
+                  setCountrySheetOpen(false);
+                }}
+                activeOpacity={0.8}
+              >
+                <View style={styles.countryFlagSquare}>
+                  <Text style={styles.countryOptionFlag}>{country.flag}</Text>
+                </View>
+                <Text style={styles.countryOptionName}>{country.name}</Text>
+                <Text style={styles.countryOptionCode}>{country.code}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -299,11 +604,51 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 20
   },
+  phoneBackBtn: {
+    top: 24,
+    left: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.22)'
+  },
+  phoneHeaderBand: {
+    height: '30%',
+    backgroundColor: '#00B386',
+    ...(Platform.OS === 'web'
+      ? { backgroundImage: 'linear-gradient(135deg, #00D9A5 0%, #00B386 100%)' }
+      : {}),
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 14
+  },
+  phoneTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  phoneTitleText: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: -0.3
+  },
   centerArea: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24
+  },
+  phoneCenterArea: {
+    flexGrow: 1,
+    justifyContent: 'flex-start',
+    marginTop: -18,
+    paddingHorizontal: 20,
+    paddingBottom: 32
   },
   cardWrapper: {
     width: '100%',
@@ -343,7 +688,7 @@ const styles = StyleSheet.create({
   },
   userCard: {
     width: '100%',
-    padding: 28,
+    padding: 24,
     gap: 16
   },
   dividerRow: {
@@ -376,6 +721,209 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     fontSize: 13,
     fontWeight: '500'
+  },
+  successBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#E3F8EC',
+    borderRadius: CARD_RADIUS,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#B5E8CE'
+  },
+  successText: {
+    flex: 1,
+    color: '#0B7A42',
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600'
+  },
+  forgotButton: {
+    alignSelf: 'flex-end',
+    minHeight: 36,
+    justifyContent: 'center',
+    marginTop: -6,
+    paddingHorizontal: 4
+  },
+  forgotText: {
+    color: '#00B386',
+    fontSize: 13,
+    fontWeight: '700'
+  },
+  accountSwitchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 2
+  },
+  accountSwitchText: {
+    color: '#64748B',
+    fontSize: 13,
+    fontWeight: '500'
+  },
+  accountSwitchAction: {
+    color: '#00B386',
+    fontSize: 13,
+    fontWeight: '800'
+  },
+  fieldWrapper: {
+    gap: 6
+  },
+  fieldLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#334155'
+  },
+  emailDomainRow: {
+    height: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F2EE',
+    borderRadius: CARD_RADIUS,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden'
+  },
+  emailLocalInput: {
+    flex: 1,
+    height: '100%',
+    paddingHorizontal: 12,
+    borderWidth: 0,
+    outlineStyle: 'none',
+    color: '#0F172A',
+    fontSize: 15
+  },
+  fixedDomain: {
+    height: '100%',
+    paddingHorizontal: 10,
+    backgroundColor: '#DFEDE8',
+    borderLeftWidth: 1,
+    borderLeftColor: '#DDE8E5',
+    color: '#51635E',
+    fontSize: 13,
+    fontWeight: '700',
+    textAlignVertical: 'center',
+    lineHeight: 52
+  },
+  phoneRow: {
+    height: 52,
+    flexDirection: 'row',
+    gap: 8
+  },
+  countryButton: {
+    width: 112,
+    height: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    backgroundColor: '#E8F2EE',
+    borderRadius: CARD_RADIUS,
+    borderWidth: 1,
+    borderColor: '#E2E8F0'
+  },
+  countryFlag: {
+    fontSize: 20
+  },
+  countryCode: {
+    color: '#334155',
+    fontSize: 13,
+    fontWeight: '700'
+  },
+  phoneInput: {
+    flex: 1,
+    height: 52,
+    backgroundColor: '#E8F2EE',
+    borderRadius: CARD_RADIUS,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 12,
+    outlineStyle: 'none',
+    color: '#0F172A',
+    fontSize: 15
+  },
+  countryModalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(15, 23, 42, 0.42)',
+    padding: 16
+  },
+  countrySheet: {
+    width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 16,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0'
+  },
+  countrySheetHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#CBD5E1',
+    alignSelf: 'center',
+    marginBottom: 4
+  },
+  countrySheetHeader: {
+    height: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  countrySheetTitle: {
+    color: '#0F172A',
+    fontSize: 17,
+    fontWeight: '800'
+  },
+  countrySheetClose: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  countryOption: {
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#EDF4F2',
+    paddingHorizontal: 10,
+    gap: 10
+  },
+  countryOptionActive: {
+    backgroundColor: '#E0F8F1',
+    borderColor: '#B2EADB'
+  },
+  countryFlagSquare: {
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  countryOptionFlag: {
+    fontSize: 22
+  },
+  countryOptionName: {
+    flex: 1,
+    color: '#334155',
+    fontSize: 14,
+    fontWeight: '700'
+  },
+  countryOptionCode: {
+    color: '#64748B',
+    fontSize: 13,
+    fontWeight: '700'
   }
 });
 

@@ -59,14 +59,7 @@ export class AuthController {
         );
       }
 
-      // 2. Ensure verified status
-      if (user.token && user.token.email_verified === false) {
-        return res.status(403).json(
-          errorResponse('Email address is not verified.', 'EMAIL_NOT_VERIFIED')
-        );
-      }
-
-      // 3. User Google sign-in can NEVER produce role: 'admin'
+      // 2. User Google and email sign-in can never produce role: 'admin'
       // Only keep existing role if user is already an admin
       const existingProfile = await UserService.getUserProfile(user.uid);
       const role = existingProfile?.role === 'admin' ? 'admin' : 'user';
@@ -79,7 +72,10 @@ export class AuthController {
       // Provision or update user document in Cloud Firestore
       const userProfile = await UserService.provisionOrUpdateUser({
         ...user.token,
-        role
+        role,
+        name: req.body?.fullName || user.token.name,
+        phone: req.body?.phone,
+        countryCode: req.body?.countryCode
       });
 
       return res.status(200).json(

@@ -44,7 +44,7 @@ export class UserService {
    * @returns {Promise<object>} User profile
    */
   static async provisionOrUpdateUser(decodedToken) {
-    const { uid, email, name, picture } = decodedToken;
+    const { uid, email, name, picture, phone, countryCode } = decodedToken;
     const normalizedEmail = (email || '').trim().toLowerCase();
 
     const existingUser = await this.getUserProfile(uid);
@@ -67,6 +67,8 @@ export class UserService {
         name: name || existingUser.name || existingUser.displayName || normalizedEmail.split('@')[0],
         displayName: name || existingUser.displayName || existingUser.name || normalizedEmail.split('@')[0],
         photoURL: picture || existingUser.photoURL || '',
+        phone: phone || existingUser.phone || '',
+        countryCode: countryCode || existingUser.countryCode || '',
         lastLogin: currentTimestamp,
         lastLoginAt: currentTimestamp
       };
@@ -104,6 +106,8 @@ export class UserService {
       displayName: name || normalizedEmail.split('@')[0] || 'User',
       email: normalizedEmail,
       photoURL: picture || '',
+      phone: phone || '',
+      countryCode: countryCode || '',
       role: assignedRole,
       isActive: true,
       lastLogin: currentTimestamp,

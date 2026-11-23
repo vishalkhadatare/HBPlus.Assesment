@@ -26,6 +26,18 @@ export async function signInWithEmailPlatform(email, password) {
   return await webAuth.signInWithEmail(email, password);
 }
 
+export async function signUpWithEmailPlatform(registration) {
+  if (Platform.OS === 'web') {
+    return await webAuth.signUpWithEmail(registration);
+  }
+  const nativeAuth = await import('./authService.native.js');
+  return await nativeAuth.signUpWithEmailPassword(
+    registration.email,
+    registration.password,
+    registration.fullName
+  );
+}
+
 export async function sendPasswordResetPlatform(email) {
   return await webAuth.sendPasswordReset(email);
 }
@@ -33,10 +45,10 @@ export async function sendPasswordResetPlatform(email) {
 /**
  * Calls backend to provision verified user and set claims.
  */
-export async function provisionWithBackend(token) {
+export async function provisionWithBackend(token, profile = {}) {
   const response = await apiClient.post(
     '/auth/provision',
-    {},
+    profile,
     {
       headers: { Authorization: `Bearer ${token}` },
       skipAuth: true
@@ -96,6 +108,7 @@ export default {
   signInWithGooglePlatform,
   checkRedirectResultPlatform,
   signInWithEmailPlatform,
+  signUpWithEmailPlatform,
   sendPasswordResetPlatform,
   provisionWithBackend,
   verifyWithBackend,

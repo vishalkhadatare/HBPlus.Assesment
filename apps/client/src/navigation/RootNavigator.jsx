@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useAuth } from '../hooks/useAuth.js';
 import { ROUTES } from './navigationConfig.js';
+import SplashScreen from '../screens/SplashScreen.jsx';
 import RoleSelectScreen from '../screens/RoleSelectScreen.jsx';
 import AdminLoginScreen from '../screens/AdminLoginScreen.jsx';
 import UserLoginScreen from '../screens/UserLoginScreen.jsx';
@@ -21,6 +22,7 @@ import ErrorBoundary from '../components/common/ErrorBoundary.jsx';
  */
 export function RootNavigator() {
   const { isAuthorized, isAdmin, isLoading, currentRoute, navigate } = useAuth();
+  const [isSplashVisible, setIsSplashVisible] = useState(true);
 
   // Route Guard Effect: enforces access rules on state change
   useEffect(() => {
@@ -100,6 +102,9 @@ export function RootNavigator() {
     <ErrorBoundary>
       <View style={styles.root}>
         {renderCurrentScreen()}
+        {isSplashVisible && (
+          <SplashScreen onFinish={() => setIsSplashVisible(false)} />
+        )}
       </View>
     </ErrorBoundary>
   );

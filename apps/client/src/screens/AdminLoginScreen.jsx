@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   },
   adminCard: {
     width: '100%',
-    padding: 28,
+    padding: 24,
     gap: 16
   },
   // Phone Layout
@@ -415,13 +415,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC'
   },
   phoneHeaderBand: {
-    height: '28%',
+    height: '30%',
     backgroundColor: '#EA580C',
     ...(Platform.OS === 'web'
       ? { backgroundImage: 'linear-gradient(135deg, #FF7A1A 0%, #EA580C 100%)' }
       : {}),
-    borderBottomLeftRadius: CARD_RADIUS,
-    borderBottomRightRadius: CARD_RADIUS,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative'
@@ -430,18 +430,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 24,
     left: 20,
-    width: 36,
-    height: 36,
-    borderRadius: CARD_RADIUS,
-    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.22)',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 20
   },
   phoneBrandBox: {
     alignItems: 'center',
-    gap: 10,
-    marginTop: 10
+    gap: 6,
+    marginTop: 2
   },
   phoneTitleRow: {
     flexDirection: 'row',
@@ -449,7 +451,7 @@ const styles = StyleSheet.create({
     gap: 8
   },
   phoneTitleText: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '800',
     color: '#ECFBF6',
     letterSpacing: -0.3
@@ -459,7 +461,8 @@ const styles = StyleSheet.create({
   },
   phoneLowerArea: {
     paddingHorizontal: 20,
-    marginTop: -28,
+    marginTop: -20,
+    paddingBottom: 32,
     alignItems: 'center'
   },
   phoneFormWrapper: {

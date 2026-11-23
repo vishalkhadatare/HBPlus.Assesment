@@ -4,6 +4,7 @@ import { auth } from '../config/firebase.js';
 import {
   signInWithGooglePlatform,
   signInWithEmailPlatform,
+  signUpWithEmailPlatform,
   sendPasswordResetPlatform,
   provisionWithBackend,
   verifyWithBackend,
@@ -229,6 +230,11 @@ export function AuthProvider({ children }) {
       // 2. Firebase Authentication
       const { user: firebaseUser } = await signInWithEmailPlatform(normalizedEmail, password);
 
+      if (!firebaseUser.emailVerified) {
+        await signOutPlatform().catch(() => {});
+        throw new Error('Please verify your employee email before signing in. Check your inbox for the verification link.');
+      }
+
       // 3. Verify user claim
       const idTokenResult = await firebaseUser.getIdTokenResult(true);
       const userClaimRole = (idTokenResult.claims.role || '').toLowerCase();
@@ -261,6 +267,71 @@ export function AuthProvider({ children }) {
       setIsAuthorizing(false);
     }
   }, [navigate, triggerAccessDenied]);
+
+  /**
+   * EMPLOYEE SIGN UP
+   * Creates Firebase credentials and writes the employee profile to Firestore.
+   */
+  const signUpEmployee = useCallback(async ({ fullName, emailLocal, phone, countryCode, password }) => {
+    setError(null);
+    setIsAuthorizing(true);
+
+    try {
+      const normalizedName = (fullName || '').trim();
+      const normalizedLocal = (emailLocal || '').trim().toLowerCase();
+      const normalizedPhone = (phone || '').trim();
+      const normalizedPassword = password || '';
+
+      if (!normalizedName) throw new Error('Please enter the employee name.');
+      if (!normalizedLocal) throw new Error('Please enter the email name.');
+      if (!/^[a-z0-9._-]+$/.test(normalizedLocal)) {
+        throw new Error('Email name may contain only letters, numbers, dots, hyphens and underscores.');
+      }
+      if (!normalizedPhone) throw new Error('Please enter the mobile number.');
+      if (normalizedPassword.length < 8) {
+        throw new Error('Password must be at least 8 characters long.');
+      }
+
+      const normalizedEmail = `${normalizedLocal}@hbplus.fit`;
+      const result = await signUpWithEmailPlatform({
+        email: normalizedEmail,
+        password: normalizedPassword,
+        fullName: normalizedName,
+        phone: normalizedPhone,
+        countryCode
+      });
+
+      if (result?.idToken) {
+        await provisionWithBackend(result.idToken, {
+          fullName: normalizedName,
+          phone: `${countryCode} ${normalizedPhone}`,
+          countryCode
+        }).catch((profileError) => {
+          console.warn('[AuthContext] Signup server profile provisioning fallback:', profileError.message);
+        });
+      }
+      await signOutPlatform().catch(() => {});
+
+      if (result?.verificationRequired) {
+        return { verificationRequired: true, email: normalizedEmail };
+      }
+      return { verificationRequired: false, email: normalizedEmail };
+    } catch (err) {
+      console.error('[AuthContext] Employee Sign-Up Error:', err.message);
+      if (err.code === 'auth/email-already-in-use') {
+        throw new Error('This employee email is already registered.');
+      }
+      if (err.code === 'auth/weak-password') {
+        throw new Error('Password must be at least 8 characters long.');
+      }
+      if (err.code === 'auth/invalid-email') {
+        throw new Error('Please enter a valid employee email name.');
+      }
+      throw err;
+    } finally {
+      setIsAuthorizing(false);
+    }
+  }, []);
 
   /**
    * FORGOT PASSWORD (Domain-checked. Section 2.3)
@@ -324,6 +395,13 @@ export function AuthProvider({ children }) {
         if (!isAllowedEmail(email)) {
           await signOutPlatform().catch(() => {});
           triggerAccessDenied(email, EXACT_RESTRICTION_MESSAGE);
+          setIsLoading(false);
+          return;
+        }
+
+        if (!firebaseUser.emailVerified) {
+          await signOutPlatform().catch(() => {});
+          clearSession();
           setIsLoading(false);
           return;
         }
@@ -400,6 +478,7 @@ export function AuthProvider({ children }) {
     signInAdmin,
     signInUserWithGoogle,
     signInUserWithPassword,
+    signUpEmployee,
     sendPasswordReset,
     signOut: signOutAccount,
     clearError

@@ -10,7 +10,8 @@ export function AnimatedLogo({
   showWordmark = true,
   showTagline = true,
   reduceMotion = false,
-  textColor = '#FFFFFF'
+  textColor = '#FFFFFF',
+  onAnimationComplete
 }) {
   // Animation Values
   const bgRingOpacity = useRef(new Animated.Value(0)).current;
@@ -87,7 +88,11 @@ export function AnimatedLogo({
     }, 1600);
 
     setTimeout(() => {
-      Animated.timing(taglineOpacity, { toValue: 1, duration: 600, useNativeDriver: true }).start();
+      Animated.timing(taglineOpacity, { toValue: 1, duration: 600, useNativeDriver: true }).start(() => {
+        if (onAnimationComplete) {
+          onAnimationComplete();
+        }
+      });
     }, 2000);
 
     // 7. Idle Loop
