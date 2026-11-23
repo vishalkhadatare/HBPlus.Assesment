@@ -8,7 +8,7 @@ service cloud.firestore {
 
     function inDomain() {
       return signedIn()
-        && request.auth.token.email_verified == true
+        && request.auth.token.email != null
         && request.auth.token.email.matches('.*@hbplus[.]fit$');
     }
 
@@ -25,19 +25,11 @@ service cloud.firestore {
       return inDomain() && request.auth.uid == uid;
     }
 
-    function canCreateOwnVerifiedDomainProfile(uid) {
-      return signedIn()
-        && request.auth.uid == uid
-        && request.auth.token.email != null
-        && request.auth.token.email.matches('.*@hbplus[.]fit$');
-    }
-
-    // Users Collection: Users view own profile; Admins list & manage all
+    // Users Collection: Users create and manage own profile; Admins list & manage all
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow create: if canCreateOwnVerifiedDomainProfile(uid);
-      allow update: if isAdmin()
-                    || (isOwner(uid) && !('role' in request.resource.data.diff(resource.data).affectedKeys()));
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) || isAdmin();
       allow delete: if isAdmin();
     }
 

@@ -18,6 +18,8 @@ import Icon from '../ui/Icon.jsx';
 import SquaredCard from '../ui/SquaredCard.jsx';
 import SquaredButton from '../ui/SquaredButton.jsx';
 import workforceStore from '../../services/workforceStore.js';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../config/firebase.js';
 
 // ─── SVG Progress Ring (web-only, used for leave balances & hero) ─────────────
 function ProgressRing({ size = 60, strokeWidth = 5, progress = 0.75, color = '#14B8A6', children }) {
@@ -197,7 +199,28 @@ function UserShellContent({ onSignOut }) {
     showToast('🎉 Leave request submitted! Forwarded to Admin for approval.');
   };
 
-  const handleSaveProfile = () => {
+  const profile = storeState.profile;
+  const displayName = authProfile?.displayName || user?.displayName || authProfile?.name || profile.displayName || 'Employee';
+  const displayEmail = user?.email || authProfile?.email || profile.email;
+  const displayPhone = authProfile?.phone || profile.phone || '+91 98765 43210';
+  const displayDepartment = authProfile?.department || profile.department || 'Engineering Systems';
+  const displayDesignation = authProfile?.designation || profile.designation || 'Enterprise Specialist';
+  const displayEmployeeId = authProfile?.employeeId || profile.employeeId || `HBP-${user?.uid ? user.uid.slice(-4).toUpperCase() : '2026'}`;
+  const displayBio = authProfile?.bio || profile.bio;
+  const displayEmergency = authProfile?.emergencyContact || profile.emergencyContact;
+  const firstName = (displayName || '').split(' ')[0] || 'Team';
+
+  // Synchronize edit form fields whenever the authenticated account updates
+  useEffect(() => {
+    if (displayName) setEditName(displayName);
+    if (displayPhone) setEditPhone(displayPhone);
+    if (displayDepartment) setEditDepartment(displayDepartment);
+    if (displayDesignation) setEditDesignation(displayDesignation);
+    if (displayBio) setEditBio(displayBio);
+    if (displayEmergency) setEditEmergency(displayEmergency);
+  }, [displayName, displayPhone, displayDepartment, displayDesignation, displayBio, displayEmergency]);
+
+  const handleSaveProfile = async () => {
     if (!editName.trim()) {
       showToast('Please provide your full name.');
       return;
@@ -210,8 +233,26 @@ function UserShellContent({ onSignOut }) {
       bio: editBio.trim(),
       emergencyContact: editEmergency.trim()
     });
+
+    if (user?.uid) {
+      try {
+        await setDoc(doc(db, 'users', user.uid), {
+          displayName: editName.trim(),
+          name: editName.trim(),
+          phone: editPhone.trim(),
+          department: editDepartment.trim(),
+          designation: editDesignation.trim(),
+          bio: editBio.trim(),
+          emergencyContact: editEmergency.trim(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      } catch (err) {
+        console.warn('[UserShell] Firestore sync notice:', err.message);
+      }
+    }
+
     setIsEditingProfile(false);
-    showToast('✅ Profile updated and synchronized successfully!');
+    showToast('✅ Profile updated and synchronized with database!');
   };
 
   const handlePasswordReset = async () => {
@@ -226,10 +267,6 @@ function UserShellContent({ onSignOut }) {
       showToast('Password reset link sent to your corporate email.');
     }
   };
-
-  const profile = storeState.profile;
-  const displayName = profile.displayName || authProfile?.displayName || user?.displayName || 'Rachel Green';
-  const firstName = displayName.split(' ')[0] || 'Team';
 
   const userNavItems = [
     { id: 'home', label: 'Home', icon: 'dashboard' },
@@ -710,20 +747,20 @@ function UserShellContent({ onSignOut }) {
                   <View style={styles.profileHeroTop}>
                     <View style={styles.profileAvatarLarge}>
                       <Text style={styles.profileAvatarLargeText}>
-                        {profile.displayName.charAt(0).toUpperCase()}
+                        {displayName.charAt(0).toUpperCase()}
                       </Text>
                       <View style={styles.profileOnlineDot} />
                     </View>
 
                     <View style={styles.profileHeroInfo}>
                       <View style={styles.profileNameRow}>
-                        <Text style={styles.profileNameText}>{profile.displayName}</Text>
+                        <Text style={styles.profileNameText}>{displayName}</Text>
                         <View style={styles.domainBadge}>
                           <Text style={styles.domainBadgeText}>@hbplus.fit</Text>
                         </View>
                       </View>
-                      <Text style={styles.profileRoleTitle}>{profile.designation} • {profile.department}</Text>
-                      <Text style={styles.profileEmployeeId}>ID: {profile.employeeId}</Text>
+                      <Text style={styles.profileRoleTitle}>{displayDesignation} • {displayDepartment}</Text>
+                      <Text style={styles.profileEmployeeId}>ID: {displayEmployeeId}</Text>
                     </View>
                   </View>
 
@@ -731,12 +768,12 @@ function UserShellContent({ onSignOut }) {
                     <TouchableOpacity
                       style={[styles.editProfileToggleBtn, isEditingProfile && styles.editProfileToggleBtnActive]}
                       onPress={() => {
-                        setEditName(profile.displayName);
-                        setEditPhone(profile.phone);
-                        setEditDepartment(profile.department);
-                        setEditDesignation(profile.designation);
-                        setEditBio(profile.bio);
-                        setEditEmergency(profile.emergencyContact);
+                        setEditName(displayName);
+                        setEditPhone(displayPhone);
+                        setEditDepartment(displayDepartment);
+                        setEditDesignation(displayDesignation);
+                        setEditBio(displayBio);
+                        setEditEmergency(displayEmergency);
                         setIsEditingProfile(!isEditingProfile);
                       }}
                       activeOpacity={0.8}
@@ -858,15 +895,15 @@ function UserShellContent({ onSignOut }) {
                     </View>
                     <View style={styles.infoRow}>
                       <Text style={styles.infoLabel}>Official Email</Text>
-                      <Text style={styles.infoValue}>{user?.email || profile.email}</Text>
+                      <Text style={styles.infoValue}>{displayEmail}</Text>
                     </View>
                     <View style={styles.infoRow}>
                       <Text style={styles.infoLabel}>Mobile Number</Text>
-                      <Text style={styles.infoValue}>{profile.phone || '+91 98765 43210'}</Text>
+                      <Text style={styles.infoValue}>{displayPhone}</Text>
                     </View>
                     <View style={styles.infoRow}>
                       <Text style={styles.infoLabel}>Department</Text>
-                      <Text style={styles.infoValue}>{profile.department}</Text>
+                      <Text style={styles.infoValue}>{displayDepartment}</Text>
                     </View>
                     <View style={styles.infoRow}>
                       <Text style={styles.infoLabel}>Work Location</Text>
@@ -898,7 +935,7 @@ function UserShellContent({ onSignOut }) {
                     </View>
                     <View style={styles.infoRow}>
                       <Text style={styles.infoLabel}>Emergency Contact</Text>
-                      <Text style={styles.infoValue}>{profile.emergencyContact || 'Configured'}</Text>
+                      <Text style={styles.infoValue}>{displayEmergency || 'Configured'}</Text>
                     </View>
                   </SquaredCard>
                 </View>

@@ -6,11 +6,13 @@ import {
   signInWithEmailPlatform,
   signUpWithEmailPlatform,
   sendPasswordResetPlatform,
+  fetchUserProfilePlatform,
   provisionWithBackend,
   verifyWithBackend,
   signOutPlatform,
   checkRedirectResultPlatform
 } from '../services/authService.js';
+import { workforceStore } from '../services/workforceStore.js';
 import { isAllowedEmail } from '../utils/domainValidator.js';
 import { ROUTES } from '../navigation/navigationConfig.js';
 
@@ -225,6 +227,17 @@ export function AuthProvider({ children }) {
         localStorage.setItem('hbplus_user_profile', JSON.stringify(userProfile));
       } catch (_) {}
 
+      try {
+        workforceStore.updateProfile({
+          displayName: userProfile.displayName || userProfile.name || normalizedEmail.split('@')[0],
+          email: userProfile.email || normalizedEmail,
+          phone: userProfile.phone || '',
+          department: userProfile.department || 'Engineering Systems',
+          designation: userProfile.designation || 'Enterprise Specialist',
+          employeeId: userProfile.employeeId || `HBP-${firebaseUser.uid.slice(-4).toUpperCase()}`
+        });
+      } catch (_) {}
+
       // 3. Force-refresh token to read fresh custom claims if available
       try {
         await firebaseUser.getIdTokenResult(true);
@@ -288,11 +301,17 @@ export function AuthProvider({ children }) {
       // 4. Provision & verify with backend (with fallback)
       let userProfile = null;
       try {
-        const token = await firebaseUser.getIdToken();
-        const provisionRes = await provisionWithBackend(token);
-        userProfile = provisionRes?.data || provisionRes;
-      } catch (backendErr) {
-        console.warn('[AuthContext] Backend provision notice:', backendErr.message);
+        userProfile = await fetchUserProfilePlatform(firebaseUser.uid);
+      } catch (_) {}
+
+      if (!userProfile) {
+        try {
+          const token = await firebaseUser.getIdToken();
+          const provisionRes = await provisionWithBackend(token);
+          userProfile = provisionRes?.data || provisionRes;
+        } catch (backendErr) {
+          console.warn('[AuthContext] Backend provision notice:', backendErr.message);
+        }
       }
 
       if (!userProfile) {
@@ -308,6 +327,17 @@ export function AuthProvider({ children }) {
 
       try {
         localStorage.setItem('hbplus_user_profile', JSON.stringify(userProfile));
+      } catch (_) {}
+
+      try {
+        workforceStore.updateProfile({
+          displayName: userProfile.displayName || userProfile.name || normalizedEmail.split('@')[0],
+          email: userProfile.email || normalizedEmail,
+          phone: userProfile.phone || '',
+          department: userProfile.department || 'Engineering Systems',
+          designation: userProfile.designation || 'Enterprise Specialist',
+          employeeId: userProfile.employeeId || `HBP-${firebaseUser.uid.slice(-4).toUpperCase()}`
+        });
       } catch (_) {}
 
       setUser(firebaseUser);
@@ -386,6 +416,17 @@ export function AuthProvider({ children }) {
 
       try {
         localStorage.setItem('hbplus_user_profile', JSON.stringify(userProfile));
+      } catch (_) {}
+
+      try {
+        workforceStore.updateProfile({
+          displayName: normalizedName,
+          email: normalizedEmail,
+          phone: `${countryCode || ''} ${normalizedPhone}`.trim(),
+          department: 'Engineering Systems',
+          designation: 'Enterprise Specialist',
+          employeeId: `HBP-${result.user.uid.slice(-4).toUpperCase()}`
+        });
       } catch (_) {}
 
       // Keep user signed in - direct access without requiring verification
@@ -482,10 +523,17 @@ export function AuthProvider({ children }) {
           const tokenResult = await firebaseUser.getIdTokenResult();
           const r = tokenResult.claims.role === 'admin' ? 'admin' : 'user';
           let userProfile = null;
+
           try {
-            const meRes = await verifyWithBackend(tokenResult.token);
-            userProfile = meRes?.data || meRes;
+            userProfile = await fetchUserProfilePlatform(firebaseUser.uid);
           } catch (_) {}
+
+          if (!userProfile) {
+            try {
+              const meRes = await verifyWithBackend(tokenResult.token);
+              userProfile = meRes?.data || meRes;
+            } catch (_) {}
+          }
 
           if (!userProfile) {
             try {
@@ -502,6 +550,19 @@ export function AuthProvider({ children }) {
               role: r,
               isActive: true
             };
+          }
+
+          if (r === 'user') {
+            try {
+              workforceStore.updateProfile({
+                displayName: userProfile.displayName || userProfile.name || email.split('@')[0],
+                email: userProfile.email || email,
+                phone: userProfile.phone || '',
+                department: userProfile.department || 'Engineering Systems',
+                designation: userProfile.designation || 'Enterprise Specialist',
+                employeeId: userProfile.employeeId || `HBP-${firebaseUser.uid.slice(-4).toUpperCase()}`
+              });
+            } catch (_) {}
           }
 
           setUser(firebaseUser);

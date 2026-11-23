@@ -10,7 +10,7 @@ import {
   sendPasswordResetEmail,
   signOut as firebaseSignOut
 } from 'firebase/auth';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase.js';
 
 const googleProvider = new GoogleAuthProvider();
@@ -114,6 +114,9 @@ export async function signUpWithEmail({ email, password, fullName, phone, countr
       countryCode: (countryCode || '').trim(),
       role: 'User',
       roleKey: 'user',
+      department: 'Engineering Systems',
+      designation: 'Enterprise Specialist',
+      employeeId: `HBP-${result.user.uid.slice(-4).toUpperCase()}`,
       isActive: true,
       emailVerified: true,
       createdAt: serverTimestamp(),
@@ -131,6 +134,22 @@ export async function signUpWithEmail({ email, password, fullName, phone, countr
     idToken,
     verificationRequired: false
   };
+}
+
+/**
+ * Fetches user profile document directly from Cloud Firestore.
+ */
+export async function fetchUserProfile(uid) {
+  if (!uid) return null;
+  try {
+    const snap = await getDoc(doc(db, 'users', uid));
+    if (snap.exists()) {
+      return snap.data();
+    }
+  } catch (err) {
+    console.warn('[authService.web] fetchUserProfile:', err.message);
+  }
+  return null;
 }
 
 /**

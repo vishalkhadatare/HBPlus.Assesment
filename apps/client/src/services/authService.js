@@ -42,6 +42,10 @@ export async function sendPasswordResetPlatform(email) {
   return await webAuth.sendPasswordReset(email);
 }
 
+export async function fetchUserProfilePlatform(uid) {
+  return await webAuth.fetchUserProfile(uid);
+}
+
 /**
  * Calls backend to provision verified user and set claims.
  */
