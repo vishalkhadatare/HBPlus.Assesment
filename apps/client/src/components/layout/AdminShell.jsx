@@ -125,7 +125,7 @@ function AdminShellContent({ onSignOut }) {
                 <View style={styles.brandTitleCol}>
                   <Text style={styles.sidebarBrandTitle}>HBPlus</Text>
                   <View style={styles.sidebarRoleBadge}>
-                    <Icon name="shieldCheck" size={11} color="#FB923C" />
+                    <Icon name="shieldCheck" size={11} color="#EA580C" />
                     <Text style={styles.sidebarRoleBadgeText}>Admin Control</Text>
                   </View>
                 </View>
@@ -157,7 +157,7 @@ function AdminShellContent({ onSignOut }) {
                         <Icon
                           name={item.icon}
                           size={18}
-                          color={isActive ? '#FFFFFF' : '#C4A48C'}
+                          color={isActive ? '#FFFFFF' : '#64748B'}
                           strokeWidth={isActive ? 2.4 : 1.8}
                         />
                         {!isSidebarCollapsed ? (
@@ -173,8 +173,8 @@ function AdminShellContent({ onSignOut }) {
                         ) : null}
 
                         {!isSidebarCollapsed && item.badge ? (
-                          <View style={styles.navBadge}>
-                            <Text style={styles.navBadgeText}>{item.badge}</Text>
+                          <View style={[styles.navBadge, isActive && styles.navBadgeActive]}>
+                            <Text style={[styles.navBadgeText, isActive && styles.navBadgeTextActive]}>{item.badge}</Text>
                           </View>
                         ) : null}
                       </TouchableOpacity>
@@ -194,7 +194,7 @@ function AdminShellContent({ onSignOut }) {
                 <Icon
                   name={isSidebarCollapsed ? 'chevronRight' : 'chevronLeft'}
                   size={16}
-                  color="#A7C4BE"
+                  color="#64748B"
                 />
                 {!isSidebarCollapsed ? (
                   <Text style={styles.collapseBtnText}>Collapse Rail</Text>
@@ -206,7 +206,7 @@ function AdminShellContent({ onSignOut }) {
                 onPress={onSignOut}
                 activeOpacity={0.7}
               >
-                <Icon name="logout" size={16} color="#F87171" />
+                <Icon name="logout" size={16} color="#EF4444" />
                 {!isSidebarCollapsed ? (
                   <Text style={styles.signOutBtnText}>Sign Out</Text>
                 ) : null}
@@ -695,7 +695,7 @@ export function AdminShell({ onSignOut }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#FAF6F2',
+    backgroundColor: '#F8FAFC',
     position: 'relative'
   },
   identityStrip: {
@@ -711,7 +711,9 @@ const styles = StyleSheet.create({
   sidebar: {
     height: '100%',
     paddingVertical: 18,
-    borderRightWidth: 0,
+    borderRightWidth: 1,
+    borderRightColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'space-between'
   },
   sidebarHeader: {
@@ -719,13 +721,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 18,
     gap: 12,
-    marginBottom: 16
+    marginBottom: 20
   },
   brandTitleCol: {
     gap: 2
   },
   sidebarBrandTitle: {
-    color: '#ECFBF6',
+    color: '#0F172A',
     fontSize: 17,
     fontWeight: '800',
     letterSpacing: -0.3
@@ -733,11 +735,17 @@ const styles = StyleSheet.create({
   sidebarRoleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FFEDD5',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
     gap: 4
   },
   sidebarRoleBadgeText: {
-    color: '#6EE7B7',
-    fontSize: 11,
+    color: '#EA580C',
+    fontSize: 10,
     fontWeight: '700'
   },
   sidebarNavScroll: {
@@ -748,7 +756,7 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   sidebarSectionHeading: {
-    color: '#A88A72',
+    color: '#94A3B8',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -758,7 +766,7 @@ const styles = StyleSheet.create({
   },
   sidebarDividerMini: {
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: '#F1F5F9',
     marginVertical: 6,
     marginHorizontal: 10
   },
@@ -771,11 +779,15 @@ const styles = StyleSheet.create({
     gap: 12
   },
   sidebarNavItemActive: {
-    backgroundColor: '#EA580C'
+    backgroundColor: '#EA580C',
+    shadowColor: '#EA580C',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.22,
+    shadowRadius: 6
   },
   sidebarNavLabel: {
     flex: 1,
-    color: '#D4B8A3',
+    color: '#475569',
     fontSize: 13,
     fontWeight: '600'
   },
@@ -784,20 +796,29 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
   navBadge: {
-    backgroundColor: '#EA580C',
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FFEDD5',
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 8
   },
+  navBadgeActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderColor: 'transparent'
+  },
   navBadgeText: {
-    color: '#FFFFFF',
+    color: '#EA580C',
     fontSize: 11,
     fontWeight: '800'
+  },
+  navBadgeTextActive: {
+    color: '#FFFFFF'
   },
   sidebarFooter: {
     paddingHorizontal: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    borderTopColor: '#F1F5F9',
     paddingTop: 12,
     gap: 6
   },
@@ -810,7 +831,7 @@ const styles = StyleSheet.create({
     gap: 10
   },
   collapseBtnText: {
-    color: '#A7C4BE',
+    color: '#64748B',
     fontSize: 12,
     fontWeight: '600'
   },
@@ -823,7 +844,7 @@ const styles = StyleSheet.create({
     gap: 10
   },
   signOutBtnText: {
-    color: '#F87171',
+    color: '#EF4444',
     fontSize: 12,
     fontWeight: '600'
   },
@@ -835,20 +856,22 @@ const styles = StyleSheet.create({
   },
   topBar: {
     height: 60,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: '#FFFFFF',
     ...(Platform.OS === 'web' ? { backdropFilter: 'blur(10px)' } : {}),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#EDE4DA',
+    borderBottomColor: '#E2E8F0',
     zIndex: 10
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3EAE1',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     borderRadius: CARD_RADIUS,
     paddingHorizontal: 12,
     height: 38,
@@ -864,6 +887,8 @@ const styles = StyleSheet.create({
   },
   shortcutPill: {
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4
@@ -1059,7 +1084,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: CARD_RADIUS,
-    backgroundColor: '#F3EAE1'
+    backgroundColor: '#F1F5F9'
   },
   filterPillActive: {
     backgroundColor: '#EA580C'
@@ -1080,7 +1105,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#EDE4DA'
+    borderBottomColor: '#E2E8F0'
   },
   tableTh: {
     fontSize: 11,
@@ -1135,7 +1160,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 6,
-    backgroundColor: '#E3ECEE',
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center'
   },

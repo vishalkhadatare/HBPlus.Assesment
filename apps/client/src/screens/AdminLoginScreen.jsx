@@ -100,7 +100,7 @@ function AdminLoginInner() {
               <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
                 <defs>
                   <pattern id="adminGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(234, 88, 12, 0.06)" strokeWidth="1" />
                   </pattern>
                 </defs>
                 <rect width="100%" height="100%" fill="url(#adminGrid)" />
@@ -108,7 +108,7 @@ function AdminLoginInner() {
                 <path
                   d="M120 180 L200 140 L280 180 L280 280 C280 340 200 400 200 400 C200 400 120 340 120 280 Z"
                   fill="none"
-                  stroke="rgba(255,255,255,0.06)"
+                  stroke="rgba(234, 88, 12, 0.05)"
                   strokeWidth="2"
                 />
               </svg>
@@ -121,7 +121,7 @@ function AdminLoginInner() {
               activeOpacity={0.8}
               accessibilityLabel="Back to Role Select"
             >
-              <Icon name="arrowLeft" size={18} color="#ECFBF6" />
+              <Icon name="arrowLeft" size={18} color="#0F172A" />
             </TouchableOpacity>
 
             {/* Branding & Role Title */}
@@ -300,10 +300,9 @@ const styles = StyleSheet.create({
   },
   desktopLeftPanel: {
     width: '42%',
-    backgroundColor: '#1A1412',
-    ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(155deg, #1A1412 0%, #2A170F 50%, #EA580C 100%)' }
-      : {}),
+    backgroundColor: '#FFFFFF',
+    borderRightWidth: 1,
+    borderRightColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -323,7 +322,9 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: CARD_RADIUS,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 20
@@ -341,17 +342,19 @@ const styles = StyleSheet.create({
   desktopTitleText: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#FDF4EC',
+    color: '#0F172A',
     letterSpacing: -0.4
   },
   controlPill: {
-    backgroundColor: 'rgba(234, 88, 12, 0.25)',
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FED7AA',
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: CARD_RADIUS
   },
   controlPillText: {
-    color: '#FB923C',
+    color: '#EA580C',
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -359,10 +362,7 @@ const styles = StyleSheet.create({
   },
   desktopRightArea: {
     width: '58%',
-    backgroundColor: '#FAF6F2',
-    ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(180deg, #FAF6F2 0%, #F3ECE4 100%)' }
-      : {}),
+    backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'flex-start',
     paddingLeft: 60,
@@ -380,16 +380,13 @@ const styles = StyleSheet.create({
   // Phone Layout
   phoneContainer: {
     flex: 1,
-    backgroundColor: '#FAF6F2',
-    ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(180deg, #FAF6F2 0%, #F3ECE4 100%)' }
-      : {})
+    backgroundColor: '#F8FAFC'
   },
   phoneHeaderBand: {
     height: '28%',
     backgroundColor: '#EA580C',
     ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(155deg, #1A1412 0%, #EA580C 100%)' }
+      ? { backgroundImage: 'linear-gradient(135deg, #FF7A1A 0%, #EA580C 100%)' }
       : {}),
     borderBottomLeftRadius: CARD_RADIUS,
     borderBottomRightRadius: CARD_RADIUS,

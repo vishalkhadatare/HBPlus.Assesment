@@ -86,13 +86,13 @@ export function AttendanceTrendChart({
             >
               {value}%
             </Text>
-            <View style={[styles.barTrack, { backgroundColor: '#F3EAE1' }]}>
+            <View style={[styles.barTrack, { backgroundColor: '#F1F5F9' }]}>
               <View
                 style={[
                   styles.barFill,
                   {
                     height: heightPercent,
-                    backgroundColor: isSelected ? '#EA580C' : '#D4B8A3'
+                    backgroundColor: isSelected ? '#EA580C' : '#FED7AA'
                   }
                 ]}
               />
