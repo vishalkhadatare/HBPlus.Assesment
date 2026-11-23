@@ -85,7 +85,7 @@ export function SplashScreen({ onFinish }) {
           <View style={styles.progressBarTrack}>
             <Animated.View style={[styles.progressBarFill, { width: progressWidth }]} />
           </View>
-          <Text style={styles.versionText}>HBPlus • Enterprise Workspace Portal</Text>
+          <Text style={styles.versionText}>HBPlus • Enterprise Workforce Portal</Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -107,6 +107,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative'
   },
+
+  /* ── Ambient glows ── */
   ambientGlowTop: {
     position: 'absolute',
     top: '-10%',
@@ -114,7 +116,7 @@ const styles = StyleSheet.create({
     width: '60%',
     height: '50%',
     borderRadius: 999,
-    backgroundColor: 'rgba(0, 179, 134, 0.08)',
+    backgroundColor: 'rgba(20, 184, 166, 0.10)',
     ...(Platform.OS === 'web'
       ? { filter: 'blur(70px)' }
       : {})
@@ -126,16 +128,19 @@ const styles = StyleSheet.create({
     width: '60%',
     height: '50%',
     borderRadius: 999,
-    backgroundColor: 'rgba(234, 88, 12, 0.08)',
+    backgroundColor: 'rgba(249, 115, 22, 0.10)',
     ...(Platform.OS === 'web'
       ? { filter: 'blur(70px)' }
       : {})
   },
+
   centerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20
   },
+
+  /* ── Bottom area ── */
   bottomArea: {
     position: 'absolute',
     bottom: 48,
@@ -152,9 +157,9 @@ const styles = StyleSheet.create({
   progressBarFill: {
     height: '100%',
     borderRadius: 2,
-    backgroundColor: '#00B386',
+    backgroundColor: '#14B8A6',
     ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(90deg, #00D9A5 0%, #00B386 60%, #EA580C 100%)' }
+      ? { backgroundImage: 'linear-gradient(90deg, #0F766E 0%, #14B8A6 60%, #F97316 100%)' }
       : {})
   },
   versionText: {

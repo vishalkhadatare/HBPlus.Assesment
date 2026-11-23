@@ -11,6 +11,16 @@ export const lightTheme = {
   primarySoft: '#E0F8F1',
   primaryBorder: '#B2EADB',
 
+  // 2025 Premium additions
+  teal: '#14B8A6',
+  tealDeep: '#0F766E',
+  tealSoft: '#F0FDFA',
+  adminPrimary: '#C2410C',
+  adminPrimaryLight: '#F97316',
+  adminPrimaryGlow: 'rgba(194, 65, 12, 0.28)',
+  adminPrimaryGradient: 'linear-gradient(135deg, #F97316 0%, #C2410C 100%)',
+  adminBg: '#FFF7ED',
+
   accent: '#FFB020',
   accentSoft: '#FFF7E6',
   accentDeep: '#E09200',
@@ -20,12 +30,12 @@ export const lightTheme = {
   // Surfaces & Backgrounds
   bg: '#F4F8F7',
   surface: '#FFFFFF',
-  surfaceAlt: '#EBF3F0',
+  surfaceAlt: '#F1F5F9',
   surfaceElevated: '#FFFFFF',
-  surfaceGlass: 'rgba(255, 255, 255, 0.88)',
-  border: '#DDE8E5',
-  borderSubtle: '#EDF4F2',
-  borderStrong: '#BCCFC9',
+  surfaceGlass: 'rgba(255, 255, 255, 0.95)',
+  border: '#E2E8F0',
+  borderSubtle: '#F1F5F9',
+  borderStrong: '#CBD5E1',
 
   // Typography
   text: '#0A1A17',
@@ -51,30 +61,30 @@ export const lightTheme = {
   infoText: '#175CD3',
 
   // Gradients
-  gradientBrand: ['#00D9A5', '#00B386', '#0A84FF'],
+  gradientBrand: ['#14B8A6', '#0F766E'],
   gradientNight: ['#04100E', '#07302A', '#0B5D4B'],
   gradientGold: ['#FFC857', '#FF9F1C'],
-  gradientPrimary: ['#00D9A5', '#00B386', '#0A84FF'],
-  gradientAurora: ['#00B386', '#1D8CF8', '#FFB020'],
+  gradientPrimary: ['#14B8A6', '#0F766E'],
+  gradientAurora: ['#14B8A6', '#1D8CF8', '#FFB020'],
   gradientSuccess: ['#34D399', '#16B364'],
   gradientWarm: ['#FFC857', '#FF9F1C'],
   gradientGlass: ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.75)'],
 
   // Feature Tints (Soft colored tiles for icons)
   tints: {
-    dashboard: { bg: '#E0F8F1', text: '#00B386', border: '#B2EADB' },
+    dashboard: { bg: '#F0FDFA', text: '#14B8A6', border: '#99F6E4' },
     directory: { bg: '#E8F3FF', text: '#1D8CF8', border: '#BBDCFF' },
     attendance: { bg: '#FFF7E6', text: '#FFB020', border: '#FFE4A8' },
     leave: { bg: '#E3F8EC', text: '#16B364', border: '#B5E8CE' },
     shifts: { bg: '#E1F0FF', text: '#1D8CF8', border: '#B8DBFF' },
     payroll: { bg: '#FFF8E1', text: '#D97706', border: '#FDE68A' },
-    tasks: { bg: '#E0F8F1', text: '#00B386', border: '#B2EADB' },
+    tasks: { bg: '#F0FDFA', text: '#14B8A6', border: '#99F6E4' },
     performance: { bg: '#FFF3DC', text: '#D97706', border: '#FDE68A' },
     announcements: { bg: '#FEE4E2', text: '#F04438', border: '#FECDCA' },
-    documents: { bg: '#EBF3F0', text: '#51635E', border: '#DDE8E5' },
+    documents: { bg: '#F1F5F9', text: '#64748B', border: '#E2E8F0' },
     helpdesk: { bg: '#E0F2FE', text: '#0284C7', border: '#BAE6FD' },
     reports: { bg: '#E8F3FF', text: '#1D8CF8', border: '#BBDCFF' },
-    settings: { bg: '#EBF3F0', text: '#51635E', border: '#DDE8E5' }
+    settings: { bg: '#F1F5F9', text: '#64748B', border: '#E2E8F0' }
   }
 };
 
@@ -215,25 +225,30 @@ export const borderRadius = radius;
 
 export const shadows = {
   subtle: {
-    shadowColor: '#00775B',
+    // Native
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+    // Web multi-layer
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 4px 6px -1px rgba(0,0,0,0.04)'
   },
   card: {
-    shadowColor: '#00775B',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 4
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 3,
+    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.08)'
   },
   modal: {
-    shadowColor: '#04100E',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.18,
     shadowRadius: 32,
-    elevation: 12
+    elevation: 12,
+    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.10), 0 20px 40px -8px rgba(0,0,0,0.14)'
   }
 };
 

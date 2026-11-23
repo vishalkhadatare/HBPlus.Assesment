@@ -83,7 +83,6 @@ function UserLoginInner() {
     );
   });
 
-  // Soft, bouncy 320ms slide-up entrance animation (Section 3 & 4)
   const slideAnim = useRef(new Animated.Value(36)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -117,7 +116,6 @@ function UserLoginInner() {
     if (loadingGoogle || loading) return;
     setError(null);
     setLoadingGoogle(true);
-
     try {
       await signInUserWithGoogle();
     } catch (err) {
@@ -131,7 +129,6 @@ function UserLoginInner() {
   const handleEmailSignIn = async () => {
     if (loading || loadingGoogle) return;
     setError(null);
-
     const cleanEmail = (email || '').trim().toLowerCase();
     if (!cleanEmail) {
       setError('Please enter your company email address.');
@@ -143,7 +140,6 @@ function UserLoginInner() {
       triggerShake();
       return;
     }
-
     setLoading(true);
     try {
       await signInUserWithPassword(cleanEmail, password);
@@ -156,16 +152,15 @@ function UserLoginInner() {
   };
 
   const handleForgotPassword = async () => {
-    const cleanEmail = mode === 'signup'
-      ? `${emailLocal.trim().toLowerCase()}@hbplus.fit`
-      : (email || '').trim().toLowerCase();
-
+    const cleanEmail =
+      mode === 'signup'
+        ? `${emailLocal.trim().toLowerCase()}@hbplus.fit`
+        : (email || '').trim().toLowerCase();
     if (!cleanEmail || !cleanEmail.includes('@')) {
       setError('Enter your employee email first.');
       triggerShake();
       return;
     }
-
     setError(null);
     setSuccessMessage('');
     setLoading(true);
@@ -184,7 +179,6 @@ function UserLoginInner() {
     if (loading || loadingGoogle) return;
     setError(null);
     setSuccessMessage('');
-
     if (!fullName.trim()) {
       setError('Please enter the employee name.');
       triggerShake();
@@ -210,7 +204,6 @@ function UserLoginInner() {
       triggerShake();
       return;
     }
-
     setLoading(true);
     try {
       const result = await signUpEmployee({
@@ -236,283 +229,352 @@ function UserLoginInner() {
     }
   };
 
-  return (
-    <View style={styles.container}>
-      {/* 4px Amber Identity Strip across the top (Section 3) */}
-      <View style={[styles.identityStrip, { backgroundColor: theme.identityStrip }]} />
+  const isPhone = width < 900;
 
-      {/* Soft decorative shape (large, 10% opacity amber/emerald circle) in top corner */}
-      <View style={styles.decorativeOrb} pointerEvents="none" />
-
-      {/* Back Button */}
-      <TouchableOpacity
-        style={[styles.backBtn, width < 900 && styles.phoneBackBtn]}
-        onPress={() => navigate(ROUTES.ROLE_SELECT)}
-        activeOpacity={0.8}
-        accessibilityLabel="Back to Role Select"
-      >
-        <Icon name="arrowLeft" size={18} color={width < 900 ? '#FFFFFF' : '#0F172A'} />
-      </TouchableOpacity>
-
-      {width < 900 ? (
-        <View style={styles.phoneHeaderBand}>
-          {Platform.OS === 'web' ? (
-            <img
-              src={userIllustration}
-              alt="User Workspace"
-              style={{
-                width: 190,
-                height: 94,
-                objectFit: 'contain',
-                marginBottom: 2,
-                display: 'block'
-              }}
-            />
-          ) : null}
-          <View style={styles.phoneTitleRow}>
-            <Icon name="userCircle" size={22} color="#FFFFFF" strokeWidth={2.4} />
-            <Text style={styles.phoneTitleText}>User Workspace</Text>
-          </View>
+  /* ─── SHARED FORM CARD CONTENT ─── */
+  const FormCard = () => (
+    <SquaredCard style={styles.userCard}>
+      {error ? (
+        <View style={styles.errorBox}>
+          <Icon name="alertTriangle" size={15} color="#DC2626" />
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : null}
+      {successMessage ? (
+        <View style={styles.successBox}>
+          <Icon name="checkCircle" size={15} color="#0B7A42" />
+          <Text style={styles.successText}>{successMessage}</Text>
         </View>
       ) : null}
 
-      {/* Centered Single Card over warm mint-cream background (Section 4) */}
-      <ScrollView
-        style={styles.centerScroll}
-        contentContainerStyle={[
-          styles.centerArea,
-          width < 900 && styles.phoneCenterArea
-        ]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Animated.View
-          style={[
-            styles.cardWrapper,
-            {
-              opacity: opacityAnim,
-              transform: [{ translateY: slideAnim }, { translateX: shakeAnim }]
-            }
-          ]}
-        >
-          {/* Desktop brand header */}
-          {width >= 900 ? (
-            <View style={styles.brandHeader}>
+      {mode === 'login' ? (
+        <>
+          {/* Google Button */}
+          <TouchableOpacity
+            style={styles.googleBtn}
+            onPress={handleGoogleSignIn}
+            activeOpacity={0.85}
+            disabled={loading || loadingGoogle}
+            accessibilityRole="button"
+            accessibilityLabel="Continue with Google"
+          >
+            <GoogleIcon size={20} />
+            <Text style={styles.googleBtnText}>
+              {loadingGoogle ? 'Signing in…' : 'Continue with Google'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>— or —</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <SquaredInput
+            label="Email"
+            iconName="mail"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="employee@hbplus.fit"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            editable={!loading && !loadingGoogle}
+          />
+
+          <SquaredInput
+            label="Password"
+            iconName="lock"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="••••••••"
+            secureTextEntry={true}
+            showPasswordToggle={true}
+            editable={!loading && !loadingGoogle}
+            onSubmitEditing={handleEmailSignIn}
+          />
+
+          <TouchableOpacity
+            style={styles.forgotButton}
+            onPress={handleForgotPassword}
+            activeOpacity={0.7}
+            disabled={loading}
+          >
+            <Text style={styles.forgotText}>Forgot password?</Text>
+          </TouchableOpacity>
+
+          {/* Sign in gradient button */}
+          <TouchableOpacity
+            style={[
+              styles.signInBtn,
+              (loading || loadingGoogle) && styles.signInBtnDisabled
+            ]}
+            onPress={handleEmailSignIn}
+            activeOpacity={0.88}
+            disabled={loading || loadingGoogle}
+            accessibilityRole="button"
+            accessibilityLabel="Sign in"
+          >
+            <Text style={styles.signInBtnText}>
+              {loading ? 'Signing in…' : 'Sign in →'}
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.accountSwitchRow}>
+            <Text style={styles.accountSwitchText}>New employee?</Text>
+            <TouchableOpacity
+              onPress={() => {
+                setMode('signup');
+                setError(null);
+                setSuccessMessage('');
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.accountSwitchAction}>Create Account</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      ) : (
+        <>
+          <SquaredInput
+            label="Employee name"
+            iconName="user"
+            value={fullName}
+            onChangeText={setFullName}
+            placeholder="Enter full name"
+            editable={!loading}
+          />
+
+          <View style={styles.fieldWrapper}>
+            <Text style={styles.fieldLabel}>Email</Text>
+            <View style={styles.emailDomainRow}>
+              <TextInput
+                value={emailLocal}
+                onChangeText={(value) =>
+                  setEmailLocal(value.replace(/[^a-zA-Z0-9._-]/g, '').toLowerCase())
+                }
+                placeholder="employee.name"
+                placeholderTextColor="#94A3B8"
+                style={styles.emailLocalInput}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!loading}
+                accessibilityLabel="Employee email name"
+              />
+              <Text style={styles.fixedDomain}>@hbplus.fit</Text>
+            </View>
+          </View>
+
+          <View style={styles.fieldWrapper}>
+            <Text style={styles.fieldLabel}>Mobile number</Text>
+            <View style={styles.phoneRow}>
+              <TouchableOpacity
+                style={styles.countryButton}
+                onPress={() => setCountrySheetOpen(true)}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={`Country code ${countryCode.code}`}
+              >
+                <CountryFlag iso={countryCode.iso} width={26} height={17} />
+                <Text style={styles.countryCode}>{countryCode.code}</Text>
+                <Icon name="chevronDown" size={14} color="#64748B" />
+              </TouchableOpacity>
+              <TextInput
+                value={phone}
+                onChangeText={(value) =>
+                  setPhone(value.replace(/[^0-9]/g, '').slice(0, 15))
+                }
+                placeholder="Mobile number"
+                placeholderTextColor="#94A3B8"
+                keyboardType="phone-pad"
+                style={styles.phoneInput}
+                editable={!loading}
+                accessibilityLabel="Mobile number"
+              />
+            </View>
+          </View>
+
+          <SquaredInput
+            label="Password"
+            iconName="lock"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Minimum 8 characters"
+            secureTextEntry={true}
+            showPasswordToggle={true}
+            editable={!loading}
+          />
+
+          <SquaredInput
+            label="Confirm password"
+            iconName="lock"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            placeholder="Re-enter password"
+            secureTextEntry={true}
+            showPasswordToggle={true}
+            editable={!loading}
+            onSubmitEditing={handleSignUp}
+          />
+
+          <TouchableOpacity
+            style={[styles.signInBtn, loading && styles.signInBtnDisabled]}
+            onPress={handleSignUp}
+            activeOpacity={0.88}
+            disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel="Create account"
+          >
+            <Text style={styles.signInBtnText}>
+              {loading ? 'Creating…' : 'Create Account →'}
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.accountSwitchRow}>
+            <Text style={styles.accountSwitchText}>Already registered?</Text>
+            <TouchableOpacity
+              onPress={() => {
+                setMode('login');
+                setError(null);
+                setSuccessMessage('');
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.accountSwitchAction}>Sign in</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+    </SquaredCard>
+  );
+
+  return (
+    <View style={styles.container}>
+      {/* ── PHONE LAYOUT ── */}
+      {isPhone ? (
+        <>
+          {/* Full-screen teal gradient background */}
+          <View style={styles.phoneBg} pointerEvents="none" />
+
+          {/* Back button — floats over gradient */}
+          <TouchableOpacity
+            style={styles.phoneBackBtn}
+            onPress={() => navigate(ROUTES.ROLE_SELECT)}
+            activeOpacity={0.8}
+            accessibilityLabel="Back to Role Select"
+          >
+            <Icon name="arrowLeft" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          {/* Header area: illustration + title */}
+          <View style={styles.phoneHeader} pointerEvents="none">
+            {Platform.OS === 'web' ? (
+              <img
+                src={userIllustration}
+                alt="User Workspace"
+                style={{
+                  width: 180,
+                  height: 160,
+                  objectFit: 'contain',
+                  display: 'block'
+                }}
+              />
+            ) : null}
+            <View style={styles.phoneTitleRow}>
+              <Icon name="userCircle" size={22} color="#FFFFFF" strokeWidth={2.4} />
+              <Text style={styles.phoneTitleText}>User Workspace</Text>
+            </View>
+          </View>
+
+          {/* Floating card area that overlaps the gradient */}
+          <ScrollView
+            style={styles.phoneScroll}
+            contentContainerStyle={styles.phoneScrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Animated.View
+              style={[
+                styles.phoneCardWrapper,
+                {
+                  opacity: opacityAnim,
+                  transform: [{ translateY: slideAnim }, { translateX: shakeAnim }]
+                }
+              ]}
+            >
+              <FormCard />
+            </Animated.View>
+          </ScrollView>
+        </>
+      ) : (
+        /* ── DESKTOP LAYOUT ── */
+        <View style={styles.desktopContainer}>
+          {/* Left panel: teal gradient */}
+          <View style={styles.desktopLeftPanel}>
+            {/* Subtle grid SVG */}
+            <View style={styles.desktopPatternOverlay} pointerEvents="none">
+              <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
+                <defs>
+                  <pattern id="userGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#userGrid)" />
+              </svg>
+            </View>
+
+            {/* Back button on desktop left */}
+            <TouchableOpacity
+              style={styles.desktopBackBtn}
+              onPress={() => navigate(ROUTES.ROLE_SELECT)}
+              activeOpacity={0.8}
+              accessibilityLabel="Back to Role Select"
+            >
+              <Icon name="arrowLeft" size={18} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            <View style={styles.desktopBrandBox}>
               <HBLogo size={56} />
               {Platform.OS === 'web' ? (
                 <img
                   src={userIllustration}
                   alt="User workspace illustration"
                   style={{
-                    width: 220,
-                    height: 118,
+                    width: 'min(82%, 400px)',
+                    height: 220,
                     objectFit: 'contain',
-                    marginTop: -6,
-                    marginBottom: -6,
                     display: 'block'
                   }}
                 />
               ) : null}
-              <View style={styles.titleRow}>
-                <Icon name="userCircle" size={24} color="#FFB020" strokeWidth={2.4} />
-                <Text style={styles.titleText}>User</Text>
+              <View style={styles.desktopTitleRow}>
+                <Icon name="userCircle" size={26} color="#FFFFFF" strokeWidth={2.4} />
+                <Text style={styles.desktopTitleText}>User Workspace</Text>
               </View>
-              <View style={styles.userBadgePill}>
-                <Text style={styles.userBadgeText}>Workspace</Text>
+              <View style={styles.desktopBadgePill}>
+                <Text style={styles.desktopBadgeText}>Employee Portal</Text>
               </View>
             </View>
-          ) : null}
+          </View>
 
-          <SquaredCard style={styles.userCard}>
-            {error ? (
-              <View style={styles.errorBox}>
-                <Icon name="alertTriangle" size={16} color="#DC2626" />
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            ) : null}
-            {successMessage ? (
-              <View style={styles.successBox}>
-                <Icon name="checkCircle" size={16} color="#0B7A42" />
-                <Text style={styles.successText}>{successMessage}</Text>
-              </View>
-            ) : null}
+          {/* Right panel: white form area */}
+          <View style={styles.desktopRightArea}>
+            <Animated.View
+              style={[
+                styles.desktopFormWrapper,
+                {
+                  opacity: opacityAnim,
+                  transform: [{ translateY: slideAnim }, { translateX: shakeAnim }]
+                }
+              ]}
+            >
+              <FormCard />
+            </Animated.View>
+          </View>
+        </View>
+      )}
 
-            {mode === 'login' ? (
-              <>
-                <SquaredButton
-                  title="Continue with Google"
-                  variant="google"
-                  icon={<GoogleIcon size={20} />}
-                  onPress={handleGoogleSignIn}
-                  loading={loadingGoogle}
-                  disabled={loading}
-                />
-
-                <View style={styles.dividerRow}>
-                  <View style={[styles.dividerLine, { backgroundColor: 'rgba(0, 179, 134, 0.15)' }]} />
-                  <Text style={styles.dividerText}>or</Text>
-                  <View style={[styles.dividerLine, { backgroundColor: 'rgba(0, 179, 134, 0.15)' }]} />
-                </View>
-
-                <SquaredInput
-                  label="Email"
-                  iconName="mail"
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="employee@hbplus.fit"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  editable={!loading && !loadingGoogle}
-                />
-
-                <SquaredInput
-                  label="Password"
-                  iconName="lock"
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="••••••••"
-                  secureTextEntry={true}
-                  showPasswordToggle={true}
-                  editable={!loading && !loadingGoogle}
-                  onSubmitEditing={handleEmailSignIn}
-                />
-
-                <TouchableOpacity
-                  style={styles.forgotButton}
-                  onPress={handleForgotPassword}
-                  activeOpacity={0.7}
-                  disabled={loading}
-                >
-                  <Text style={styles.forgotText}>Forgot password?</Text>
-                </TouchableOpacity>
-
-                <SquaredButton
-                  title="Sign in"
-                  onPress={handleEmailSignIn}
-                  loading={loading}
-                  disabled={loadingGoogle}
-                  style={{ marginTop: 2 }}
-                />
-
-                <View style={styles.accountSwitchRow}>
-                  <Text style={styles.accountSwitchText}>New employee?</Text>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setMode('signup');
-                      setError(null);
-                      setSuccessMessage('');
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.accountSwitchAction}>Create account</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            ) : (
-              <>
-                <SquaredInput
-                  label="Employee name"
-                  iconName="user"
-                  value={fullName}
-                  onChangeText={setFullName}
-                  placeholder="Enter full name"
-                  editable={!loading}
-                />
-
-                <View style={styles.fieldWrapper}>
-                  <Text style={styles.fieldLabel}>Email</Text>
-                  <View style={styles.emailDomainRow}>
-                    <TextInput
-                      value={emailLocal}
-                      onChangeText={(value) => setEmailLocal(value.replace(/[^a-zA-Z0-9._-]/g, '').toLowerCase())}
-                      placeholder="employee.name"
-                      placeholderTextColor="#94A3B8"
-                      style={styles.emailLocalInput}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      editable={!loading}
-                      accessibilityLabel="Employee email name"
-                    />
-                    <Text style={styles.fixedDomain}>@hbplus.fit</Text>
-                  </View>
-                </View>
-
-                <View style={styles.fieldWrapper}>
-                  <Text style={styles.fieldLabel}>Mobile number</Text>
-                  <View style={styles.phoneRow}>
-                    <TouchableOpacity
-                      style={styles.countryButton}
-                      onPress={() => setCountrySheetOpen(true)}
-                      activeOpacity={0.8}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Country code ${countryCode.code}`}
-                    >
-                      <CountryFlag iso={countryCode.iso} width={26} height={17} />
-                      <Text style={styles.countryCode}>{countryCode.code}</Text>
-                      <Icon name="chevronDown" size={14} color="#64748B" />
-                    </TouchableOpacity>
-                    <TextInput
-                      value={phone}
-                      onChangeText={(value) => setPhone(value.replace(/[^0-9]/g, '').slice(0, 15))}
-                      placeholder="Mobile number"
-                      placeholderTextColor="#94A3B8"
-                      keyboardType="phone-pad"
-                      style={styles.phoneInput}
-                      editable={!loading}
-                      accessibilityLabel="Mobile number"
-                    />
-                  </View>
-                </View>
-
-                <SquaredInput
-                  label="Password"
-                  iconName="lock"
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Minimum 8 characters"
-                  secureTextEntry={true}
-                  showPasswordToggle={true}
-                  editable={!loading}
-                />
-
-                <SquaredInput
-                  label="Confirm password"
-                  iconName="lock"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  placeholder="Re-enter password"
-                  secureTextEntry={true}
-                  showPasswordToggle={true}
-                  editable={!loading}
-                  onSubmitEditing={handleSignUp}
-                />
-
-                <SquaredButton
-                  title="Create account"
-                  onPress={handleSignUp}
-                  loading={loading}
-                  style={{ marginTop: 2 }}
-                />
-
-                <View style={styles.accountSwitchRow}>
-                  <Text style={styles.accountSwitchText}>Already registered?</Text>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setMode('login');
-                      setError(null);
-                      setSuccessMessage('');
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.accountSwitchAction}>Sign in</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-          </SquaredCard>
-        </Animated.View>
-      </ScrollView>
-
+      {/* ── COUNTRY PICKER MODAL ── */}
       <Modal
         visible={countrySheetOpen}
         transparent
@@ -545,7 +607,6 @@ function UserLoginInner() {
               </TouchableOpacity>
             </View>
 
-            {/* Quick Country Search Bar */}
             <View style={styles.countrySearchBox}>
               <Icon name="search" size={16} color="#64748B" />
               <TextInput
@@ -594,7 +655,7 @@ function UserLoginInner() {
                     </Text>
                     <Text style={styles.countryOptionCode}>{country.code}</Text>
                     {isSelected ? (
-                      <Icon name="check" size={16} color="#00B386" strokeWidth={2.4} />
+                      <Icon name="check" size={16} color="#0F766E" strokeWidth={2.4} />
                     ) : null}
                   </TouchableOpacity>
                 );
@@ -621,70 +682,60 @@ export function UserLoginScreen() {
   );
 }
 
+const TEAL_GRADIENT = Platform.OS === 'web'
+  ? { backgroundImage: 'linear-gradient(170deg, #0F766E 0%, #14B8A6 45%, #F0FDFA 100%)' }
+  : { backgroundColor: '#0F766E' };
+
+const TEAL_BTN_GRADIENT = Platform.OS === 'web'
+  ? { backgroundImage: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)' }
+  : { backgroundColor: '#0F766E' };
+
+const DESKTOP_LEFT_GRADIENT = Platform.OS === 'web'
+  ? { backgroundImage: 'linear-gradient(160deg, #0F766E 0%, #14B8A6 60%, #5EEAD4 100%)' }
+  : { backgroundColor: '#0F766E' };
+
 const styles = StyleSheet.create({
+  /* ── Root ── */
   container: {
     flex: 1,
-    backgroundColor: '#F5FBF7',
-    ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(180deg, #F5FBF7 0%, #E6F6EE 100%)' }
-      : {}),
-    position: 'relative'
+    backgroundColor: '#F0FDFA',
+    position: 'relative',
+    overflow: 'hidden'
   },
-  identityStrip: {
+
+  /* ── Phone gradient background ── */
+  phoneBg: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: 4,
-    zIndex: 100
+    bottom: 0,
+    ...TEAL_GRADIENT
   },
-  decorativeOrb: {
-    position: 'absolute',
-    top: -120,
-    right: -100,
-    width: 380,
-    height: 380,
-    borderRadius: 190,
-    backgroundColor: 'rgba(255, 176, 32, 0.08)',
-    ...(Platform.OS === 'web' ? { filter: 'blur(50px)' } : {})
-  },
-  centerScroll: {
-    flex: 1
-  },
-  backBtn: {
-    position: 'absolute',
-    top: 28,
-    left: 24,
-    width: 38,
-    height: 38,
-    borderRadius: CARD_RADIUS,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 20
-  },
+
+  /* ── Phone back button ── */
   phoneBackBtn: {
+    position: 'absolute',
     top: Platform.OS === 'web' ? 'max(40px, env(safe-area-inset-top, 40px))' : 40,
     left: 18,
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)'
-  },
-  phoneHeaderBand: {
-    minHeight: 180,
-    paddingTop: Platform.OS === 'web' ? 'max(44px, env(safe-area-inset-top, 44px))' : 44,
-    paddingBottom: 24,
-    backgroundColor: '#00B386',
-    ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(135deg, #00D9A5 0%, #00B386 100%)' }
-      : {}),
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+    borderColor: 'rgba(255,255,255,0.3)',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    zIndex: 30
+  },
+
+  /* ── Phone header (illustration + title) ── */
+  phoneHeader: {
+    paddingTop: Platform.OS === 'web' ? 'max(88px, env(safe-area-inset-top, 88px))' : 88,
+    paddingBottom: 20,
+    alignItems: 'center',
+    gap: 10,
+    minHeight: '38%'
   },
   phoneTitleRow: {
     flexDirection: 'row',
@@ -693,88 +744,90 @@ const styles = StyleSheet.create({
   },
   phoneTitleText: {
     color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: -0.3
-  },
-  centerArea: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24
-  },
-  phoneCenterArea: {
-    flexGrow: 1,
-    justifyContent: 'flex-start',
-    marginTop: -18,
-    paddingHorizontal: 20,
-    paddingBottom: 32
-  },
-  cardWrapper: {
-    width: '100%',
-    maxWidth: 440,
-    alignItems: 'center'
-  },
-  brandHeader: {
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 24
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8
-  },
-  titleText: {
     fontSize: 26,
     fontWeight: '800',
-    color: '#0F172A',
-    letterSpacing: -0.3
+    letterSpacing: -0.4
   },
-  userBadgePill: {
-    backgroundColor: '#FFF7E6',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 176, 32, 0.3)',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: CARD_RADIUS
+
+  /* ── Phone scrollable card area ── */
+  phoneScroll: {
+    flex: 1
   },
-  userBadgeText: {
-    color: '#B57400',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase'
+  phoneScrollContent: {
+    paddingHorizontal: 18,
+    paddingBottom: 40,
+    alignItems: 'center'
   },
+  phoneCardWrapper: {
+    width: '100%',
+    maxWidth: 460,
+    marginTop: -32
+  },
+
+  /* ── Shared form card ── */
   userCard: {
     width: '100%',
     padding: 24,
-    gap: 16
+    gap: 14,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    ...(Platform.OS === 'web'
+      ? {
+          boxShadow:
+            '0 4px 6px -1px rgba(0,0,0,0.06), 0 20px 40px -8px rgba(15,118,110,0.18)',
+          backdropFilter: 'blur(12px)'
+        }
+      : { elevation: 8 })
   },
+
+  /* ── Google button ── */
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    height: 52,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }
+      : { elevation: 2 })
+  },
+  googleBtnText: {
+    color: '#0F172A',
+    fontSize: 15,
+    fontWeight: '700'
+  },
+
+  /* ── Divider ── */
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginVertical: 4
+    gap: 10,
+    marginVertical: 2
   },
   dividerLine: {
     flex: 1,
-    height: 1
+    height: 1,
+    backgroundColor: '#E2E8F0'
   },
   dividerText: {
     fontSize: 13,
     color: '#94A3B8',
     fontWeight: '600'
   },
+
+  /* ── Error / Success pills ── */
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FEF2F2',
-    borderRadius: CARD_RADIUS,
+    borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    gap: 8,
-    borderWidth: 0
+    gap: 8
   },
   errorText: {
     flex: 1,
@@ -786,7 +839,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     backgroundColor: '#E3F8EC',
-    borderRadius: CARD_RADIUS,
+    borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     gap: 8,
@@ -800,18 +853,43 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: '600'
   },
+
+  /* ── Forgot password ── */
   forgotButton: {
     alignSelf: 'flex-end',
-    minHeight: 36,
+    minHeight: 32,
     justifyContent: 'center',
-    marginTop: -6,
+    marginTop: -4,
     paddingHorizontal: 4
   },
   forgotText: {
-    color: '#00B386',
+    color: '#0F766E',
     fontSize: 13,
     fontWeight: '700'
   },
+
+  /* ── Teal gradient sign-in button ── */
+  signInBtn: {
+    height: 52,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...TEAL_BTN_GRADIENT,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 4px 14px rgba(15,118,110,0.35)' }
+      : { elevation: 4 })
+  },
+  signInBtnDisabled: {
+    opacity: 0.65
+  },
+  signInBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.2
+  },
+
+  /* ── Account switch row ── */
   accountSwitchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -825,10 +903,12 @@ const styles = StyleSheet.create({
     fontWeight: '500'
   },
   accountSwitchAction: {
-    color: '#00B386',
+    color: '#0F766E',
     fontSize: 13,
     fontWeight: '800'
   },
+
+  /* ── Signup-only fields ── */
   fieldWrapper: {
     gap: 6
   },
@@ -841,7 +921,7 @@ const styles = StyleSheet.create({
     height: 52,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E8F2EE',
+    backgroundColor: '#F1F5F9',
     borderRadius: CARD_RADIUS,
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -859,10 +939,10 @@ const styles = StyleSheet.create({
   fixedDomain: {
     height: '100%',
     paddingHorizontal: 10,
-    backgroundColor: '#DFEDE8',
+    backgroundColor: '#E2E8F0',
     borderLeftWidth: 1,
-    borderLeftColor: '#DDE8E5',
-    color: '#51635E',
+    borderLeftColor: '#CBD5E1',
+    color: '#475569',
     fontSize: 13,
     fontWeight: '700',
     textAlignVertical: 'center',
@@ -880,13 +960,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-    backgroundColor: '#E8F2EE',
+    backgroundColor: '#F1F5F9',
     borderRadius: CARD_RADIUS,
     borderWidth: 1,
     borderColor: '#E2E8F0'
-  },
-  countryFlag: {
-    fontSize: 20
   },
   countryCode: {
     color: '#334155',
@@ -896,7 +973,7 @@ const styles = StyleSheet.create({
   phoneInput: {
     flex: 1,
     height: 52,
-    backgroundColor: '#E8F2EE',
+    backgroundColor: '#F1F5F9',
     borderRadius: CARD_RADIUS,
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -905,6 +982,90 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontSize: 15
   },
+
+  /* ── Desktop layout ── */
+  desktopContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    height: '100%'
+  },
+  desktopLeftPanel: {
+    width: '42%',
+    ...DESKTOP_LEFT_GRADIENT,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    padding: 40,
+    overflow: 'hidden'
+  },
+  desktopPatternOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0
+  },
+  desktopBackBtn: {
+    position: 'absolute',
+    top: 36,
+    left: 36,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 20
+  },
+  desktopBrandBox: {
+    alignItems: 'center',
+    gap: 16,
+    zIndex: 10
+  },
+  desktopTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  desktopTitleText: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.4
+  },
+  desktopBadgePill: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderRadius: CARD_RADIUS
+  },
+  desktopBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase'
+  },
+  desktopRightArea: {
+    width: '58%',
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 48,
+    ...(Platform.OS === 'web'
+      ? { backgroundImage: 'linear-gradient(180deg, #FFFFFF 0%, #F0FDFA 100%)' }
+      : {})
+  },
+  desktopFormWrapper: {
+    width: '100%',
+    maxWidth: 440
+  },
+
+  /* ── Country picker modal ── */
   countryModalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -999,14 +1160,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#EDF4F2',
+    borderColor: '#F1F5F9',
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 12,
     gap: 12
   },
   countryOptionActive: {
-    backgroundColor: '#E0F8F1',
-    borderColor: '#00B386'
+    backgroundColor: '#E6FFFA',
+    borderColor: '#0F766E'
   },
   countryFlagSquare: {
     width: 36,

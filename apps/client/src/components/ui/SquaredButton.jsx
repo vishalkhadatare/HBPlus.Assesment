@@ -9,7 +9,9 @@ import {
   View
 } from 'react-native';
 import { useRoleTheme } from '../../theme/roleThemes.js';
-import { CARD_RADIUS } from '../../theme/shape.js';
+
+// 16px rounded corners as spec'd for buttons (independent of CARD_RADIUS)
+const BUTTON_RADIUS = 16;
 
 export function SquaredButton({
   title,
@@ -45,38 +47,48 @@ export function SquaredButton({
 
   const buttonStyle = [
     styles.baseButton,
-    {
-      borderRadius: CARD_RADIUS,
-      height: 52
-    },
-    // Primary gradient / fill
+    { borderRadius: BUTTON_RADIUS, height: 52 },
+
+    // Primary — gradient on web, solid on native
     !isGoogle && !isSecondary && {
       backgroundColor: theme.primary,
       ...(Platform.OS === 'web'
-        ? { backgroundImage: theme.buttonGradientCss }
-        : {}),
-      shadowColor: theme.primary,
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.3,
-      shadowRadius: 14,
-      elevation: 0
+        ? {
+            backgroundImage: theme.buttonGradientCss,
+            boxShadow: `0 4px 14px 0 ${theme.buttonGlow}, 0 2px 6px rgba(0,0,0,0.12)`
+          }
+        : {
+            shadowColor: theme.primary,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.35,
+            shadowRadius: 14,
+            elevation: 4
+          })
     },
-    // Google variant: pure white, borderless, very soft shadow
+
+    // Google — pure white, very soft shadow
     isGoogle && {
       backgroundColor: '#FFFFFF',
       borderWidth: 0,
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.05,
-      shadowRadius: 10,
-      elevation: 0
+      ...(Platform.OS === 'web'
+        ? { boxShadow: '0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)' }
+        : {
+            shadowColor: '#000000',
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.07,
+            shadowRadius: 10,
+            elevation: 2
+          })
     },
-    // Secondary variant: subtle role tint
+
+    // Secondary — subtle fill
     isSecondary && {
-      backgroundColor: theme.inputFill,
-      borderWidth: 0,
+      backgroundColor: '#F1F5F9',
+      borderWidth: 1,
+      borderColor: '#E2E8F0',
       elevation: 0
     },
+
     (disabled || loading) && styles.disabled,
     style
   ];
@@ -133,11 +145,11 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
     letterSpacing: -0.2
   },
   disabled: {
-    opacity: 0.65
+    opacity: 0.55
   }
 });
 

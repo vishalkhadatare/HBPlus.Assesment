@@ -19,6 +19,204 @@ import SquaredCard from '../ui/SquaredCard.jsx';
 import SquaredButton from '../ui/SquaredButton.jsx';
 import SimpleCharts from '../ui/SimpleCharts.jsx';
 
+// ─── Metric Card for Mobile 2×2 grid ────────────────────────────────────────
+function MetricCard({ value, badge, badgeColor, badgeBg, subtitle, iconName, iconBg, label }) {
+  return (
+    <View style={metricStyles.card}>
+      <View style={metricStyles.topRow}>
+        <View style={[metricStyles.iconCircle, { backgroundColor: iconBg }]}>
+          <Icon name={iconName} size={18} color="#FFFFFF" strokeWidth={2} />
+        </View>
+        <View style={[metricStyles.badge, { backgroundColor: badgeBg }]}>
+          <Text style={[metricStyles.badgeText, { color: badgeColor }]}>{badge}</Text>
+        </View>
+      </View>
+      <Text style={metricStyles.value}>{value}</Text>
+      <Text style={metricStyles.label}>{label}</Text>
+      <Text style={metricStyles.subtitle}>{subtitle}</Text>
+    </View>
+  );
+}
+
+const metricStyles = StyleSheet.create({
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 16,
+    flex: 1,
+    minWidth: 140,
+    gap: 4,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 2px 4px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.06)' }
+      : { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3 })
+  },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6
+  },
+  iconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  badge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '700'
+  },
+  value: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#0F172A',
+    fontVariant: ['tabular-nums']
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#94A3B8',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase'
+  },
+  subtitle: {
+    fontSize: 11,
+    color: '#64748B'
+  }
+});
+
+// ─── Department Breakdown Card ───────────────────────────────────────────────
+function DeptBreakdownCard() {
+  const depts = [
+    { label: 'Engineering', pct: 45, color: '#0F766E' },
+    { label: 'Product', pct: 20, color: '#2563EB' },
+    { label: 'Ops', pct: 22, color: '#7C3AED' },
+    { label: 'Admin', pct: 13, color: '#D97706' }
+  ];
+  return (
+    <View style={deptStyles.card}>
+      <Text style={deptStyles.title}>Department Breakdown</Text>
+      <Text style={deptStyles.sub}>Distribution of 248 staff</Text>
+      {/* Segmented bar */}
+      <View style={deptStyles.segBar}>
+        {depts.map((d) => (
+          <View key={d.label} style={[deptStyles.seg, { flex: d.pct, backgroundColor: d.color }]} />
+        ))}
+      </View>
+      {/* Legend */}
+      <View style={deptStyles.legendRow}>
+        {depts.map((d) => (
+          <View key={d.label} style={deptStyles.legendItem}>
+            <View style={[deptStyles.legendDot, { backgroundColor: d.color }]} />
+            <Text style={deptStyles.legendLabel}>{d.label}</Text>
+            <Text style={[deptStyles.legendPct, { color: d.color }]}>{d.pct}%</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const deptStyles = StyleSheet.create({
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 18,
+    gap: 12,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 2px 4px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.06)' }
+      : { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3 })
+  },
+  title: { fontSize: 15, fontWeight: '700', color: '#0F172A' },
+  sub: { fontSize: 12, color: '#64748B', marginTop: -6 },
+  segBar: {
+    flexDirection: 'row',
+    height: 10,
+    borderRadius: 6,
+    overflow: 'hidden',
+    gap: 2
+  },
+  seg: { borderRadius: 4 },
+  legendRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 4
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4
+  },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  legendLabel: { fontSize: 11, color: '#64748B', fontWeight: '500' },
+  legendPct: { fontSize: 11, fontWeight: '700' }
+});
+
+// ─── Employee Card (mobile list) ─────────────────────────────────────────────
+function EmployeeCard({ user }) {
+  const initials = user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+  const avatarColors = ['#0F766E', '#2563EB', '#7C3AED', '#D97706', '#C2410C'];
+  const avatarColor = avatarColors[user.id.charCodeAt(user.id.length - 1) % avatarColors.length];
+  return (
+    <View style={empStyles.card}>
+      <View style={[empStyles.avatar, { backgroundColor: avatarColor }]}>
+        <Text style={empStyles.avatarText}>{initials}</Text>
+      </View>
+      <View style={empStyles.info}>
+        <Text style={empStyles.name}>{user.name}</Text>
+        <Text style={empStyles.email}>{user.email}</Text>
+      </View>
+      <View style={empStyles.badges}>
+        <View style={[empStyles.badge, user.role === 'Admin' ? empStyles.badgeAdmin : empStyles.badgeUser]}>
+          <Text style={[empStyles.badgeText, user.role === 'Admin' ? { color: '#FFFFFF' } : { color: '#334155' }]}>
+            {user.role}
+          </Text>
+        </View>
+        <View style={[empStyles.badge, user.status === 'Active' ? empStyles.badgeActive : empStyles.badgeLeave]}>
+          <Text style={[empStyles.badgeText, user.status === 'Active' ? { color: '#059669' } : { color: '#2563EB' }]}>
+            {user.status}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const empStyles = StyleSheet.create({
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 12,
+    gap: 10,
+    marginBottom: 8,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.04)' }
+      : { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 })
+  },
+  avatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  info: { flex: 1, gap: 2 },
+  name: { fontSize: 13, fontWeight: '700', color: '#0F172A' },
+  email: { fontSize: 11, color: '#64748B' },
+  badges: { flexDirection: 'column', gap: 4, alignItems: 'flex-end' },
+  badge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
+  badgeAdmin: { backgroundColor: '#EA580C' },
+  badgeUser: { backgroundColor: '#E2E8F0' },
+  badgeActive: { backgroundColor: '#ECFDF5' },
+  badgeLeave: { backgroundColor: '#EFF6FF' },
+  badgeText: { fontSize: 10, fontWeight: '700' }
+});
+
+// ─── Main Shell Content ───────────────────────────────────────────────────────
 function AdminShellContent({ onSignOut }) {
   const { user, profile } = useAuth();
   const theme = useRoleTheme();
@@ -100,182 +298,584 @@ function AdminShellContent({ onSignOut }) {
     }
   ];
 
-  return (
-    <View style={styles.root}>
-      {/* 4px Deep-Teal Identity Strip (Section 3 - Desktop only) */}
-      {isDesktop || isTablet ? (
-        <View style={[styles.identityStrip, { backgroundColor: theme.identityStrip }]} />
-      ) : null}
-
-      {/* Main Container */}
-      <View style={styles.mainContainer}>
-        {/* DESKTOP / TABLET: Dark Deep-Teal Sidebar (264px, collapsible to 72px) */}
-        {isDesktop || isTablet ? (
-          <View
-            style={[
-              styles.sidebar,
-              {
-                width: isSidebarCollapsed ? 72 : 264,
-                backgroundColor: theme.sidebarBg
-              }
-            ]}
-          >
-            {/* Sidebar Header with Brand */}
-            <View style={styles.sidebarHeader}>
-              <HBLogo size={isSidebarCollapsed ? 32 : 36} />
-              {!isSidebarCollapsed ? (
-                <View style={styles.brandTitleCol}>
-                  <Text style={styles.sidebarBrandTitle}>HBPlus</Text>
-                  <View style={styles.sidebarRoleBadge}>
-                    <Icon name="shieldCheck" size={11} color="#EA580C" />
-                    <Text style={styles.sidebarRoleBadgeText}>Admin Control</Text>
-                  </View>
-                </View>
-              ) : null}
+  // ── MOBILE LAYOUT ────────────────────────────────────────────────────────
+  if (!isDesktop && !isTablet) {
+    return (
+      <View style={styles.root}>
+        {/* ── Mobile Top Bar ── */}
+        <View style={styles.mobileTopBar}>
+          {/* Left: Logo + Admin badge */}
+          <View style={styles.mobileTopLeft}>
+            <HBLogo size={32} />
+            <View style={styles.mobileAdminBadge}>
+              <Icon name="shieldCheck" size={11} color="#EA580C" strokeWidth={2.4} />
+              <Text style={styles.mobileAdminBadgeText}>Admin</Text>
             </View>
+          </View>
 
-            {/* Nav Items */}
-            <ScrollView style={styles.sidebarNavScroll} showsVerticalScrollIndicator={false}>
-              {navSections.map((section, sIdx) => (
-                <View key={sIdx} style={styles.sidebarSectionBlock}>
-                  {!isSidebarCollapsed ? (
-                    <Text style={styles.sidebarSectionHeading}>{section.title}</Text>
-                  ) : (
-                    <View style={styles.sidebarDividerMini} />
-                  )}
+          {/* Center: Online dot */}
+          <View style={styles.mobileStatusPill}>
+            <View style={styles.onlineDot} />
+            <Text style={styles.mobileStatusText}>Online</Text>
+          </View>
 
-                  {section.items.map((item) => {
-                    const isActive = activeTab === item.id;
-                    return (
-                      <TouchableOpacity
-                        key={item.id}
-                        style={[
-                          styles.sidebarNavItem,
-                          isActive && styles.sidebarNavItemActive
-                        ]}
-                        onPress={() => setActiveTab(item.id)}
-                        activeOpacity={0.8}
-                      >
-                        <Icon
-                          name={item.icon}
-                          size={18}
-                          color={isActive ? '#FFFFFF' : '#64748B'}
-                          strokeWidth={isActive ? 2.4 : 1.8}
-                        />
-                        {!isSidebarCollapsed ? (
-                          <Text
-                            style={[
-                              styles.sidebarNavLabel,
-                              isActive && styles.sidebarNavLabelActive
-                            ]}
-                            numberOfLines={1}
-                          >
-                            {item.label}
-                          </Text>
-                        ) : null}
+          {/* Right: Bell + Logout */}
+          <View style={styles.mobileTopRight}>
+            <TouchableOpacity style={styles.mobileIconBtn} activeOpacity={0.7}>
+              <Icon name="bell" size={18} color="#0F172A" />
+              <View style={styles.bellBadge} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.mobileIconBtn} onPress={onSignOut} activeOpacity={0.7}>
+              <Icon name="logout" size={18} color="#EF4444" />
+            </TouchableOpacity>
+          </View>
+        </View>
 
-                        {!isSidebarCollapsed && item.badge ? (
-                          <View style={[styles.navBadge, isActive && styles.navBadgeActive]}>
-                            <Text style={[styles.navBadgeText, isActive && styles.navBadgeTextActive]}>{item.badge}</Text>
-                          </View>
-                        ) : null}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              ))}
-            </ScrollView>
-
-            {/* Sidebar Footer with Collapse & Sign Out */}
-            <View style={styles.sidebarFooter}>
-              <TouchableOpacity
-                style={styles.collapseBtn}
-                onPress={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                activeOpacity={0.7}
-              >
-                <Icon
-                  name={isSidebarCollapsed ? 'chevronRight' : 'chevronLeft'}
-                  size={16}
-                  color="#64748B"
-                />
-                {!isSidebarCollapsed ? (
-                  <Text style={styles.collapseBtnText}>Collapse Rail</Text>
-                ) : null}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.signOutBtn}
-                onPress={onSignOut}
-                activeOpacity={0.7}
-              >
-                <Icon name="logout" size={16} color="#EF4444" />
-                {!isSidebarCollapsed ? (
-                  <Text style={styles.signOutBtnText}>Sign Out</Text>
-                ) : null}
-              </TouchableOpacity>
-            </View>
+        {/* Toast */}
+        {toastMessage ? (
+          <View style={styles.toastCard}>
+            <Icon name="checkCircle" size={16} color="#00B386" />
+            <Text style={styles.toastText}>{toastMessage}</Text>
           </View>
         ) : null}
 
-        {/* Content Area */}
-        <View style={styles.contentColumn}>
-          {/* Top Bar: Search / Brand, Status Dot, Notifications, Badge, Profile */}
-          <View style={[styles.topBar, (!isDesktop && !isTablet) && styles.mobileTopBar]}>
-            {!isDesktop && !isTablet ? (
-              <View style={styles.mobileTopBrand}>
-                <HBLogo size={32} />
-                <View style={styles.mobileRoleBadge}>
-                  <Icon name="shieldCheck" size={12} color="#EA580C" strokeWidth={2.4} />
-                  <Text style={styles.mobileRoleText}>Admin</Text>
-                </View>
-              </View>
-            ) : (
-              <View style={styles.searchBox}>
-                <Icon name="search" size={16} color="#64748B" />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Search people, audit logs, commands..."
-                  placeholderTextColor="#94A3B8"
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-                <View style={styles.shortcutPill}>
-                  <Text style={styles.shortcutText}>⌘K</Text>
-                </View>
-              </View>
-            )}
+        {/* ── Scrollable Content ── */}
+        <ScrollView
+          style={styles.mobileScroll}
+          contentContainerStyle={styles.mobileScrollInner}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Search bar */}
+          <View style={styles.mobileSearchBar}>
+            <Icon name="search" size={16} color="#94A3B8" />
+            <TextInput
+              style={styles.mobileSearchInput}
+              placeholder="Search people, audit logs..."
+              placeholderTextColor="#94A3B8"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
 
-            {/* Right Top Bar Actions */}
+          {/* ── Tab: Overview ── */}
+          {activeTab === 'overview' && (
+            <>
+              {/* 4 Metric Cards 2×2 grid */}
+              <View style={styles.metricsGrid}>
+                <MetricCard
+                  value="248"
+                  badge="+12%"
+                  badgeColor="#059669"
+                  badgeBg="#ECFDF5"
+                  label="Total Workforce"
+                  subtitle="Active accounts across 6 depts"
+                  iconName="dashboard"
+                  iconBg="#0F766E"
+                />
+                <MetricCard
+                  value="231"
+                  badge="93.1%"
+                  badgeColor="#059669"
+                  badgeBg="#ECFDF5"
+                  label="Present Today"
+                  subtitle="1-tap geofence verified"
+                  iconName="fingerprint"
+                  iconBg="#2563EB"
+                />
+              </View>
+              <View style={[styles.metricsGrid, { marginTop: 10 }]}>
+                <MetricCard
+                  value="12"
+                  badge="4.8%"
+                  badgeColor="#2563EB"
+                  badgeBg="#EFF6FF"
+                  label="On Leave"
+                  subtitle="8 planned, 4 medical"
+                  iconName="calendar"
+                  iconBg="#D97706"
+                />
+                <MetricCard
+                  value={String(approvalsList.length)}
+                  badge="Action"
+                  badgeColor="#D97706"
+                  badgeBg="#FEF3C7"
+                  label="Pending Approvals"
+                  subtitle="Requires admin review"
+                  iconName="bell"
+                  iconBg="#C2410C"
+                />
+              </View>
+
+              {/* Attendance Trend Card */}
+              <View style={styles.mobileSectionCard}>
+                <View style={styles.mobileSectionHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.mobileSectionTitle}>Attendance Trend (30 Days)</Text>
+                    <Text style={styles.mobileSectionSub}>Workforce presence vs scheduled shifts</Text>
+                  </View>
+                  <View style={styles.slaTag}>
+                    <Text style={styles.slaTagText}>99.4% SLA</Text>
+                  </View>
+                </View>
+                <SimpleCharts type="bar" height={160} />
+              </View>
+
+              {/* Dept Breakdown */}
+              <DeptBreakdownCard />
+
+              {/* Workforce Governance */}
+              <View style={styles.mobileSectionCard}>
+                <View style={styles.mobileSectionHeader}>
+                  <Text style={styles.mobileSectionTitle}>Workforce Governance</Text>
+                </View>
+                {/* Filter tabs */}
+                <View style={styles.mobileFilterRow}>
+                  {['all', 'admin', 'user'].map((f) => (
+                    <TouchableOpacity
+                      key={f}
+                      style={[styles.mobileFilterTab, selectedUserFilter === f && styles.mobileFilterTabActive]}
+                      onPress={() => setSelectedUserFilter(f)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.mobileFilterTabText, selectedUserFilter === f && styles.mobileFilterTabTextActive]}>
+                        {f.toUpperCase()}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {filteredUsers.map((u) => (
+                  <EmployeeCard key={u.id} user={u} />
+                ))}
+              </View>
+
+              {/* Pending Approvals Queue */}
+              <View style={styles.mobileSectionCard}>
+                <Text style={styles.mobileSectionTitle}>Pending Approvals Queue</Text>
+                <Text style={[styles.mobileSectionSub, { marginBottom: 8 }]}>Real-time requests awaiting sign-off</Text>
+                {approvalsList.length === 0 ? (
+                  <View style={styles.emptyState}>
+                    <Icon name="checkCircle" size={28} color="#EA580C" />
+                    <Text style={styles.emptyStateText}>All pending approvals cleared!</Text>
+                  </View>
+                ) : (
+                  approvalsList.map((req) => (
+                    <View key={req.id} style={styles.mobileApprovalCard}>
+                      <View style={{ flex: 1, gap: 2 }}>
+                        <Text style={styles.approvalName}>{req.name}</Text>
+                        <Text style={styles.approvalMeta}>{req.dept} • {req.type}</Text>
+                        <Text style={styles.approvalMeta}>{req.dates}</Text>
+                      </View>
+                      <View style={styles.approvalActions}>
+                        <TouchableOpacity
+                          style={styles.approveCircleBtn}
+                          onPress={() => handleApprove(req.id, req.name)}
+                          activeOpacity={0.8}
+                        >
+                          <Icon name="checkCircle" size={20} color="#FFFFFF" strokeWidth={2} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.rejectCircleBtn}
+                          onPress={() => handleReject(req.id, req.name)}
+                          activeOpacity={0.8}
+                        >
+                          <Icon name="xCircle" size={20} color="#FFFFFF" strokeWidth={2} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))
+                )}
+              </View>
+
+              {/* Audit Log Feed */}
+              <View style={styles.mobileSectionCard}>
+                <Text style={styles.mobileSectionTitle}>Audit Log Feed</Text>
+                <Text style={[styles.mobileSectionSub, { marginBottom: 8 }]}>Immutable compliance telemetry</Text>
+                {[
+                  { time: '14:02:11', actor: 'admin@hbplus.fit', action: 'Custom claim verified', ip: '10.0.4.12' },
+                  { time: '13:58:45', actor: 'marcus.v@hbplus.fit', action: 'Geofence check-in [HQ-East]', ip: '192.168.1.84' },
+                  { time: '13:42:09', actor: 'system-governance', action: 'Nightly payroll sync complete', ip: 'internal' },
+                  { time: '13:10:33', actor: 'sarah.c@hbplus.fit', action: 'Submitted overtime claim', ip: '10.0.2.91' }
+                ].map((log, idx) => (
+                  <View key={idx} style={styles.mobileAuditRow}>
+                    <Text style={styles.auditTime}>{log.time}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.auditAction}>{log.action}</Text>
+                      <Text style={styles.auditActor}>{log.actor} • {log.ip}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
+
+          {activeTab === 'users' && (
+            <View style={styles.mobileSectionCard}>
+              <Text style={styles.mobileSectionTitle}>Workforce Directory & Role Provisioning</Text>
+              <Text style={styles.mobileSectionSub}>Full employee roster with direct privilege elevation tools.</Text>
+              <View style={[styles.mobileFilterRow, { marginTop: 12 }]}>
+                {['all', 'admin', 'user'].map((f) => (
+                  <TouchableOpacity
+                    key={f}
+                    style={[styles.mobileFilterTab, selectedUserFilter === f && styles.mobileFilterTabActive]}
+                    onPress={() => setSelectedUserFilter(f)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.mobileFilterTabText, selectedUserFilter === f && styles.mobileFilterTabTextActive]}>
+                      {f.toUpperCase()}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              {filteredUsers.map((u) => (
+                <EmployeeCard key={u.id} user={u} />
+              ))}
+            </View>
+          )}
+
+          {activeTab === 'approvals' && (
+            <View style={styles.mobileSectionCard}>
+              <Text style={styles.mobileSectionTitle}>Pending Approvals</Text>
+              <Text style={[styles.mobileSectionSub, { marginBottom: 8 }]}>Review time-off and reimbursement requests.</Text>
+              {approvalsList.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <Icon name="checkCircle" size={28} color="#EA580C" />
+                  <Text style={styles.emptyStateText}>All pending approvals cleared!</Text>
+                </View>
+              ) : (
+                approvalsList.map((req) => (
+                  <View key={req.id} style={styles.mobileApprovalCard}>
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <Text style={styles.approvalName}>{req.name}</Text>
+                      <Text style={styles.approvalMeta}>{req.dept} • {req.type}</Text>
+                      <Text style={styles.approvalMeta}>{req.dates}</Text>
+                    </View>
+                    <View style={styles.approvalActions}>
+                      <TouchableOpacity
+                        style={styles.approveCircleBtn}
+                        onPress={() => handleApprove(req.id, req.name)}
+                        activeOpacity={0.8}
+                      >
+                        <Icon name="checkCircle" size={20} color="#FFFFFF" strokeWidth={2} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.rejectCircleBtn}
+                        onPress={() => handleReject(req.id, req.name)}
+                        activeOpacity={0.8}
+                      >
+                        <Icon name="xCircle" size={20} color="#FFFFFF" strokeWidth={2} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))
+              )}
+            </View>
+          )}
+
+          {activeTab === 'reports' && (
+            <View style={{ gap: 14 }}>
+              <View style={styles.metricsGrid}>
+                <MetricCard value="99.4%" badge="SLA" badgeColor="#059669" badgeBg="#ECFDF5" label="Overall Presence" subtitle="30-day verified attendance" iconName="dashboard" iconBg="#0F766E" />
+                <MetricCard value="98.2%" badge="+0.8%" badgeColor="#059669" badgeBg="#ECFDF5" label="Punctuality" subtitle="On-time shift arrival" iconName="activity" iconBg="#2563EB" />
+              </View>
+              <View style={styles.mobileSectionCard}>
+                <View style={styles.mobileSectionHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.mobileSectionTitle}>Attendance Trend (30 Days)</Text>
+                    <Text style={styles.mobileSectionSub}>Historical presence trends</Text>
+                  </View>
+                  <View style={styles.slaTag}>
+                    <Text style={styles.slaTagText}>99.4% SLA</Text>
+                  </View>
+                </View>
+                <SimpleCharts type="bar" height={200} />
+              </View>
+              <View style={styles.mobileSectionCard}>
+                <Text style={styles.mobileSectionTitle}>Department Attendance Health</Text>
+                {[
+                  { name: 'Engineering', rate: '99%', count: '42 / 42 present', color: '#00B386' },
+                  { name: 'Product & Design', rate: '96%', count: '17 / 18 present', color: '#0284C7' },
+                  { name: 'Operations & Fitness', rate: '97%', count: '27 / 28 present', color: '#7C3AED' },
+                  { name: 'People & Admin', rate: '100%', count: '12 / 12 present', color: '#EA580C' }
+                ].map((dept, i) => (
+                  <View key={i} style={styles.mobileApprovalCard}>
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <Text style={styles.approvalName}>{dept.name}</Text>
+                      <Text style={styles.approvalMeta}>{dept.count}</Text>
+                    </View>
+                    <View style={[styles.mobileFilterTab, { backgroundColor: '#ECFDF5' }]}>
+                      <Text style={[styles.mobileFilterTabText, { color: '#059669' }]}>{dept.rate}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {activeTab === 'audit' && (
+            <View style={styles.mobileSectionCard}>
+              <Text style={styles.mobileSectionTitle}>System Audit Log</Text>
+              <Text style={[styles.mobileSectionSub, { marginBottom: 10 }]}>Every authenticated interaction is permanently logged.</Text>
+              {[
+                { time: '14:02:11', actor: 'admin@hbplus.fit', action: 'Custom claim verified' },
+                { time: '13:58:45', actor: 'marcus.v@hbplus.fit', action: 'Geofence check-in [HQ-East]' },
+                { time: '13:42:09', actor: 'system-governance', action: 'Nightly payroll sync complete' }
+              ].map((l, i) => (
+                <View key={i} style={styles.mobileAuditRow}>
+                  <Text style={styles.auditTime}>{l.time}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.auditAction}>{l.action}</Text>
+                    <Text style={styles.auditActor}>{l.actor}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {activeTab === 'settings' && (
+            <View style={{ gap: 14 }}>
+              <View style={styles.mobileSectionCard}>
+                <View style={styles.mobileSectionHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.mobileSectionTitle}>Domain Governance & Tenant Security</Text>
+                    <Text style={styles.mobileSectionSub}>Strict authentication restrictions</Text>
+                  </View>
+                  <View style={styles.slaTag}>
+                    <Text style={styles.slaTagText}>Active</Text>
+                  </View>
+                </View>
+                <View style={{ gap: 12, marginTop: 8 }}>
+                  <View style={styles.settingRow}>
+                    <View style={{ gap: 2 }}>
+                      <Text style={styles.settingLabel}>Domain Enforcement Rule</Text>
+                      <Text style={styles.approvalMeta}>Restricts sign-ins strictly to corporate addresses</Text>
+                    </View>
+                    <View style={[styles.mobileAdminBadge, { backgroundColor: '#EA580C', borderColor: '#EA580C' }]}>
+                      <Text style={[styles.mobileAdminBadgeText, { color: '#FFFFFF' }]}>STRICT</Text>
+                    </View>
+                  </View>
+                  <View style={styles.settingRow}>
+                    <View style={{ gap: 2 }}>
+                      <Text style={styles.settingLabel}>SSL / TLS Certificate</Text>
+                      <Text style={styles.approvalMeta}>End-to-end encrypted transport layer</Text>
+                    </View>
+                    <View style={[styles.mobileFilterTab, { backgroundColor: '#ECFDF5' }]}>
+                      <Text style={[styles.mobileFilterTabText, { color: '#059669' }]}>TLS 1.3</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+              <View style={styles.mobileSectionCard}>
+                <Text style={styles.mobileSectionTitle}>Session & Access Policies</Text>
+                <Text style={[styles.mobileSectionSub, { marginBottom: 8 }]}>Idle timeout windows and token lifecycle governance</Text>
+                <View style={{ gap: 12 }}>
+                  {[
+                    { label: 'Idle Session Timeout (Admin)', val: '30 Minutes' },
+                    { label: 'Idle Session Timeout (User)', val: '8 Hours' },
+                    { label: 'Geofence Radius (HQ Campus)', val: '500 meters' },
+                    { label: 'Immutable Audit Trail', val: 'Enabled (90 Days)' }
+                  ].map((s, i) => (
+                    <View key={i} style={styles.settingRow}>
+                      <Text style={styles.settingLabel}>{s.label}</Text>
+                      <Text style={styles.settingVal}>{s.val}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* ── Bottom Navigation Bar ── */}
+        <View style={styles.mobileBottomBar}>
+          {[
+            { id: 'overview', label: 'Dashboard', icon: 'dashboard' },
+            { id: 'users', label: 'Users', icon: 'directory' },
+            { id: 'approvals', label: 'Approvals', icon: 'checkSquare', badge: approvalsList.length },
+            { id: 'reports', label: 'Reports', icon: 'reports' },
+            { id: 'settings', label: 'More', icon: 'settings' }
+          ].map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.mobileBottomTab}
+                onPress={() => setActiveTab(item.id)}
+                activeOpacity={0.7}
+              >
+                <View style={{ position: 'relative' }}>
+                  <Icon
+                    name={item.icon}
+                    size={22}
+                    color={isActive ? '#F97316' : '#94A3B8'}
+                    strokeWidth={isActive ? 2.4 : 1.8}
+                  />
+                  {item.badge ? (
+                    <View style={styles.phoneBadgeDot}>
+                      <Text style={styles.phoneBadgeText}>{item.badge}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                <Text style={[styles.mobileBottomLabel, isActive && styles.mobileBottomLabelActive]}>
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+    );
+  }
+
+  // ── DESKTOP / TABLET LAYOUT ──────────────────────────────────────────────
+  return (
+    <View style={styles.root}>
+      {/* Identity strip */}
+      <View style={[styles.identityStrip, { backgroundColor: theme.identityStrip || '#C2410C' }]} />
+
+      <View style={styles.mainContainer}>
+        {/* Sidebar */}
+        <View
+          style={[
+            styles.sidebar,
+            {
+              width: isSidebarCollapsed ? 72 : 264,
+              backgroundColor: theme.sidebarBg || '#FFFFFF'
+            }
+          ]}
+        >
+          {/* Sidebar Header */}
+          <View style={styles.sidebarHeader}>
+            <HBLogo size={isSidebarCollapsed ? 32 : 36} />
+            {!isSidebarCollapsed ? (
+              <View style={styles.brandTitleCol}>
+                <Text style={styles.sidebarBrandTitle}>HBPlus</Text>
+                <View style={styles.sidebarRoleBadge}>
+                  <Icon name="shieldCheck" size={11} color="#EA580C" />
+                  <Text style={styles.sidebarRoleBadgeText}>Admin Control</Text>
+                </View>
+              </View>
+            ) : null}
+          </View>
+
+          {/* Nav Items */}
+          <ScrollView style={styles.sidebarNavScroll} showsVerticalScrollIndicator={false}>
+            {navSections.map((section, sIdx) => (
+              <View key={sIdx} style={styles.sidebarSectionBlock}>
+                {!isSidebarCollapsed ? (
+                  <Text style={styles.sidebarSectionHeading}>{section.title}</Text>
+                ) : (
+                  <View style={styles.sidebarDividerMini} />
+                )}
+
+                {section.items.map((item) => {
+                  const isActive = activeTab === item.id;
+                  return (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={[
+                        styles.sidebarNavItem,
+                        isActive && styles.sidebarNavItemActive
+                      ]}
+                      onPress={() => setActiveTab(item.id)}
+                      activeOpacity={0.8}
+                    >
+                      <Icon
+                        name={item.icon}
+                        size={18}
+                        color={isActive ? '#FFFFFF' : '#64748B'}
+                        strokeWidth={isActive ? 2.4 : 1.8}
+                      />
+                      {!isSidebarCollapsed ? (
+                        <Text
+                          style={[
+                            styles.sidebarNavLabel,
+                            isActive && styles.sidebarNavLabelActive
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {item.label}
+                        </Text>
+                      ) : null}
+
+                      {!isSidebarCollapsed && item.badge ? (
+                        <View style={[styles.navBadge, isActive && styles.navBadgeActive]}>
+                          <Text style={[styles.navBadgeText, isActive && styles.navBadgeTextActive]}>{item.badge}</Text>
+                        </View>
+                      ) : null}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* Sidebar Footer */}
+          <View style={styles.sidebarFooter}>
+            <TouchableOpacity
+              style={styles.collapseBtn}
+              onPress={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              activeOpacity={0.7}
+            >
+              <Icon
+                name={isSidebarCollapsed ? 'chevronRight' : 'chevronLeft'}
+                size={16}
+                color="#64748B"
+              />
+              {!isSidebarCollapsed ? (
+                <Text style={styles.collapseBtnText}>Collapse Rail</Text>
+              ) : null}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.signOutBtn}
+              onPress={onSignOut}
+              activeOpacity={0.7}
+            >
+              <Icon name="logout" size={16} color="#EF4444" />
+              {!isSidebarCollapsed ? (
+                <Text style={styles.signOutBtnText}>Sign Out</Text>
+              ) : null}
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Content Area */}
+        <View style={[styles.contentColumn, { backgroundColor: '#FFF7ED' }]}>
+          {/* Top Bar */}
+          <View style={styles.topBar}>
+            <View style={styles.searchBox}>
+              <Icon name="search" size={16} color="#64748B" />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search people, audit logs, commands..."
+                placeholderTextColor="#94A3B8"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              <View style={styles.shortcutPill}>
+                <Text style={styles.shortcutText}>⌘K</Text>
+              </View>
+            </View>
+
             <View style={styles.topBarRight}>
-              {/* Live System Status Dot */}
               <View style={styles.statusDotRow}>
                 <View style={styles.pulsingDot} />
-                <Text style={styles.statusDotText}>
-                  {isDesktop || isTablet ? 'Systems Operational' : 'Online'}
-                </Text>
+                <Text style={styles.statusDotText}>Systems Operational</Text>
               </View>
 
-              {/* Notification Bell */}
               <TouchableOpacity style={styles.iconCircleBtn} activeOpacity={0.7}>
                 <Icon name="bell" size={18} color="#0F172A" />
                 <View style={styles.unreadBadgeDot} />
               </TouchableOpacity>
 
-              {/* Admin Badge on Desktop */}
-              {isDesktop || isTablet ? (
-                <View style={styles.adminRolePill}>
-                  <Icon name="shieldCheck" size={14} color="#EA580C" strokeWidth={2.4} />
-                  <Text style={styles.adminRolePillText}>Admin</Text>
-                </View>
-              ) : (
-                <TouchableOpacity onPress={onSignOut} style={styles.iconCircleBtn} activeOpacity={0.7}>
-                  <Icon name="logout" size={18} color="#EF4444" />
-                </TouchableOpacity>
-              )}
+              <View style={styles.adminRolePill}>
+                <Icon name="shieldCheck" size={14} color="#EA580C" strokeWidth={2.4} />
+                <Text style={styles.adminRolePillText}>Admin</Text>
+              </View>
             </View>
           </View>
 
-          {/* Toast Notification */}
+          {/* Toast */}
           {toastMessage ? (
             <View style={styles.toastCard}>
               <Icon name="checkCircle" size={16} color="#00B386" />
@@ -283,30 +883,15 @@ function AdminShellContent({ onSignOut }) {
             </View>
           ) : null}
 
-          {/* Main Scrollable View */}
+          {/* Main Scrollable */}
           <ScrollView
             style={styles.scrollContent}
-            contentContainerStyle={[
-              styles.scrollContentInner,
-              !isDesktop && !isTablet && { paddingHorizontal: 16, paddingBottom: 110 }
-            ]}
+            contentContainerStyle={styles.scrollContentInner}
             showsVerticalScrollIndicator={false}
           >
-            {!isDesktop && !isTablet ? (
-              <View style={styles.mobileSearchBox}>
-                <Icon name="search" size={16} color="#64748B" />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Search people, audit logs, commands..."
-                  placeholderTextColor="#94A3B8"
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-              </View>
-            ) : null}
             {activeTab === 'overview' && (
               <>
-                {/* 4 KPI Cards Row (Compact, 44px rows, Tabular Mono Numbers) */}
+                {/* 4 KPI Cards */}
                 <View style={styles.kpiRow}>
                   <SquaredCard style={styles.kpiCard}>
                     <Text style={styles.kpiOverline}>TOTAL WORKFORCE</Text>
@@ -353,7 +938,7 @@ function AdminShellContent({ onSignOut }) {
                   </SquaredCard>
                 </View>
 
-                {/* Charts Row: Trend Area Chart & Department Donut */}
+                {/* Charts Row */}
                 <View style={styles.chartsGrid}>
                   <SquaredCard style={styles.chartCardLarge}>
                     <View style={styles.cardHeader}>
@@ -386,25 +971,15 @@ function AdminShellContent({ onSignOut }) {
                       <Text style={styles.cardTitle}>Workforce Governance</Text>
                       <Text style={styles.cardSub}>Manage accounts, permission claims and access state</Text>
                     </View>
-
-                    {/* Filter Pills */}
                     <View style={styles.filterPillsRow}>
                       {['all', 'admin', 'user'].map((f) => (
                         <TouchableOpacity
                           key={f}
-                          style={[
-                            styles.filterPill,
-                            selectedUserFilter === f && styles.filterPillActive
-                          ]}
+                          style={[styles.filterPill, selectedUserFilter === f && styles.filterPillActive]}
                           onPress={() => setSelectedUserFilter(f)}
                           activeOpacity={0.7}
                         >
-                          <Text
-                            style={[
-                              styles.filterPillText,
-                              selectedUserFilter === f && styles.filterPillTextActive
-                            ]}
-                          >
+                          <Text style={[styles.filterPillText, selectedUserFilter === f && styles.filterPillTextActive]}>
                             {f.toUpperCase()}
                           </Text>
                         </TouchableOpacity>
@@ -412,10 +987,8 @@ function AdminShellContent({ onSignOut }) {
                     </View>
                   </View>
 
-                  {/* Table Content */}
                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View style={styles.tableBody}>
-                      {/* Header Row */}
                       <View style={styles.tableHeadRow}>
                         <Text style={[styles.tableTh, { width: 180 }]}>EMPLOYEE</Text>
                         <Text style={[styles.tableTh, { width: 140 }]}>DEPARTMENT</Text>
@@ -493,9 +1066,8 @@ function AdminShellContent({ onSignOut }) {
                   </ScrollView>
                 </SquaredCard>
 
-                {/* Pending Approvals & Live Audit Feed Row */}
+                {/* Bottom Grid: Approvals + Audit */}
                 <View style={styles.bottomGrid}>
-                  {/* Pending Approvals Card */}
                   <SquaredCard style={styles.approvalsCard}>
                     <View style={styles.cardHeader}>
                       <View>
@@ -537,7 +1109,6 @@ function AdminShellContent({ onSignOut }) {
                     )}
                   </SquaredCard>
 
-                  {/* Recent Audit Log Feed */}
                   <SquaredCard style={styles.auditCard}>
                     <View style={styles.cardHeader}>
                       <View>
@@ -571,7 +1142,6 @@ function AdminShellContent({ onSignOut }) {
               <SquaredCard style={styles.tableCard}>
                 <Text style={styles.cardTitle}>Workforce Directory & Role Provisioning</Text>
                 <Text style={styles.cardSub}>Full employee roster with direct privilege elevation tools.</Text>
-                {/* Users list reused */}
                 <View style={{ marginTop: 16 }}>
                   {sampleUsers.map((u) => (
                     <View key={u.id} style={styles.tableTr}>
@@ -618,7 +1188,6 @@ function AdminShellContent({ onSignOut }) {
 
             {activeTab === 'reports' && (
               <View style={{ gap: 16 }}>
-                {/* Quick KPI stats */}
                 <View style={styles.kpiRow}>
                   <SquaredCard style={styles.kpiCard}>
                     <Text style={styles.kpiOverline}>OVERALL PRESENCE</Text>
@@ -652,7 +1221,6 @@ function AdminShellContent({ onSignOut }) {
                   </SquaredCard>
                 </View>
 
-                {/* Main Trend Card */}
                 <SquaredCard style={styles.chartCardLarge}>
                   <View style={styles.cardHeader}>
                     <View>
@@ -666,7 +1234,6 @@ function AdminShellContent({ onSignOut }) {
                   <SimpleCharts type="bar" height={220} />
                 </SquaredCard>
 
-                {/* Department Health Card */}
                 <SquaredCard style={styles.tableCard}>
                   <Text style={styles.cardTitle}>Department Attendance Health</Text>
                   <Text style={styles.cardSub}>Live presence breakdown across active units</Text>
@@ -715,7 +1282,6 @@ function AdminShellContent({ onSignOut }) {
 
             {activeTab === 'settings' && (
               <View style={{ gap: 16 }}>
-                {/* Domain & Tenant Card */}
                 <SquaredCard style={styles.tableCard}>
                   <View style={styles.cardHeader}>
                     <View>
@@ -748,7 +1314,6 @@ function AdminShellContent({ onSignOut }) {
                   </View>
                 </SquaredCard>
 
-                {/* Session Security Card */}
                 <SquaredCard style={styles.tableCard}>
                   <Text style={styles.cardTitle}>Session & Access Policies</Text>
                   <Text style={styles.cardSub}>Idle timeout windows and token lifecycle governance</Text>
@@ -776,51 +1341,6 @@ function AdminShellContent({ onSignOut }) {
               </View>
             )}
           </ScrollView>
-
-          {/* PHONES: Admin Bottom Bar (Dashboard, Users, Approvals, Reports, More) */}
-          {!isDesktop && !isTablet ? (
-            <View style={styles.phoneBottomBar}>
-              {[
-                { id: 'overview', label: 'Dashboard', icon: 'dashboard' },
-                { id: 'users', label: 'Users', icon: 'directory' },
-                { id: 'approvals', label: 'Approvals', icon: 'checkSquare', badge: approvalsList.length },
-                { id: 'reports', label: 'Reports', icon: 'reports' },
-                { id: 'settings', label: 'More', icon: 'settings' }
-              ].map((item) => {
-                const isActive = activeTab === item.id;
-                return (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={styles.phoneBottomTab}
-                    onPress={() => setActiveTab(item.id)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={{ position: 'relative' }}>
-                      <Icon
-                        name={item.icon}
-                        size={20}
-                        color={isActive ? '#EA580C' : '#64748B'}
-                        strokeWidth={isActive ? 2.4 : 1.8}
-                      />
-                      {item.badge ? (
-                        <View style={styles.phoneBadgeDot}>
-                          <Text style={styles.phoneBadgeText}>{item.badge}</Text>
-                        </View>
-                      ) : null}
-                    </View>
-                    <Text
-                      style={[
-                        styles.phoneBottomLabel,
-                        isActive && styles.phoneBottomLabelActive
-                      ]}
-                    >
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          ) : null}
         </View>
       </View>
     </View>
@@ -838,7 +1358,7 @@ export function AdminShell({ onSignOut }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFF7ED',
     position: 'relative'
   },
   identityStrip: {
@@ -851,6 +1371,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     height: '100%'
   },
+
+  // ── Desktop Sidebar ────────────────────────────────────────────
   sidebar: {
     height: '100%',
     paddingVertical: 18,
@@ -923,10 +1445,9 @@ const styles = StyleSheet.create({
   },
   sidebarNavItemActive: {
     backgroundColor: '#EA580C',
-    shadowColor: '#EA580C',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.22,
-    shadowRadius: 6
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 3px 10px rgba(234,88,12,0.25)' }
+      : { shadowColor: '#EA580C', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.22, shadowRadius: 6 })
   },
   sidebarNavLabel: {
     flex: 1,
@@ -991,6 +1512,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600'
   },
+
+  // ── Desktop Content Area ───────────────────────────────────────
   contentColumn: {
     flex: 1,
     height: '100%',
@@ -1004,25 +1527,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
     zIndex: 10,
     width: '100%',
     maxWidth: '100%'
-  },
-  mobileTopBar: {
-    paddingTop: Platform.OS === 'web' ? 'max(42px, env(safe-area-inset-top, 42px))' : 42,
-    minHeight: Platform.OS === 'web' ? 'calc(58px + max(42px, env(safe-area-inset-top, 42px)))' : 100,
-    paddingBottom: 10,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2
   },
   searchBox: {
     flexDirection: 'row',
@@ -1056,70 +1566,36 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#64748B'
   },
-  mobileTopBrand: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flexShrink: 0
-  },
-  mobileRoleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#FFF7ED',
-    borderWidth: 1,
-    borderColor: '#FED7AA',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 6
-  },
-  mobileRoleText: {
-    color: '#EA580C',
-    fontSize: 11,
-    fontWeight: '700'
-  },
-  mobileSearchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: CARD_RADIUS,
-    paddingHorizontal: 12,
-    height: 42,
-    width: '100%',
-    marginBottom: 6
-  },
   topBarRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     flexShrink: 0
   },
   statusDotRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#FFF7ED',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: CARD_RADIUS
   },
   pulsingDot: {
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#EA580C'
+    backgroundColor: '#10B981'
   },
   statusDotText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#EA580C'
+    color: '#059669'
   },
   iconCircleBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: CARD_RADIUS,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -1129,8 +1605,8 @@ const styles = StyleSheet.create({
   },
   unreadBadgeDot: {
     position: 'absolute',
-    top: 7,
-    right: 7,
+    top: 8,
+    right: 8,
     width: 7,
     height: 7,
     borderRadius: 4,
@@ -1140,16 +1616,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#EA580C',
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FFEDD5',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: CARD_RADIUS
   },
   adminRolePillText: {
-    color: '#FFFFFF',
+    color: '#EA580C',
     fontSize: 12,
     fontWeight: '800'
   },
+
+  // ── Toast ──────────────────────────────────────────────────────
   toastCard: {
     position: 'absolute',
     top: 72,
@@ -1168,6 +1648,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600'
   },
+
+  // ── Scroll & Content ───────────────────────────────────────────
   scrollContent: {
     flex: 1
   },
@@ -1176,6 +1658,8 @@ const styles = StyleSheet.create({
     gap: 18,
     paddingBottom: 90
   },
+
+  // ── KPI Cards ──────────────────────────────────────────────────
   kpiRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1184,14 +1668,15 @@ const styles = StyleSheet.create({
   kpiCard: {
     flex: 1,
     minWidth: 140,
-    padding: 14,
+    padding: 16,
     gap: 4
   },
   kpiOverline: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#64748B',
-    letterSpacing: 0.5
+    color: '#94A3B8',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase'
   },
   kpiValRow: {
     flexDirection: 'row',
@@ -1217,6 +1702,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#64748B'
   },
+
+  // ── Charts ─────────────────────────────────────────────────────
   chartsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1255,13 +1742,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#ECFDF5',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6
+    borderRadius: 8
   },
   chartTagText: {
     color: '#059669',
     fontSize: 11,
     fontWeight: '700'
   },
+
+  // ── Table / Users ──────────────────────────────────────────────
   tableCard: {
     padding: 20,
     gap: 14
@@ -1308,7 +1797,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     color: '#64748B',
-    letterSpacing: 0.4
+    letterSpacing: 0.4,
+    textTransform: 'uppercase'
   },
   tableTr: {
     height: 48,
@@ -1361,6 +1851,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center'
   },
+
+  // ── Approvals + Audit Grid ─────────────────────────────────────
   bottomGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1437,13 +1929,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    paddingVertical: 4
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8FAFC'
   },
   auditTime: {
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 11,
-    color: '#64748B',
-    fontWeight: '600'
+    color: '#94A3B8',
+    fontWeight: '600',
+    minWidth: 60
   },
   auditDetails: {
     flex: 1,
@@ -1476,9 +1971,230 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0F172A'
   },
-  // Phone Bottom Bar
-  phoneBottomBar: {
-    height: Platform.OS === 'web' ? 'calc(58px + max(12px, env(safe-area-inset-bottom, 12px)))' : 72,
+
+  // ── Mobile Top Bar ─────────────────────────────────────────────
+  mobileTopBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'web' ? 'max(42px, env(safe-area-inset-top, 42px))' : 42,
+    paddingBottom: 10,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    minHeight: Platform.OS === 'web' ? 'calc(60px + max(42px, env(safe-area-inset-top, 42px)))' : 100,
+    zIndex: 20,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }
+      : { shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 3 })
+  },
+  mobileTopLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  mobileAdminBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 8
+  },
+  mobileAdminBadgeText: {
+    color: '#EA580C',
+    fontSize: 11,
+    fontWeight: '700'
+  },
+  mobileStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20
+  },
+  onlineDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#10B981'
+  },
+  mobileStatusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#059669'
+  },
+  mobileTopRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
+  },
+  mobileIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative'
+  },
+  bellBadge: {
+    position: 'absolute',
+    top: 7,
+    right: 7,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#EA580C'
+  },
+
+  // ── Mobile Scroll ──────────────────────────────────────────────
+  mobileScroll: {
+    flex: 1
+  },
+  mobileScrollInner: {
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 100,
+    gap: 12
+  },
+
+  // ── Mobile Search Bar ──────────────────────────────────────────
+  mobileSearchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    height: 44,
+    gap: 8,
+    marginBottom: 2
+  },
+  mobileSearchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#0F172A',
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {})
+  },
+
+  // ── Mobile Metric Grid ─────────────────────────────────────────
+  metricsGrid: {
+    flexDirection: 'row',
+    gap: 10
+  },
+
+  // ── Mobile Section Cards ───────────────────────────────────────
+  mobileSectionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 16,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 2px 4px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.06)' }
+      : { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3 })
+  },
+  mobileSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 10
+  },
+  mobileSectionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0F172A'
+  },
+  mobileSectionSub: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2
+  },
+  slaTag: {
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8
+  },
+  slaTagText: {
+    color: '#059669',
+    fontSize: 11,
+    fontWeight: '700'
+  },
+
+  // ── Mobile Filter Tabs ─────────────────────────────────────────
+  mobileFilterRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: 10
+  },
+  mobileFilterTab: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9'
+  },
+  mobileFilterTabActive: {
+    backgroundColor: '#EA580C'
+  },
+  mobileFilterTabText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B'
+  },
+  mobileFilterTabTextActive: {
+    color: '#FFFFFF'
+  },
+
+  // ── Mobile Approval Card ───────────────────────────────────────
+  mobileApprovalCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 8,
+    gap: 10
+  },
+  approveCircleBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#059669',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  rejectCircleBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#DC2626',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+
+  // ── Mobile Audit Row ───────────────────────────────────────────
+  mobileAuditRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    paddingVertical: 7,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9'
+  },
+
+  // ── Mobile Bottom Navigation Bar ──────────────────────────────
+  mobileBottomBar: {
+    height: Platform.OS === 'web' ? 'calc(68px + max(0px, env(safe-area-inset-bottom, 0px)))' : 72,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
@@ -1490,26 +2206,25 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 90,
-    paddingBottom: Platform.OS === 'web' ? 'max(12px, env(safe-area-inset-bottom, 12px))' : 12,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 8
+    paddingBottom: Platform.OS === 'web' ? 'max(8px, env(safe-area-inset-bottom, 8px))' : 8,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 -2px 12px rgba(0,0,0,0.06)' }
+      : { shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 8 })
   },
-  phoneBottomTab: {
+  mobileBottomTab: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 6,
     gap: 3
   },
-  phoneBottomLabel: {
-    fontSize: 11,
+  mobileBottomLabel: {
+    fontSize: 10,
     fontWeight: '600',
-    color: '#64748B'
+    color: '#94A3B8'
   },
-  phoneBottomLabelActive: {
-    color: '#EA580C',
+  mobileBottomLabelActive: {
+    color: '#F97316',
     fontWeight: '700'
   },
   phoneBadgeDot: {

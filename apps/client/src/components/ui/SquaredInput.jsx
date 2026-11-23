@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useRoleTheme } from '../../theme/roleThemes.js';
-import { CARD_RADIUS } from '../../theme/shape.js';
 import Icon from './Icon.jsx';
+
+// 14px border radius for inputs as per 2025 premium spec
+const INPUT_RADIUS = 14;
 
 export function SquaredInput({
   label,
@@ -25,6 +27,9 @@ export function SquaredInput({
 
   const effectiveSecure = secureTextEntry && !isPasswordVisible;
 
+  // Focus ring colour: use the theme's brand primary
+  const focusColor = theme.primary;
+
   return (
     <View style={[styles.wrapper, style]}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
@@ -32,22 +37,28 @@ export function SquaredInput({
         style={[
           styles.inputContainer,
           {
-            backgroundColor: isFocused ? theme.inputFocusFill : theme.inputFill,
-            borderRadius: CARD_RADIUS,
-            borderColor: isFocused ? theme.primary : '#E2E8F0',
+            backgroundColor: isFocused ? '#FFFFFF' : '#F1F5F9',
+            borderRadius: INPUT_RADIUS,
+            borderColor: isFocused ? focusColor : '#E2E8F0',
             borderWidth: isFocused ? 2 : 1,
             ...(Platform.OS === 'web'
-              ? { boxShadow: isFocused ? `0 0 0 4px ${theme.role === 'admin' ? 'rgba(234,88,12,0.10)' : 'rgba(0,179,134,0.10)'}` : 'none' }
+              ? {
+                  boxShadow: isFocused
+                    ? `0 0 0 3px ${focusColor}22`
+                    : 'none',
+                  transition: 'box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease'
+                }
               : {})
           }
         ]}
       >
+        {/* Left icon slot */}
         {iconName ? (
           <View style={styles.iconContainer}>
             <Icon
               name={iconName}
               size={18}
-              color={isFocused ? theme.primary : '#64748B'}
+              color={isFocused ? focusColor : '#64748B'}
             />
           </View>
         ) : null}
@@ -79,6 +90,7 @@ export function SquaredInput({
           returnKeyType={returnKeyType}
         />
 
+        {/* Password eye toggle */}
         {showPasswordToggle ? (
           <TouchableOpacity
             style={styles.eyeBtn}
@@ -89,7 +101,7 @@ export function SquaredInput({
             <Icon
               name={isPasswordVisible ? 'eyeOff' : 'eye'}
               size={18}
-              color={isPasswordVisible ? theme.primary : '#94A3B8'}
+              color={isPasswordVisible ? focusColor : '#94A3B8'}
             />
           </TouchableOpacity>
         ) : null}
@@ -111,7 +123,7 @@ const styles = StyleSheet.create({
     height: 52,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     borderWidth: 0,
     outlineStyle: 'none',
     position: 'relative'
@@ -130,7 +142,7 @@ const styles = StyleSheet.create({
   },
   eyeBtn: {
     position: 'absolute',
-    right: 12,
+    right: 14,
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center'

@@ -6,8 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
-  useWindowDimensions,
-  Animated
+  useWindowDimensions
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth.js';
 import { RoleThemeProvider, useRoleTheme } from '../../theme/roleThemes.js';
@@ -17,13 +16,110 @@ import Icon from '../ui/Icon.jsx';
 import SquaredCard from '../ui/SquaredCard.jsx';
 import SquaredButton from '../ui/SquaredButton.jsx';
 
+// ─── SVG Progress Ring (web-only, used for leave balances & hero) ─────────────
+function ProgressRing({ size = 60, strokeWidth = 5, progress = 0.75, color = '#14B8A6', children }) {
+  const r = (size - strokeWidth) / 2;
+  const circ = 2 * Math.PI * r;
+  const dash = circ * progress;
+
+  if (Platform.OS !== 'web') {
+    // Fallback: simple circle
+    return (
+      <View style={{ width: size, height: size, borderRadius: size / 2, borderWidth: strokeWidth, borderColor: color, alignItems: 'center', justifyContent: 'center' }}>
+        {children}
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      {/* eslint-disable-next-line react-native/no-inline-styles */}
+      <svg
+        width={size}
+        height={size}
+        style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}
+      >
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="rgba(255,255,255,0.25)"
+          strokeWidth={strokeWidth}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${dash} ${circ}`}
+          strokeLinecap="round"
+        />
+      </svg>
+      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+        {children}
+      </View>
+    </View>
+  );
+}
+
+function LeaveRing({ size = 60, strokeWidth = 5, value, total, color, label }) {
+  const progress = total > 0 ? value / total : 0;
+  const r = (size - strokeWidth) / 2;
+  const circ = 2 * Math.PI * r;
+  const dash = circ * progress;
+
+  if (Platform.OS !== 'web') {
+    return (
+      <View style={styles.balanceItem}>
+        <View style={[styles.ringCircle, { borderColor: color }]}>
+          <Text style={[styles.ringNum, { color }]}>{value}</Text>
+        </View>
+        <Text style={styles.ringLabel}>{label}</Text>
+        <Text style={styles.ringFraction}>{value}/{total}</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.balanceItem}>
+      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        {/* eslint-disable-next-line react-native/no-inline-styles */}
+        <svg
+          width={size}
+          height={size}
+          style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}
+        >
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E2E8F0" strokeWidth={strokeWidth} />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            strokeDasharray={`${dash} ${circ}`}
+            strokeLinecap="round"
+          />
+        </svg>
+        <Text style={[styles.ringNum, { color }]}>{value}</Text>
+      </View>
+      <Text style={styles.ringLabel}>{label}</Text>
+      <Text style={styles.ringFraction}>{value}/{total}</Text>
+    </View>
+  );
+}
+
+// ─── Main Shell Content ───────────────────────────────────────────────────────
 function UserShellContent({ onSignOut }) {
   const { user, profile } = useAuth();
   const theme = useRoleTheme();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 900;
 
-  const [activeTab, setActiveTab] = useState('home'); // 'home' | 'attendance' | 'leave' | 'payslips' | 'tasks' | 'profile'
+  const [activeTab, setActiveTab] = useState('home');
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [showSalary, setShowSalary] = useState(false);
   const [tasks, setTasks] = useState([
@@ -75,18 +171,27 @@ function UserShellContent({ onSignOut }) {
     { id: 'profile', label: 'Profile', icon: 'user' }
   ];
 
+  // Bottom nav (5 items for mobile)
+  const mobileNavItems = [
+    { id: 'home', label: 'Home', icon: 'dashboard' },
+    { id: 'attendance', label: 'Attendance', icon: 'fingerprint' },
+    null, // center check-in button placeholder
+    { id: 'leave', label: 'Leave', icon: 'leave' },
+    { id: 'more', label: 'More', icon: 'more' }
+  ];
+
   return (
     <View style={styles.root}>
-      {/* 4px Amber Identity Strip across the top (Section 3 - Desktop only) */}
+      {/* Identity strip (desktop only) */}
       {isDesktop ? (
-        <View style={[styles.identityStrip, { backgroundColor: theme.identityStrip }]} />
+        <View style={[styles.identityStrip, { backgroundColor: '#0F766E' }]} />
       ) : null}
 
       <View style={styles.mainLayout}>
-        {/* DESKTOP: Light Sidebar (Translucent White, 240px, Airy) */}
+        {/* ── DESKTOP SIDEBAR ─────────────────────────────────────────────── */}
         {isDesktop ? (
           <View style={styles.lightSidebar}>
-            {/* Brand Header */}
+            {/* Brand */}
             <View style={styles.sidebarBrand}>
               <HBLogo size={36} />
               <View style={styles.brandTitleWrap}>
@@ -97,32 +202,24 @@ function UserShellContent({ onSignOut }) {
               </View>
             </View>
 
-            {/* Navigation Links */}
+            {/* Nav links */}
             <View style={styles.sidebarNav}>
               {userNavItems.map((item) => {
                 const isActive = activeTab === item.id;
                 return (
                   <TouchableOpacity
                     key={item.id}
-                    style={[
-                      styles.sidebarNavItem,
-                      isActive && styles.sidebarNavItemActive
-                    ]}
+                    style={[styles.sidebarNavItem, isActive && styles.sidebarNavItemActive]}
                     onPress={() => setActiveTab(item.id)}
                     activeOpacity={0.7}
                   >
                     <Icon
                       name={item.icon}
                       size={20}
-                      color={isActive ? '#00B386' : '#64748B'}
+                      color={isActive ? '#0F766E' : '#64748B'}
                       strokeWidth={isActive ? 2.4 : 1.8}
                     />
-                    <Text
-                      style={[
-                        styles.sidebarNavText,
-                        isActive && styles.sidebarNavTextActive
-                      ]}
-                    >
+                    <Text style={[styles.sidebarNavText, isActive && styles.sidebarNavTextActive]}>
                       {item.label}
                     </Text>
                   </TouchableOpacity>
@@ -130,29 +227,18 @@ function UserShellContent({ onSignOut }) {
               })}
             </View>
 
-            {/* Bottom Profile & Sign Out */}
+            {/* Sidebar footer */}
             <View style={styles.sidebarFooter}>
               <View style={styles.userBrief}>
                 <View style={styles.userAvatar}>
-                  <Text style={styles.userAvatarText}>
-                    {firstName.charAt(0).toUpperCase()}
-                  </Text>
+                  <Text style={styles.userAvatarText}>{firstName.charAt(0).toUpperCase()}</Text>
                 </View>
                 <View style={styles.userInfoCol}>
-                  <Text style={styles.userNameText} numberOfLines={1}>
-                    {displayName}
-                  </Text>
-                  <Text style={styles.userEmailText} numberOfLines={1}>
-                    {user?.email}
-                  </Text>
+                  <Text style={styles.userNameText} numberOfLines={1}>{displayName}</Text>
+                  <Text style={styles.userEmailText} numberOfLines={1}>{user?.email}</Text>
                 </View>
               </View>
-
-              <TouchableOpacity
-                style={styles.signOutBtn}
-                onPress={onSignOut}
-                activeOpacity={0.7}
-              >
+              <TouchableOpacity style={styles.signOutBtn} onPress={onSignOut} activeOpacity={0.7}>
                 <Icon name="logout" size={16} color="#DC2626" />
                 <Text style={styles.signOutText}>Sign Out</Text>
               </TouchableOpacity>
@@ -160,10 +246,18 @@ function UserShellContent({ onSignOut }) {
           </View>
         ) : null}
 
-        {/* Content Column (max 1100px on desktop) */}
+        {/* ── CONTENT COLUMN ───────────────────────────────────────────────── */}
         <View style={styles.contentColumn}>
-          {/* Top Bar: Greeting Header + Avatar + Notification Bell */}
+
+          {/* ── TOP GREETING HEADER ─────────────────────────────────────── */}
           <View style={[styles.topArea, !isDesktop && styles.mobileTopArea]}>
+            {/* Mobile: avatar left */}
+            {!isDesktop ? (
+              <View style={styles.mobileAvatarCircle}>
+                <Text style={styles.mobileAvatarText}>{firstName.charAt(0).toUpperCase()}</Text>
+              </View>
+            ) : null}
+
             <View style={styles.greetingCol}>
               <Text style={styles.greetingText}>Good morning, {firstName} 👋</Text>
               <Text style={styles.dateSubText}>
@@ -181,43 +275,43 @@ function UserShellContent({ onSignOut }) {
                 <Icon name="bell" size={20} color="#0F172A" />
                 <View style={styles.bellDot} />
               </TouchableOpacity>
-
-              <View style={styles.topAvatar}>
-                <Text style={styles.topAvatarText}>
-                  {firstName.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-
               {!isDesktop ? (
-                <TouchableOpacity onPress={onSignOut} style={styles.bellBtn}>
+                <TouchableOpacity onPress={onSignOut} style={styles.bellBtn} activeOpacity={0.7}>
                   <Icon name="logout" size={18} color="#EF4444" />
                 </TouchableOpacity>
-              ) : null}
+              ) : (
+                <View style={styles.topAvatar}>
+                  <Text style={styles.topAvatarText}>{firstName.charAt(0).toUpperCase()}</Text>
+                </View>
+              )}
             </View>
           </View>
 
-          {/* Toast Notification */}
+          {/* Toast */}
           {toastMessage ? (
             <View style={styles.toastCard}>
               <Text style={styles.toastText}>{toastMessage}</Text>
             </View>
           ) : null}
 
-          {/* Main Scroll Content */}
+          {/* ── SCROLL CONTENT ──────────────────────────────────────────── */}
           <ScrollView
             style={styles.scrollArea}
-            contentContainerStyle={styles.scrollInner}
+            contentContainerStyle={[styles.scrollInner, !isDesktop && styles.scrollInnerMobile]}
             showsVerticalScrollIndicator={false}
           >
+            {/* ══ HOME TAB ════════════════════════════════════════════════ */}
             {activeTab === 'home' && (
               <>
-                {/* 1. Hero "Today" Card (Emerald Gradient, Live Clock, Shift Time, 1-Tap Check-In) */}
+                {/* 1. SHIFT HERO CARD */}
                 <View style={styles.heroCard}>
                   <View style={styles.heroLeftCol}>
+                    {/* Time badge */}
                     <View style={styles.liveClockBadge}>
                       <View style={styles.clockPulse} />
                       <Text style={styles.liveClockText}>{currentTime || '09:30 AM'}</Text>
                     </View>
+
                     <Text style={styles.shiftTitle}>General Corporate Shift</Text>
                     <Text style={styles.shiftTime}>09:00 AM – 06:00 PM • 8h remaining</Text>
 
@@ -232,34 +326,55 @@ function UserShellContent({ onSignOut }) {
                       <Icon
                         name={isCheckedIn ? 'checkCircle' : 'fingerprint'}
                         size={20}
-                        color={isCheckedIn ? '#00B386' : '#0F172A'}
+                        color={isCheckedIn ? '#059669' : '#0F766E'}
                         strokeWidth={2.4}
                       />
-                      <Text
-                        style={[
-                          styles.checkInActionBtnText,
-                          isCheckedIn && styles.checkInActionBtnTextChecked
-                        ]}
-                      >
-                        {isCheckedIn ? 'Checked In at 09:14 AM' : '1-Tap Geofence Check-In'}
+                      <Text style={[styles.checkInActionBtnText, isCheckedIn && styles.checkInActionBtnTextChecked]}>
+                        {isCheckedIn ? 'Checked In ✓' : '1-Tap Geofence Check-In'}
                       </Text>
                     </TouchableOpacity>
                   </View>
 
+                  {/* Progress ring (right side) */}
                   <View style={styles.heroRightCol}>
-                    <View style={styles.progressRingCircle}>
-                      <Text style={styles.progressRingVal}>68%</Text>
-                      <Text style={styles.progressRingLabel}>Day Done</Text>
-                    </View>
+                    {Platform.OS === 'web' ? (
+                      <View style={{ width: 80, height: 80, alignItems: 'center', justifyContent: 'center' }}>
+                        {/* eslint-disable-next-line react-native/no-inline-styles */}
+                        <svg
+                          width={80}
+                          height={80}
+                          style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}
+                        >
+                          <circle cx={40} cy={40} r={34} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth={6} />
+                          <circle
+                            cx={40}
+                            cy={40}
+                            r={34}
+                            fill="none"
+                            stroke="#FFFFFF"
+                            strokeWidth={6}
+                            strokeDasharray={`${2 * Math.PI * 34 * 0.68} ${2 * Math.PI * 34}`}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <Text style={styles.progressRingVal}>68%</Text>
+                        <Text style={styles.progressRingLabel}>Day Done</Text>
+                      </View>
+                    ) : (
+                      <View style={styles.progressRingCircle}>
+                        <Text style={styles.progressRingVal}>68%</Text>
+                        <Text style={styles.progressRingLabel}>Day Done</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
 
-                {/* 2. Quick Actions as Large Icon Tiles (Comfortable 60px rows) */}
+                {/* 2. QUICK ACTIONS 2×2 GRID */}
                 <View style={styles.quickActionsGrid}>
                   {[
-                    { label: 'Apply Leave', icon: 'leave', bg: '#EFF6FF', color: '#2563EB', action: () => setActiveTab('leave') },
-                    { label: 'Clock History', icon: 'clock', bg: '#ECFDF5', color: '#059669', action: () => setActiveTab('attendance') },
-                    { label: 'View Payslip', icon: 'payroll', bg: '#FFF7ED', color: '#EA580C', action: () => setActiveTab('payslips') },
+                    { label: 'Apply Leave', icon: 'leave', bg: '#ECFDF5', color: '#059669', action: () => setActiveTab('leave') },
+                    { label: 'Clock History', icon: 'clock', bg: '#EFF6FF', color: '#2563EB', action: () => setActiveTab('attendance') },
+                    { label: 'View Payslip', icon: 'payroll', bg: '#FFFBEB', color: '#D97706', action: () => setActiveTab('payslips') },
                     { label: 'My Tasks', icon: 'tasks', bg: '#F5F3FF', color: '#7C3AED', action: () => setActiveTab('tasks') }
                   ].map((qa, i) => (
                     <TouchableOpacity
@@ -272,129 +387,113 @@ function UserShellContent({ onSignOut }) {
                         <Icon name={qa.icon} size={22} color={qa.color} strokeWidth={2.2} />
                       </View>
                       <Text style={styles.quickActionLabel}>{qa.label}</Text>
+                      <View style={{ flex: 1 }} />
+                      <Icon name="chevronRight" size={16} color="#CBD5E1" strokeWidth={2} />
                     </TouchableOpacity>
                   ))}
                 </View>
 
-                {/* 3. Leave Balances & Attendance Heatmap Row */}
-                <View style={styles.twoColRow}>
-                  {/* Leave Balances Card */}
-                  <SquaredCard style={styles.leaveCard}>
-                    <View style={styles.cardHeader}>
-                      <Text style={styles.cardTitle}>My Leave Balances</Text>
-                      <TouchableOpacity onPress={() => setActiveTab('leave')}>
-                        <Text style={styles.viewAllLink}>Apply</Text>
-                      </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.balanceRingsRow}>
-                      <View style={styles.balanceItem}>
-                        <View style={[styles.ringCircle, { borderColor: '#00B386' }]}>
-                          <Text style={styles.ringNum}>14</Text>
-                        </View>
-                        <Text style={styles.ringLabel}>Annual (of 18)</Text>
-                      </View>
-
-                      <View style={styles.balanceItem}>
-                        <View style={[styles.ringCircle, { borderColor: '#FFB020' }]}>
-                          <Text style={styles.ringNum}>6</Text>
-                        </View>
-                        <Text style={styles.ringLabel}>Sick (of 8)</Text>
-                      </View>
-
-                      <View style={styles.balanceItem}>
-                        <View style={[styles.ringCircle, { borderColor: '#3B82F6' }]}>
-                          <Text style={styles.ringNum}>4</Text>
-                        </View>
-                        <Text style={styles.ringLabel}>Casual (of 5)</Text>
-                      </View>
-                    </View>
-                  </SquaredCard>
-
-                  {/* Latest Payslip Card */}
-                  <SquaredCard style={styles.payslipCard}>
-                    <View style={styles.cardHeader}>
-                      <Text style={styles.cardTitle}>Latest Net Salary</Text>
-                      <TouchableOpacity onPress={() => setShowSalary(!showSalary)}>
-                        <Icon name={showSalary ? 'eyeOff' : 'eye'} size={18} color="#64748B" />
-                      </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.salaryAmountRow}>
-                      <Text style={styles.salaryCurrency}>$</Text>
-                      <Text style={styles.salaryAmount}>
-                        {showSalary ? '8,450.00' : '••••••••'}
-                      </Text>
-                    </View>
-                    <Text style={styles.salaryMeta}>Direct Deposit • Nov 15, 2026 (Processed)</Text>
-
-                    <TouchableOpacity
-                      style={styles.downloadPayslipBtn}
-                      onPress={() => showToast('Payslip PDF downloaded to your device.')}
-                      activeOpacity={0.8}
-                    >
-                      <Icon name="download" size={15} color="#00775B" />
-                      <Text style={styles.downloadPayslipText}>Download PDF</Text>
-                    </TouchableOpacity>
-                  </SquaredCard>
+                {/* 3. LEAVE BALANCES */}
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>My Leave Balances</Text>
+                  <TouchableOpacity onPress={() => setActiveTab('leave')}>
+                    <Text style={styles.viewAllLink}>Apply →</Text>
+                  </TouchableOpacity>
                 </View>
 
-                {/* 4. My Tasks Due Soon with Check Ticks */}
-                <SquaredCard style={styles.tasksCard}>
-                  <View style={styles.cardHeader}>
-                    <Text style={styles.cardTitle}>Pending Tasks</Text>
-                    <Text style={styles.tasksDueSub}>3 items requiring your attention</Text>
-                  </View>
-
-                  <View style={styles.tasksList}>
-                    {tasks.map((t) => (
-                      <TouchableOpacity
-                        key={t.id}
-                        style={styles.taskItemRow}
-                        onPress={() => handleToggleTask(t.id)}
-                        activeOpacity={0.8}
-                      >
-                        <View
-                          style={[
-                            styles.checkboxCircle,
-                            t.completed && styles.checkboxCircleCompleted
-                          ]}
-                        >
-                          {t.completed ? (
-                            <Icon name="check" size={13} color="#FFFFFF" strokeWidth={3} />
-                          ) : null}
-                        </View>
-                        <View style={styles.taskDetails}>
-                          <Text
-                            style={[
-                              styles.taskTitle,
-                              t.completed && styles.taskTitleCompleted
-                            ]}
-                          >
-                            {t.title}
-                          </Text>
-                          <Text style={styles.taskDue}>{t.due}</Text>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
+                <SquaredCard style={styles.leaveBalanceCard}>
+                  <View style={styles.balanceRingsRow}>
+                    <LeaveRing size={64} strokeWidth={5} value={14} total={18} color="#0F766E" label="Annual" />
+                    <LeaveRing size={64} strokeWidth={5} value={6}  total={8}  color="#2563EB" label="Sick"   />
+                    <LeaveRing size={64} strokeWidth={5} value={4}  total={5}  color="#D97706" label="Casual" />
                   </View>
                 </SquaredCard>
 
-                {/* 5. Company Announcements & Celebrations */}
+                {/* 4. PAYSLIP CARD */}
+                <SquaredCard style={styles.payslipCardNew}>
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.cardTitle}>Latest Net Salary</Text>
+                    <TouchableOpacity onPress={() => setShowSalary(!showSalary)}>
+                      <Icon name={showSalary ? 'eyeOff' : 'eye'} size={18} color="#64748B" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <Text style={styles.salaryAmountNew}>
+                    {showSalary ? '₹ 84,500' : '••••••'}
+                  </Text>
+                  <Text style={styles.salaryMeta}>Direct Deposit • Nov 15, 2026 (Processed)</Text>
+
+                  <TouchableOpacity
+                    style={styles.downloadPayslipBtn}
+                    onPress={() => showToast('Payslip PDF downloaded to your device.')}
+                    activeOpacity={0.8}
+                  >
+                    <Icon name="download" size={15} color="#0F766E" />
+                    <Text style={styles.downloadPayslipText}>Download PDF</Text>
+                  </TouchableOpacity>
+                </SquaredCard>
+
+                {/* 5. TASKS LIST */}
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Pending Tasks</Text>
+                  <Text style={styles.tasksDueSub}>3 items</Text>
+                </View>
+
+                <View style={styles.tasksList}>
+                  {tasks.map((t) => (
+                    <TouchableOpacity
+                      key={t.id}
+                      style={styles.taskItemCard}
+                      onPress={() => handleToggleTask(t.id)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={[styles.checkboxCircle, t.completed && styles.checkboxCircleCompleted]}>
+                        {t.completed ? <Icon name="check" size={13} color="#FFFFFF" strokeWidth={3} /> : null}
+                      </View>
+                      <View style={styles.taskDetails}>
+                        <Text style={[styles.taskTitle, t.completed && styles.taskTitleCompleted]}>
+                          {t.title}
+                        </Text>
+                        <View style={styles.taskDueBadge}>
+                          <Icon name="calendar" size={10} color="#D97706" />
+                          <Text style={styles.taskDue}>{t.due}</Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* 6. ANNOUNCEMENTS */}
                 <SquaredCard style={styles.announcementCard}>
                   <View style={styles.announcementHeader}>
-                    <Icon name="announcements" size={18} color="#FFB020" />
+                    <View style={styles.announcementIconWrap}>
+                      <Icon name="announcements" size={18} color="#D97706" />
+                    </View>
                     <Text style={styles.cardTitle}>Corporate Announcements</Text>
                   </View>
-                  <Text style={styles.announcementBody}>
-                    🌟 Annual All-Hands Summit scheduled for Dec 12. New flexible wellness stipends take effect starting next payroll cycle.
-                  </Text>
+
+                  <View style={styles.announcementItem}>
+                    <Text style={styles.announcementBody}>
+                      🌟 Annual All-Hands Summit scheduled for Dec 12. All teams are requested to confirm attendance by Nov 28.
+                    </Text>
+                    <Text style={styles.announcementDate}>Nov 20, 2026</Text>
+                  </View>
+
+                  <View style={styles.announcementDivider} />
+
+                  <View style={styles.announcementItem}>
+                    <Text style={styles.announcementBody}>
+                      💚 New flexible wellness stipends take effect starting next payroll cycle. Check the benefits portal for details.
+                    </Text>
+                    <Text style={styles.announcementDate}>Nov 18, 2026</Text>
+                  </View>
                 </SquaredCard>
               </>
             )}
 
+            {/* ══ ATTENDANCE TAB ══════════════════════════════════════════ */}
             {activeTab === 'attendance' && (
-              <SquaredCard style={styles.tasksCard}>
+              <SquaredCard style={styles.tabContentCard}>
                 <Text style={styles.cardTitle}>Monthly Attendance Heatmap</Text>
                 <Text style={styles.tasksDueSub}>21 of 22 days present (95.4% compliance)</Text>
                 <View style={styles.heatmapGrid}>
@@ -415,8 +514,9 @@ function UserShellContent({ onSignOut }) {
               </SquaredCard>
             )}
 
+            {/* ══ LEAVE TAB ═══════════════════════════════════════════════ */}
             {activeTab === 'leave' && (
-              <SquaredCard style={styles.tasksCard}>
+              <SquaredCard style={styles.tabContentCard}>
                 <Text style={styles.cardTitle}>Request Time Off</Text>
                 <Text style={styles.tasksDueSub}>Submit formal leave requests to your supervisor.</Text>
                 <View style={{ marginTop: 16, gap: 12 }}>
@@ -428,25 +528,25 @@ function UserShellContent({ onSignOut }) {
               </SquaredCard>
             )}
 
+            {/* ══ PAYSLIPS TAB ════════════════════════════════════════════ */}
             {activeTab === 'payslips' && (
-              <SquaredCard style={styles.payslipCard}>
+              <SquaredCard style={styles.tabContentCard}>
                 <Text style={styles.cardTitle}>Historical Payslips</Text>
                 <Text style={styles.tasksDueSub}>Access payroll statements and tax documents.</Text>
                 {['October 2026', 'September 2026', 'August 2026'].map((m, i) => (
                   <View key={i} style={styles.historicalRow}>
                     <Text style={styles.historicalMonth}>{m}</Text>
-                    <TouchableOpacity
-                      onPress={() => showToast(`Downloading ${m} statement`)}
-                    >
-                      <Icon name="download" size={16} color="#00B386" />
+                    <TouchableOpacity onPress={() => showToast(`Downloading ${m} statement`)}>
+                      <Icon name="download" size={16} color="#0F766E" />
                     </TouchableOpacity>
                   </View>
                 ))}
               </SquaredCard>
             )}
 
+            {/* ══ TASKS TAB ═══════════════════════════════════════════════ */}
             {activeTab === 'tasks' && (
-              <SquaredCard style={styles.tasksCard}>
+              <SquaredCard style={styles.tabContentCard}>
                 <Text style={styles.cardTitle}>Personal Tasks</Text>
                 {tasks.map((t) => (
                   <TouchableOpacity
@@ -463,8 +563,9 @@ function UserShellContent({ onSignOut }) {
               </SquaredCard>
             )}
 
+            {/* ══ PROFILE TAB ═════════════════════════════════════════════ */}
             {activeTab === 'profile' && (
-              <SquaredCard style={styles.tasksCard}>
+              <SquaredCard style={styles.tabContentCard}>
                 <Text style={styles.cardTitle}>Personal Profile</Text>
                 <Text style={styles.tasksDueSub}>Verified account: {user?.email}</Text>
                 <View style={{ marginTop: 16, gap: 8 }}>
@@ -478,58 +579,47 @@ function UserShellContent({ onSignOut }) {
             )}
           </ScrollView>
 
-          {/* PHONES: Floating Bottom Tab Bar with Raised Round Check-In Button in Centre (Section 5.2) */}
+          {/* ── MOBILE FLOATING BOTTOM NAV ──────────────────────────────── */}
           {!isDesktop ? (
             <View style={styles.phoneFloatingTabWrapper}>
               <View style={styles.phoneFloatingBar}>
-                <TouchableOpacity
-                  style={styles.phoneTabBtn}
-                  onPress={() => setActiveTab('home')}
-                >
-                  <Icon name="dashboard" size={20} color={activeTab === 'home' ? '#00B386' : '#64748B'} />
+                {/* Home */}
+                <TouchableOpacity style={styles.phoneTabBtn} onPress={() => setActiveTab('home')}>
+                  <Icon name="dashboard" size={22} color={activeTab === 'home' ? '#0F766E' : '#94A3B8'} />
                   <Text style={[styles.phoneTabLabel, activeTab === 'home' && styles.phoneTabLabelActive]}>Home</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.phoneTabBtn}
-                  onPress={() => setActiveTab('attendance')}
-                >
-                  <Icon name="fingerprint" size={20} color={activeTab === 'attendance' ? '#00B386' : '#64748B'} />
+                {/* Attendance */}
+                <TouchableOpacity style={styles.phoneTabBtn} onPress={() => setActiveTab('attendance')}>
+                  <Icon name="fingerprint" size={22} color={activeTab === 'attendance' ? '#0F766E' : '#94A3B8'} />
                   <Text style={[styles.phoneTabLabel, activeTab === 'attendance' && styles.phoneTabLabelActive]}>Attendance</Text>
                 </TouchableOpacity>
 
-                {/* Raised Round Check-In Button in Centre */}
+                {/* Center raised check-in button */}
                 <TouchableOpacity
-                  style={[
-                    styles.raisedCheckInBtn,
-                    isCheckedIn && styles.raisedCheckInBtnChecked
-                  ]}
+                  style={[styles.raisedCheckInBtn, isCheckedIn && styles.raisedCheckInBtnChecked]}
                   onPress={handleCheckInToggle}
                   activeOpacity={0.85}
                   accessibilityLabel="Check In / Out"
                 >
                   <Icon
                     name={isCheckedIn ? 'check' : 'fingerprint'}
-                    size={24}
+                    size={26}
                     color="#FFFFFF"
                     strokeWidth={2.6}
                   />
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.phoneTabBtn}
-                  onPress={() => setActiveTab('leave')}
-                >
-                  <Icon name="leave" size={20} color={activeTab === 'leave' ? '#00B386' : '#64748B'} />
+                {/* Leave */}
+                <TouchableOpacity style={styles.phoneTabBtn} onPress={() => setActiveTab('leave')}>
+                  <Icon name="leave" size={22} color={activeTab === 'leave' ? '#0F766E' : '#94A3B8'} />
                   <Text style={[styles.phoneTabLabel, activeTab === 'leave' && styles.phoneTabLabelActive]}>Leave</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.phoneTabBtn}
-                  onPress={() => setActiveTab('payslips')}
-                >
-                  <Icon name="payroll" size={20} color={activeTab === 'payslips' ? '#00B386' : '#64748B'} />
-                  <Text style={[styles.phoneTabLabel, activeTab === 'payslips' && styles.phoneTabLabelActive]}>Payslips</Text>
+                {/* More */}
+                <TouchableOpacity style={styles.phoneTabBtn} onPress={() => setActiveTab('profile')}>
+                  <Icon name="more" size={22} color={activeTab === 'profile' ? '#0F766E' : '#94A3B8'} />
+                  <Text style={[styles.phoneTabLabel, activeTab === 'profile' && styles.phoneTabLabelActive]}>More</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -548,10 +638,11 @@ export function UserShell({ onSignOut }) {
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F5FBF7',
+    backgroundColor: '#F0FDFA',
     position: 'relative'
   },
   identityStrip: {
@@ -564,12 +655,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     height: '100%'
   },
+
+  // ── Desktop Sidebar ────────────────────────────────────────────────────────
   lightSidebar: {
     width: 240,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: '#FFFFFF',
     ...(Platform.OS === 'web' ? { backdropFilter: 'blur(12px)' } : {}),
     borderRightWidth: 1,
-    borderRightColor: '#E6F6EE',
+    borderRightColor: '#E2E8F0',
     paddingVertical: 24,
     justifyContent: 'space-between'
   },
@@ -590,15 +683,15 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3
   },
   userBadgePill: {
-    backgroundColor: '#FFF7E6',
+    backgroundColor: '#F0FDFA',
     borderWidth: 1,
-    borderColor: 'rgba(255, 176, 32, 0.3)',
+    borderColor: '#99F6E4',
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: CARD_RADIUS
+    borderRadius: 20
   },
   userBadgeText: {
-    color: '#B57400',
+    color: '#0F766E',
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.4,
@@ -607,7 +700,7 @@ const styles = StyleSheet.create({
   sidebarNav: {
     flex: 1,
     paddingHorizontal: 12,
-    gap: 6
+    gap: 4
   },
   sidebarNavItem: {
     height: 48,
@@ -618,7 +711,7 @@ const styles = StyleSheet.create({
     gap: 12
   },
   sidebarNavItemActive: {
-    backgroundColor: 'rgba(0, 179, 134, 0.12)'
+    backgroundColor: '#F0FDFA'
   },
   sidebarNavText: {
     fontSize: 14,
@@ -626,14 +719,14 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   sidebarNavTextActive: {
-    color: '#00B386',
+    color: '#0F766E',
     fontWeight: '700'
   },
   sidebarFooter: {
     paddingHorizontal: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E6F6EE',
+    borderTopColor: '#E2E8F0',
     gap: 12
   },
   userBrief: {
@@ -645,12 +738,12 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(0, 179, 134, 0.15)',
+    backgroundColor: '#0F766E',
     alignItems: 'center',
     justifyContent: 'center'
   },
   userAvatarText: {
-    color: '#00B386',
+    color: '#FFFFFF',
     fontWeight: '800',
     fontSize: 14
   },
@@ -677,6 +770,8 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     fontWeight: '600'
   },
+
+  // ── Content Column ─────────────────────────────────────────────────────────
   contentColumn: {
     flex: 1,
     maxWidth: 1100,
@@ -685,33 +780,53 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'column'
   },
+
+  // ── Top Greeting Header ────────────────────────────────────────────────────
   topArea: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 14,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: '100%',
-    maxWidth: '100%'
+    width: '100%'
   },
   mobileTopArea: {
     paddingTop: Platform.OS === 'web' ? 'max(42px, env(safe-area-inset-top, 42px))' : 42,
-    paddingBottom: 12,
+    paddingBottom: 14,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
-    shadowColor: '#00775B',
+    shadowColor: '#0F766E',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 2
+    elevation: 2,
+    gap: 10
+  },
+  // Mobile avatar circle (left of greeting)
+  mobileAvatarCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#0F766E',
+    ...(Platform.OS === 'web'
+      ? { backgroundImage: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)' }
+      : {}),
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  mobileAvatarText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 16
   },
   greetingCol: {
-    gap: 4
+    flex: 1,
+    gap: 2
   },
   greetingText: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     color: '#0F172A',
     letterSpacing: -0.3
@@ -723,21 +838,16 @@ const styles = StyleSheet.create({
   topActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12
+    gap: 10
   },
   bellBtn: {
     width: 38,
     height: 38,
-    borderRadius: CARD_RADIUS,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 19,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 0
+    position: 'relative'
   },
   bellDot: {
     position: 'absolute',
@@ -746,23 +856,25 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#FFB020'
+    backgroundColor: '#F59E0B'
   },
   topAvatar: {
     width: 38,
     height: 38,
-    borderRadius: CARD_RADIUS,
-    backgroundColor: '#E0F8F1',
+    borderRadius: 19,
+    backgroundColor: '#0F766E',
     alignItems: 'center',
     justifyContent: 'center'
   },
   topAvatarText: {
-    color: '#00B386',
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '800'
   },
+
+  // ── Toast ──────────────────────────────────────────────────────────────────
   toastCard: {
-    marginHorizontal: 24,
+    marginHorizontal: 20,
     marginBottom: 10,
     backgroundColor: '#0F172A',
     borderRadius: CARD_RADIUS,
@@ -775,45 +887,52 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600'
   },
+
+  // ── Scroll ─────────────────────────────────────────────────────────────────
   scrollArea: {
     flex: 1
   },
   scrollInner: {
     paddingHorizontal: 20,
-    paddingBottom: 140,
-    gap: 16
+    paddingTop: 16,
+    paddingBottom: 100,
+    gap: 14
   },
-  // Hero Today Card
+  scrollInnerMobile: {
+    paddingBottom: 140
+  },
+
+  // ── Shift Hero Card ────────────────────────────────────────────────────────
   heroCard: {
-    backgroundColor: '#00B386',
+    backgroundColor: '#0F766E',
     ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(135deg, #00D9A5 0%, #00B386 100%)' }
+      ? { backgroundImage: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)' }
       : {}),
-    borderRadius: CARD_RADIUS,
-    padding: 24,
+    borderRadius: 24,
+    padding: 22,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#00B386',
+    shadowColor: '#0F766E',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 20,
-    elevation: 0,
-    flexWrap: 'wrap',
-    gap: 16
+    elevation: 6,
+    gap: 16,
+    flexWrap: 'wrap'
   },
   heroLeftCol: {
     gap: 8,
     flex: 1,
-    minWidth: 260
+    minWidth: 220
   },
   liveClockBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: 20,
     alignSelf: 'flex-start'
   },
@@ -835,7 +954,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3
   },
   shiftTime: {
-    color: 'rgba(255, 255, 255, 0.85)',
+    color: 'rgba(255, 255, 255, 0.82)',
     fontSize: 13,
     fontWeight: '500'
   },
@@ -845,44 +964,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: CARD_RADIUS,
+    paddingVertical: 13,
+    borderRadius: 20,
     gap: 10,
-    alignSelf: 'flex-start',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 0
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2
   },
   checkInActionBtnChecked: {
     backgroundColor: '#ECFDF5'
   },
   checkInActionBtnText: {
-    color: '#0F172A',
+    color: '#0F766E',
     fontSize: 14,
-    fontWeight: '700'
+    fontWeight: '800'
   },
   checkInActionBtnTextChecked: {
-    color: '#00B386'
+    color: '#059669'
   },
   heroRightCol: {
     alignItems: 'center',
     justifyContent: 'center'
   },
   progressRingCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    borderWidth: 4,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 5,
     borderColor: 'rgba(255, 255, 255, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)'
+    backgroundColor: 'rgba(255, 255, 255, 0.12)'
   },
   progressRingVal: {
     color: '#FFFFFF',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800'
   },
   progressRingLabel: {
@@ -890,50 +1008,106 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600'
   },
-  // Quick Actions (60px rows)
+
+  // ── Quick Action 2×2 Grid ──────────────────────────────────────────────────
   quickActionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 14
+    gap: 12
   },
   quickActionTile: {
-    flex: 1,
+    // 2 columns on mobile, flexible on desktop
+    flexBasis: '47%',
+    flexGrow: 1,
     minWidth: 140,
-    height: 60,
     backgroundColor: '#FFFFFF',
-    borderRadius: CARD_RADIUS,
-    paddingHorizontal: 16,
+    borderRadius: 20,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    shadowColor: '#00775B',
+    shadowColor: '#0F766E',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.07,
     shadowRadius: 12,
-    elevation: 0
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F1F5F9'
   },
   quickActionIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: CARD_RADIUS,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center'
   },
   quickActionLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
+    color: '#0F172A',
+    flex: 1
+  },
+
+  // ── Section header ─────────────────────────────────────────────────────────
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
     color: '#0F172A'
   },
-  twoColRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16
+  viewAllLink: {
+    fontSize: 13,
+    color: '#0F766E',
+    fontWeight: '700'
   },
-  leaveCard: {
-    flex: 1,
-    minWidth: 300,
+
+  // ── Leave Balance Card ─────────────────────────────────────────────────────
+  leaveBalanceCard: {
+    padding: 20
+  },
+  balanceRingsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 6
+  },
+  balanceItem: {
+    alignItems: 'center',
+    gap: 6
+  },
+  ringCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF'
+  },
+  ringNum: {
+    fontSize: 20,
+    fontWeight: '800'
+  },
+  ringLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '600'
+  },
+  ringFraction: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontWeight: '500'
+  },
+
+  // ── Payslip Card (new) ─────────────────────────────────────────────────────
+  payslipCardNew: {
     padding: 22,
-    gap: 16
+    gap: 10
   },
   cardHeader: {
     flexDirection: 'row',
@@ -945,61 +1119,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0F172A'
   },
-  viewAllLink: {
-    fontSize: 13,
-    color: '#00B386',
-    fontWeight: '700'
-  },
-  balanceRingsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingVertical: 6
-  },
-  balanceItem: {
-    alignItems: 'center',
-    gap: 8
-  },
-  ringCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF'
-  },
-  ringNum: {
-    fontSize: 20,
+  salaryAmountNew: {
+    fontSize: 28,
     fontWeight: '800',
-    color: '#0F172A'
-  },
-  ringLabel: {
-    fontSize: 12,
-    color: '#64748B',
-    fontWeight: '600'
-  },
-  payslipCard: {
-    flex: 1,
-    minWidth: 300,
-    padding: 22,
-    gap: 12
-  },
-  salaryAmountRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 4
-  },
-  salaryCurrency: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#64748B'
-  },
-  salaryAmount: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#0F172A',
-    fontVariant: ['tabular-nums']
+    color: '#0F766E',
+    letterSpacing: -0.5
   },
   salaryMeta: {
     fontSize: 12,
@@ -1009,76 +1133,133 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 6,
-    alignSelf: 'flex-start'
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderWidth: 1.5,
+    borderColor: '#0F766E',
+    borderRadius: 10,
+    alignSelf: 'flex-start',
+    marginTop: 4
   },
   downloadPayslipText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#00775B'
+    color: '#0F766E'
   },
-  tasksCard: {
-    padding: 22,
-    gap: 14
-  },
+
+  // ── Tasks ──────────────────────────────────────────────────────────────────
   tasksDueSub: {
     fontSize: 12,
-    color: '#64748B'
+    color: '#94A3B8',
+    fontWeight: '600'
   },
   tasksList: {
     gap: 10
+  },
+  taskItemCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 14,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: '#F1F5F9'
   },
   taskItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingVertical: 6
+    paddingVertical: 8
   },
   checkboxCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#CBD5E1',
+    borderColor: '#0F766E',
     alignItems: 'center',
     justifyContent: 'center'
   },
   checkboxCircleCompleted: {
-    backgroundColor: '#00B386',
-    borderColor: '#00B386'
+    backgroundColor: '#059669',
+    borderColor: '#059669'
   },
   taskDetails: {
     flex: 1,
-    gap: 2
+    gap: 4
   },
   taskTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#0F172A'
   },
   taskTitleCompleted: {
     textDecorationLine: 'line-through',
-    color: '#94A3B8'
+    color: '#94A3B8',
+    fontWeight: '500'
+  },
+  taskDueBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4
   },
   taskDue: {
     fontSize: 11,
-    color: '#64748B'
+    color: '#D97706',
+    fontWeight: '600'
   },
+
+  // ── Announcements ──────────────────────────────────────────────────────────
   announcementCard: {
     padding: 20,
-    gap: 8,
+    gap: 12,
     backgroundColor: '#FFFDF5'
   },
   announcementHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8
+    gap: 10
+  },
+  announcementIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FEF3C7',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  announcementItem: {
+    gap: 4
   },
   announcementBody: {
     fontSize: 13,
     color: '#475569',
     lineHeight: 20
   },
+  announcementDate: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontWeight: '600'
+  },
+  announcementDivider: {
+    height: 1,
+    backgroundColor: '#FDE68A',
+    opacity: 0.6
+  },
+
+  // ── Tab content generic card ───────────────────────────────────────────────
+  tabContentCard: {
+    padding: 22,
+    gap: 14
+  },
+
+  // ── Heatmap ────────────────────────────────────────────────────────────────
   heatmapGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1088,12 +1269,12 @@ const styles = StyleSheet.create({
   heatmapTile: {
     width: 36,
     height: 36,
-    borderRadius: 6,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center'
   },
   heatmapPresent: {
-    backgroundColor: '#E0F8F1'
+    backgroundColor: '#CCFBF1'
   },
   heatmapWeekend: {
     backgroundColor: '#F1F5F9'
@@ -1101,12 +1282,14 @@ const styles = StyleSheet.create({
   heatmapTileNum: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#334155'
+    color: '#0F766E'
   },
+
+  // ── Historical payslips ────────────────────────────────────────────────────
   historicalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9'
   },
@@ -1115,11 +1298,14 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontWeight: '600'
   },
+
+  // ── Profile ────────────────────────────────────────────────────────────────
   profileField: {
     fontSize: 14,
     color: '#334155'
   },
-  // Floating Bottom Tab Bar on Phones (Section 5.2)
+
+  // ── Floating Bottom Nav ────────────────────────────────────────────────────
   phoneFloatingTabWrapper: {
     position: 'absolute',
     bottom: Platform.OS === 'web' ? 'max(14px, env(safe-area-inset-bottom, 14px))' : 14,
@@ -1128,55 +1314,59 @@ const styles = StyleSheet.create({
     zIndex: 90
   },
   phoneFloatingBar: {
-    height: 62,
+    height: 64,
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
     paddingHorizontal: 8,
-    shadowColor: '#00775B',
+    shadowColor: '#0F766E',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 18,
+    shadowOpacity: 0.14,
+    shadowRadius: 20,
     elevation: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0, 179, 134, 0.12)'
+    borderColor: '#E2E8F0'
   },
   phoneTabBtn: {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 3,
-    paddingHorizontal: 6
+    paddingHorizontal: 6,
+    flex: 1
   },
   phoneTabLabel: {
     fontSize: 10,
-    color: '#64748B',
+    color: '#94A3B8',
     fontWeight: '600'
   },
   phoneTabLabelActive: {
-    color: '#00B386',
+    color: '#0F766E',
     fontWeight: '700'
   },
   raisedCheckInBtn: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#00B386',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#0F766E',
     ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(135deg, #00D9A5 0%, #00B386 100%)' }
+      ? { backgroundImage: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)' }
       : {}),
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -20,
-    shadowColor: '#00B386',
+    marginTop: -24,
+    shadowColor: '#0F766E',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 6
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
+    elevation: 8
   },
   raisedCheckInBtnChecked: {
-    backgroundColor: '#00775B'
+    backgroundColor: '#059669',
+    ...(Platform.OS === 'web'
+      ? { backgroundImage: 'linear-gradient(135deg, #047857 0%, #059669 100%)' }
+      : {})
   }
 });
 

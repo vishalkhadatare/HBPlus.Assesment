@@ -11,11 +11,9 @@ import {
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth.js';
 import AnimatedLogo from '../components/brand/AnimatedLogo.jsx';
-import { AdminRoleLogo, UserRoleLogo } from '../components/brand/RoleLogos.jsx';
 import Icon from '../components/ui/Icon.jsx';
 import DiagnosticsPanel from '../components/common/DiagnosticsPanel.jsx';
 import { ROUTES } from '../navigation/navigationConfig.js';
-import { CARD_RADIUS } from '../theme/shape.js';
 
 export function RoleSelectScreen() {
   const { navigate } = useAuth();
@@ -25,17 +23,21 @@ export function RoleSelectScreen() {
 
   return (
     <View style={styles.root}>
-      {/* Background Soft Gradient */}
+      {/* Background gradient */}
       <View style={styles.gradientBg} pointerEvents="none" />
 
-      {/* Developer Diagnostics Subtle Gear Icon */}
+      {/* Ambient blobs */}
+      <View style={styles.blobTopLeft} pointerEvents="none" />
+      <View style={styles.blobBottomRight} pointerEvents="none" />
+
+      {/* Developer diagnostics gear – subtle, top-right */}
       <TouchableOpacity
         style={styles.gearBtn}
         onPress={() => setIsDevSheetOpen(true)}
         activeOpacity={0.7}
         accessibilityLabel="Developer Diagnostics"
       >
-        <Icon name="settings" size={20} color="#94A3B8" />
+        <Icon name="settings" size={16} color="#94A3B8" />
       </TouchableOpacity>
 
       <ScrollView
@@ -44,64 +46,73 @@ export function RoleSelectScreen() {
         bounces={false}
       >
         <View style={[styles.mainWrapper, isWide && styles.mainWrapperWide]}>
-          {/* Animated Logo (Keeps exact honeycomb component & animation) */}
+          {/* Animated Logo */}
           <View style={styles.logoArea}>
             <AnimatedLogo
-              size={isWide ? 120 : 104}
+              size={isWide ? 130 : 110}
               showWordmark={true}
               showTagline={false}
               textColor="#0F172A"
             />
           </View>
 
-          {/* Two Clean, Large Choice Buttons */}
-          <View style={styles.cardArea}>
-            <View style={styles.introBlock}>
-              <Text style={styles.eyebrow}>HBPlus workspace</Text>
-              <Text style={styles.heading}>Choose how you want to continue</Text>
-            </View>
+          {/* Tagline + Heading */}
+          <View style={styles.introBlock}>
+            <Text style={styles.eyebrow}>HBPlus Workspace</Text>
+            <Text style={styles.heading}>Choose your access</Text>
+          </View>
 
-            {/* Admin Choice Button */}
+          {/* Role cards */}
+          <View style={[styles.cardArea, isWide && styles.cardAreaWide]}>
+            {/* Admin Card */}
             <TouchableOpacity
-              style={styles.roleCard}
+              style={[styles.roleCard, isWide && styles.roleCardWide]}
               onPress={() => navigate(ROUTES.LOGIN_ADMIN)}
-              activeOpacity={0.8}
+              activeOpacity={0.9}
               accessibilityRole="button"
               accessibilityLabel="Admin"
             >
-              <View style={styles.adminIconTile}>
-                <AdminRoleLogo size={36} />
+              {/* Icon circle – orange gradient */}
+              <View style={styles.adminIconCircle}>
+                <Icon name="shieldCheck" size={24} color="#FFFFFF" strokeWidth={2} />
               </View>
 
               <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>Admin</Text>
-                <Text style={styles.cardDescription}>Manage people, approvals and reports</Text>
+                <Text style={styles.cardDescription}>
+                  Manage people, approvals and reports
+                </Text>
               </View>
 
-              <View style={styles.trailingArrow}>
-                <Icon name="chevronRight" size={20} color="#EA580C" strokeWidth={2.4} />
+              {/* Chevron in orange circle */}
+              <View style={styles.chevronCircleOrange}>
+                <Icon name="chevronRight" size={16} color="#FFFFFF" strokeWidth={2.5} />
               </View>
             </TouchableOpacity>
 
-            {/* User Choice Button */}
+            {/* User Card */}
             <TouchableOpacity
-              style={styles.roleCard}
+              style={[styles.roleCard, isWide && styles.roleCardWide]}
               onPress={() => navigate(ROUTES.LOGIN_USER)}
-              activeOpacity={0.8}
+              activeOpacity={0.9}
               accessibilityRole="button"
               accessibilityLabel="User"
             >
-              <View style={styles.userIconTile}>
-                <UserRoleLogo size={36} />
+              {/* Icon circle – teal gradient */}
+              <View style={styles.userIconCircle}>
+                <Icon name="userCircle" size={24} color="#FFFFFF" strokeWidth={2} />
               </View>
 
               <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>User</Text>
-                <Text style={styles.cardDescription}>Access your workspace, tasks and payroll</Text>
+                <Text style={styles.cardDescription}>
+                  Access your workspace, tasks and payroll
+                </Text>
               </View>
 
-              <View style={styles.trailingArrow}>
-                <Icon name="chevronRight" size={20} color="#00B386" strokeWidth={2.4} />
+              {/* Chevron in teal circle */}
+              <View style={styles.chevronCircleTeal}>
+                <Icon name="chevronRight" size={16} color="#FFFFFF" strokeWidth={2.5} />
               </View>
             </TouchableOpacity>
           </View>
@@ -145,9 +156,73 @@ export function RoleSelectScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F7FBFA',
+    backgroundColor: '#F8FAFC',
     position: 'relative'
   },
+
+  /* ── Background ── */
+  gradientBg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#F8FAFC',
+    ...(Platform.OS === 'web'
+      ? { backgroundImage: 'linear-gradient(180deg, #F8FAFC 0%, #F0FDFA 100%)' }
+      : {})
+  },
+
+  /* ── Ambient blobs ── */
+  blobTopLeft: {
+    position: 'absolute',
+    top: -80,
+    left: -80,
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    backgroundColor: 'rgba(20, 184, 166, 0.40)',
+    ...(Platform.OS === 'web' ? { filter: 'blur(80px)' } : {}),
+    zIndex: 0
+  },
+  blobBottomRight: {
+    position: 'absolute',
+    bottom: -80,
+    right: -80,
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    backgroundColor: 'rgba(249, 115, 22, 0.40)',
+    ...(Platform.OS === 'web' ? { filter: 'blur(80px)' } : {}),
+    zIndex: 0
+  },
+
+  /* ── Gear button ── */
+  gearBtn: {
+    position: 'absolute',
+    top: Platform.OS === 'web' ? 'max(32px, env(safe-area-inset-top, 32px))' : 32,
+    right: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(255,255,255,0.80)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    zIndex: 20,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 2px 8px rgba(15,23,42,0.06)' }
+      : {
+          shadowColor: '#000000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.04,
+          shadowRadius: 6,
+          elevation: 2
+        })
+  },
+
+  /* ── Scroll / wrapper ── */
   scrollRoot: {
     flexGrow: 1,
     alignItems: 'center',
@@ -157,119 +232,110 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'web' ? 'max(28px, env(safe-area-inset-bottom, 28px))' : 28,
     width: '100%'
   },
-  gradientBg: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#F7FBFA',
-    ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(180deg, #F7FBFA 0%, #E4F5EF 100%)' }
-      : {})
-  },
-  gearBtn: {
-    position: 'absolute',
-    top: Platform.OS === 'web' ? 'max(40px, env(safe-area-inset-top, 40px))' : 40,
-    right: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    zIndex: 20,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2
-  },
   mainWrapper: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 420,
     alignItems: 'center',
-    zIndex: 10
+    zIndex: 10,
+    gap: 20
   },
   mainWrapperWide: {
-    maxWidth: 420
+    maxWidth: 560
   },
+
+  /* ── Logo ── */
   logoArea: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24
+    justifyContent: 'center'
   },
-  cardArea: {
-    width: '100%',
-    gap: 16
-  },
+
+  /* ── Intro block ── */
   introBlock: {
     alignItems: 'center',
-    marginBottom: 4
+    gap: 6
   },
   eyebrow: {
     color: '#64748B',
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    marginBottom: 6
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textTransform: 'uppercase'
   },
   heading: {
     color: '#0F172A',
-    fontSize: 20,
+    fontSize: 26,
     fontWeight: '800',
     letterSpacing: -0.5,
     textAlign: 'center'
   },
-  roleCard: {
+
+  /* ── Card area ── */
+  cardArea: {
     width: '100%',
+    gap: 14,
+    marginTop: 4
+  },
+  cardAreaWide: {
+    flexDirection: 'row'
+  },
+
+  /* ── Role card ── */
+  roleCard: {
+    flex: 1,
     minHeight: 82,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.88)',
-    ...(Platform.OS === 'web'
-      ? {
-          backdropFilter: 'blur(12px)',
-          boxShadow: '0 12px 36px rgba(15,23,42,0.08)',
-          transition: 'transform 160ms ease, box-shadow 160ms ease'
-        }
-      : {}),
-    borderRadius: CARD_RADIUS,
-    paddingHorizontal: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 2,
-    cursor: 'pointer'
+    ...(Platform.OS === 'web'
+      ? {
+          boxShadow: '0 4px 24px rgba(15,23,42,0.07)',
+          transition: 'transform 160ms ease, box-shadow 160ms ease',
+          cursor: 'pointer'
+        }
+      : {
+          shadowColor: '#0F172A',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.07,
+          shadowRadius: 16,
+          elevation: 3
+        })
   },
-  adminIconTile: {
+  roleCardWide: {
+    minHeight: 100
+  },
+
+  /* ── Icon circles ── */
+  adminIconCircle: {
     width: 52,
     height: 52,
-    borderRadius: 14,
-    backgroundColor: '#FFF7ED',
-    borderWidth: 1,
-    borderColor: '#FED7AA',
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16
+    marginRight: 16,
+    backgroundColor: '#F97316',
+    ...(Platform.OS === 'web'
+      ? { backgroundImage: 'linear-gradient(135deg, #C2410C 0%, #F97316 100%)' }
+      : {})
   },
-  userIconTile: {
+  userIconCircle: {
     width: 52,
     height: 52,
-    borderRadius: 14,
-    backgroundColor: '#F0FDF4',
-    borderWidth: 1,
-    borderColor: '#DCFCE7',
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16
+    marginRight: 16,
+    backgroundColor: '#14B8A6',
+    ...(Platform.OS === 'web'
+      ? { backgroundImage: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)' }
+      : {})
   },
+
+  /* ── Card text ── */
   cardContent: {
     flex: 1,
     justifyContent: 'center'
@@ -281,17 +347,37 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2
   },
   cardDescription: {
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 13,
+    lineHeight: 18,
     color: '#64748B',
     marginTop: 3
   },
-  trailingArrow: {
+
+  /* ── Chevron circles ── */
+  chevronCircleOrange: {
     width: 32,
     height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F97316',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    ...(Platform.OS === 'web'
+      ? { backgroundImage: 'linear-gradient(135deg, #C2410C 0%, #F97316 100%)' }
+      : {})
   },
+  chevronCircleTeal: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#14B8A6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...(Platform.OS === 'web'
+      ? { backgroundImage: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)' }
+      : {})
+  },
+
+  /* ── Diagnostics modal ── */
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.4)',

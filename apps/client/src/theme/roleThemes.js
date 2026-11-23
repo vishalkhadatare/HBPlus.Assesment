@@ -2,89 +2,136 @@ import React, { createContext, useContext } from 'react';
 import { CARD_RADIUS } from './shape.js';
 
 /**
- * Role Theme Definitions (Section 3)
- * Admin = "Control" (Authoritative, precise, data-dense)
- * User = "Workspace" (Friendly, calm, personal)
+ * Role Theme Definitions — 2025 Premium Color System
+ * Admin = "Control" (Warm coral-orange, authoritative, data-dense)
+ * User  = "Workspace" (Teal-emerald, friendly, calm, personal)
  */
 export const ROLE_THEME = {
   admin: {
     role: 'admin',
     label: 'Admin',
     personality: 'Authoritative, precise, data-dense',
-    pageTint: ['#F8FAFC', '#F1F5F9'],
-    pageBgGradient: 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)',
-    pageBgColor: '#F8FAFC',
-    primary: '#EA580C',
-    secondary: '#FF6B00',
-    buttonGradient: ['#FF7A1A', '#EA580C'],
-    buttonGradientCss: 'linear-gradient(135deg, #FF7A1A 0%, #EA580C 100%)',
-    buttonGlow: 'rgba(234, 88, 12, 0.25)',
+
+    // Backgrounds
+    pageBgColor: '#FFF7ED',
+    pageBgGradient: 'linear-gradient(180deg, #FFFFFF 0%, #FFF7ED 100%)',
+    pageTint: ['#FFFFFF', '#FFF7ED'],
+
+    // Brand
+    primary: '#C2410C',
+    primaryLight: '#F97316',
+    secondary: '#F97316',
+    buttonGradient: ['#F97316', '#C2410C'],
+    buttonGradientCss: 'linear-gradient(135deg, #F97316 0%, #C2410C 100%)',
+    buttonGlow: 'rgba(194, 65, 12, 0.28)',
+
+    // Cards
     cardTint: '#FFFFFF',
-    cardShadow: 'rgba(15, 23, 42, 0.04)',
+    cardShadow: 'rgba(15, 23, 42, 0.05)',
     cardShadowStyle: {
       shadowColor: '#0F172A',
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.04,
-      shadowRadius: 16,
-      elevation: 0
+      shadowOpacity: 0.05,
+      shadowRadius: 12,
+      elevation: 3
     },
-    inputFill: '#F8FAFC',
+    cardShadowWeb:
+      '0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.08)',
+
+    // Inputs
+    inputFill: '#F1F5F9',
     inputFocusFill: '#FFFFFF',
+
+    // Text
+    textPrimary: '#0F172A',
+    textSecondary: '#64748B',
+    textTertiary: '#94A3B8',
+
+    // Borders
+    border: '#E2E8F0',
+
+    // Navigation & chrome
     roleIcon: 'shieldCheck',
     roleBadge: {
       bg: '#FFF7ED',
-      text: '#EA580C',
+      text: '#C2410C',
       icon: 'shieldCheck',
       label: 'Admin'
     },
+    identityStrip: '#C2410C',
+    sidebarBg: '#FFFFFF',
+    sidebarText: '#334155',
+    activeNavHighlight: '#C2410C',
+
+    // Layout
     density: 'compact',
     rowHeight: 44,
     gap: 12,
     motion: { duration: 200, spring: 'snappy' },
-    identityStrip: '#EA580C',
-    sidebarBg: '#FFFFFF',
-    sidebarText: '#334155',
-    activeNavHighlight: '#EA580C',
     cardRadius: CARD_RADIUS
   },
+
   user: {
     role: 'user',
     label: 'User',
     personality: 'Friendly, calm, personal',
-    pageTint: ['#F5FBF7', '#E6F6EE'],
-    pageBgGradient: 'linear-gradient(180deg, #F5FBF7 0%, #E6F6EE 100%)',
-    pageBgColor: '#F5FBF7',
-    primary: '#00B386',
-    secondary: '#FFB020',
-    buttonGradient: ['#00D9A5', '#00B386'],
-    buttonGradientCss: 'linear-gradient(135deg, #00D9A5 0%, #00B386 100%)',
-    buttonGlow: 'rgba(0, 179, 134, 0.25)',
-    cardTint: 'rgba(255, 255, 255, 0.78)',
-    cardShadow: 'rgba(0, 119, 91, 0.07)',
+
+    // Backgrounds
+    pageBgColor: '#F0FDFA',
+    pageBgGradient: 'linear-gradient(180deg, #FFFFFF 0%, #F0FDFA 100%)',
+    pageTint: ['#FFFFFF', '#F0FDFA'],
+
+    // Brand
+    primary: '#0F766E',
+    primaryLight: '#14B8A6',
+    secondary: '#14B8A6',
+    buttonGradient: ['#14B8A6', '#0F766E'],
+    buttonGradientCss: 'linear-gradient(135deg, #14B8A6 0%, #0F766E 100%)',
+    buttonGlow: 'rgba(15, 118, 110, 0.28)',
+
+    // Cards
+    cardTint: '#FFFFFF',
+    cardShadow: 'rgba(15, 23, 42, 0.05)',
     cardShadowStyle: {
-      shadowColor: '#00775B',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.07,
-      shadowRadius: 24,
-      elevation: 0
+      shadowColor: '#0F172A',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.05,
+      shadowRadius: 12,
+      elevation: 3
     },
-    inputFill: '#E8F2EE',
-    inputFocusFill: '#DFEDE8',
+    cardShadowWeb:
+      '0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.08)',
+
+    // Inputs
+    inputFill: '#F1F5F9',
+    inputFocusFill: '#FFFFFF',
+
+    // Text
+    textPrimary: '#0F172A',
+    textSecondary: '#64748B',
+    textTertiary: '#94A3B8',
+
+    // Borders
+    border: '#E2E8F0',
+
+    // Navigation & chrome
     roleIcon: 'userCircle',
     roleBadge: {
-      bg: '#FFF7E6',
-      text: '#B57400',
+      bg: '#F0FDFA',
+      text: '#0F766E',
       icon: 'userCircle',
       label: 'User'
     },
+    identityStrip: '#0F766E',
+    sidebarBg: '#FFFFFF',
+    sidebarText: '#334155',
+    activeNavHighlight: '#0F766E',
+
+    // Layout
     density: 'comfortable',
     rowHeight: 60,
     gap: 20,
     motion: { duration: 320, spring: 'bouncy' },
-    identityStrip: '#00B386',
-    sidebarBg: 'rgba(255, 255, 255, 0.85)',
-    sidebarText: '#0F172A',
-    activeNavHighlight: '#00B386',
     cardRadius: CARD_RADIUS
   }
 };
