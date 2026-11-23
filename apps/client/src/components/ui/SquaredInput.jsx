@@ -19,6 +19,8 @@ export function SquaredInput({
   editable = true,
   onSubmitEditing,
   returnKeyType = 'done',
+  autoComplete,
+  textContentType,
   style
 }) {
   const theme = useRoleTheme();
@@ -30,6 +32,24 @@ export function SquaredInput({
   // Focus ring colour: use the theme's brand primary
   const focusColor = theme.primary;
 
+  const resolvedAutoComplete =
+    autoComplete !== undefined
+      ? autoComplete
+      : secureTextEntry
+        ? 'password'
+        : keyboardType === 'email-address'
+          ? 'email'
+          : 'off';
+
+  const resolvedTextContentType =
+    textContentType !== undefined
+      ? textContentType
+      : secureTextEntry
+        ? 'password'
+        : keyboardType === 'email-address'
+          ? 'emailAddress'
+          : 'none';
+
   return (
     <View style={[styles.wrapper, style]}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
@@ -37,7 +57,7 @@ export function SquaredInput({
         style={[
           styles.inputContainer,
           {
-            backgroundColor: isFocused ? '#FFFFFF' : '#F1F5F9',
+            backgroundColor: isFocused ? '#FFFFFF' : '#F8FAFC',
             borderRadius: INPUT_RADIUS,
             borderColor: isFocused ? focusColor : '#E2E8F0',
             borderWidth: isFocused ? 2 : 1,
@@ -79,8 +99,8 @@ export function SquaredInput({
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
           autoCorrect={false}
-          autoComplete={secureTextEntry ? 'password' : 'email'}
-          textContentType={secureTextEntry ? 'password' : 'emailAddress'}
+          autoComplete={resolvedAutoComplete}
+          textContentType={resolvedTextContentType}
           accessibilityLabel={label}
           accessibilityHint={placeholder}
           editable={editable}

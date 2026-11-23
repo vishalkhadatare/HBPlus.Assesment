@@ -16,9 +16,7 @@ import { RoleThemeProvider, useRoleTheme } from '../theme/roleThemes.js';
 import { CARD_RADIUS } from '../theme/shape.js';
 import HBLogo from '../components/brand/HBLogo.jsx';
 import Icon from '../components/ui/Icon.jsx';
-import SquaredCard from '../components/ui/SquaredCard.jsx';
 import SquaredInput from '../components/ui/SquaredInput.jsx';
-import SquaredButton from '../components/ui/SquaredButton.jsx';
 import CountryFlag from '../components/ui/CountryFlag.jsx';
 import { ALL_COUNTRIES, DEFAULT_COUNTRY } from '../constants/countries.js';
 import { ROUTES } from '../navigation/navigationConfig.js';
@@ -83,7 +81,7 @@ function UserLoginInner() {
     );
   });
 
-  const slideAnim = useRef(new Animated.Value(36)).current;
+  const slideAnim = useRef(new Animated.Value(24)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
@@ -91,13 +89,13 @@ function UserLoginInner() {
     Animated.parallel([
       Animated.spring(slideAnim, {
         toValue: 0,
-        damping: 15,
-        stiffness: 120,
+        damping: 16,
+        stiffness: 130,
         useNativeDriver: true
       }),
       Animated.timing(opacityAnim, {
         toValue: 1,
-        duration: 320,
+        duration: 280,
         useNativeDriver: true
       })
     ]).start();
@@ -231,9 +229,9 @@ function UserLoginInner() {
 
   const isPhone = width < 900;
 
-  /* ─── SHARED FORM CARD CONTENT ─── */
-  const FormCard = () => (
-    <SquaredCard style={styles.userCard}>
+  /* Plain Form Fields — rendered directly in tree (never as a child component) */
+  const renderFormFields = () => (
+    <View style={styles.formFieldsContainer}>
       {error ? (
         <View style={styles.errorBox}>
           <Icon name="alertTriangle" size={15} color="#DC2626" />
@@ -267,7 +265,7 @@ function UserLoginInner() {
           {/* Divider */}
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>— or —</Text>
+            <Text style={styles.dividerText}>— or sign in with email —</Text>
             <View style={styles.dividerLine} />
           </View>
 
@@ -279,6 +277,7 @@ function UserLoginInner() {
             placeholder="employee@hbplus.fit"
             keyboardType="email-address"
             autoCapitalize="none"
+            autoComplete="email"
             editable={!loading && !loadingGoogle}
           />
 
@@ -303,11 +302,11 @@ function UserLoginInner() {
             <Text style={styles.forgotText}>Forgot password?</Text>
           </TouchableOpacity>
 
-          {/* Sign in gradient button */}
+          {/* Primary Sign in button */}
           <TouchableOpacity
             style={[
-              styles.signInBtn,
-              (loading || loadingGoogle) && styles.signInBtnDisabled
+              styles.primaryBtn,
+              (loading || loadingGoogle) && styles.primaryBtnDisabled
             ]}
             onPress={handleEmailSignIn}
             activeOpacity={0.88}
@@ -315,7 +314,7 @@ function UserLoginInner() {
             accessibilityRole="button"
             accessibilityLabel="Sign in"
           >
-            <Text style={styles.signInBtnText}>
+            <Text style={styles.primaryBtnText}>
               {loading ? 'Signing in…' : 'Sign in →'}
             </Text>
           </TouchableOpacity>
@@ -342,24 +341,25 @@ function UserLoginInner() {
             value={fullName}
             onChangeText={setFullName}
             placeholder="Enter full name"
+            autoCapitalize="words"
+            autoComplete="name"
             editable={!loading}
           />
 
           <View style={styles.fieldWrapper}>
-            <Text style={styles.fieldLabel}>Email</Text>
+            <Text style={styles.fieldLabel}>Company Email</Text>
             <View style={styles.emailDomainRow}>
               <TextInput
                 value={emailLocal}
-                onChangeText={(value) =>
-                  setEmailLocal(value.replace(/[^a-zA-Z0-9._-]/g, '').toLowerCase())
-                }
+                onChangeText={setEmailLocal}
                 placeholder="employee.name"
                 placeholderTextColor="#94A3B8"
-                style={styles.emailLocalInput}
                 autoCapitalize="none"
                 autoCorrect={false}
+                autoComplete="off"
+                style={styles.emailLocalInput}
                 editable={!loading}
-                accessibilityLabel="Employee email name"
+                accessibilityLabel="Email username"
               />
               <Text style={styles.fixedDomain}>@hbplus.fit</Text>
             </View>
@@ -372,21 +372,21 @@ function UserLoginInner() {
                 style={styles.countryButton}
                 onPress={() => setCountrySheetOpen(true)}
                 activeOpacity={0.8}
-                accessibilityRole="button"
-                accessibilityLabel={`Country code ${countryCode.code}`}
+                disabled={loading}
+                accessibilityLabel="Choose country code"
               >
-                <CountryFlag iso={countryCode.iso} width={26} height={17} />
+                <CountryFlag iso={countryCode.iso} width={22} height={15} />
                 <Text style={styles.countryCode}>{countryCode.code}</Text>
                 <Icon name="chevronDown" size={14} color="#64748B" />
               </TouchableOpacity>
+
               <TextInput
                 value={phone}
-                onChangeText={(value) =>
-                  setPhone(value.replace(/[^0-9]/g, '').slice(0, 15))
-                }
+                onChangeText={setPhone}
                 placeholder="Mobile number"
                 placeholderTextColor="#94A3B8"
                 keyboardType="phone-pad"
+                autoComplete="tel"
                 style={styles.phoneInput}
                 editable={!loading}
                 accessibilityLabel="Mobile number"
@@ -418,14 +418,14 @@ function UserLoginInner() {
           />
 
           <TouchableOpacity
-            style={[styles.signInBtn, loading && styles.signInBtnDisabled]}
+            style={[styles.primaryBtn, loading && styles.primaryBtnDisabled]}
             onPress={handleSignUp}
             activeOpacity={0.88}
             disabled={loading}
             accessibilityRole="button"
             accessibilityLabel="Create account"
           >
-            <Text style={styles.signInBtnText}>
+            <Text style={styles.primaryBtnText}>
               {loading ? 'Creating…' : 'Create Account →'}
             </Text>
           </TouchableOpacity>
@@ -445,74 +445,79 @@ function UserLoginInner() {
           </View>
         </>
       )}
-    </SquaredCard>
+    </View>
   );
 
   return (
     <View style={styles.container}>
-      {/* ── PHONE LAYOUT ── */}
+      {/* ── PHONE LAYOUT (PLAIN DATA ENTERING SYSTEM, NO OVERLAY BOX) ── */}
       {isPhone ? (
-        <>
-          {/* Full-screen teal gradient background */}
-          <View style={styles.phoneBg} pointerEvents="none" />
-
-          {/* Back button — pinned top left */}
-          <TouchableOpacity
-            style={styles.phoneBackBtn}
-            onPress={() => navigate(ROUTES.ROLE_SELECT)}
-            activeOpacity={0.8}
-            accessibilityLabel="Back to Role Select"
-          >
-            <Icon name="arrowLeft" size={18} color="#FFFFFF" />
-          </TouchableOpacity>
-
-          {/* Unified ScrollView containing Header + Form Card */}
-          <ScrollView
-            style={styles.phoneScroll}
-            contentContainerStyle={styles.phoneScrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {/* Header area: illustration + title */}
-            <View style={styles.phoneHeader}>
-              {Platform.OS === 'web' ? (
-                <img
-                  src={userIllustration}
-                  alt="User Workspace"
-                  style={{
-                    width: mode === 'signup' ? 140 : 160,
-                    height: mode === 'signup' ? 100 : 120,
-                    objectFit: 'contain',
-                    display: 'block'
-                  }}
-                />
-              ) : null}
-              <View style={styles.phoneTitleRow}>
-                <Icon name="userCircle" size={20} color="#FFFFFF" strokeWidth={2.4} />
-                <Text style={styles.phoneTitleText}>User Workspace</Text>
-              </View>
-            </View>
-
-            {/* Floating form card */}
-            <Animated.View
-              style={[
-                styles.phoneCardWrapper,
-                {
-                  opacity: opacityAnim,
-                  transform: [{ translateY: slideAnim }, { translateX: shakeAnim }]
-                }
-              ]}
+        <ScrollView
+          style={styles.phoneScroll}
+          contentContainerStyle={styles.phoneScrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Top navigation row */}
+          <View style={styles.phoneTopBar}>
+            <TouchableOpacity
+              style={styles.backPillBtn}
+              onPress={() => navigate(ROUTES.ROLE_SELECT)}
+              activeOpacity={0.8}
+              accessibilityLabel="Back to Role Select"
             >
-              <FormCard />
-            </Animated.View>
-          </ScrollView>
-        </>
+              <Icon name="arrowLeft" size={18} color="#0F172A" />
+            </TouchableOpacity>
+
+            <View style={styles.roleBadgePill}>
+              <View style={styles.roleBadgeDot} />
+              <Text style={styles.roleBadgeText}>User Workspace</Text>
+            </View>
+          </View>
+
+          {/* Header area with illustration and titles */}
+          <View style={styles.phoneHeaderArea}>
+            {Platform.OS === 'web' ? (
+              <img
+                src={userIllustration}
+                alt="User Workspace"
+                style={{
+                  width: mode === 'signup' ? 130 : 150,
+                  height: mode === 'signup' ? 95 : 115,
+                  objectFit: 'contain',
+                  display: 'block'
+                }}
+              />
+            ) : null}
+
+            <Text style={styles.mainTitleText}>
+              {mode === 'login' ? 'Welcome back' : 'Create employee account'}
+            </Text>
+            <Text style={styles.subTitleText}>
+              {mode === 'login'
+                ? 'Sign in to access your shifts, attendance & payroll'
+                : 'Enter your credentials to join your organization'}
+            </Text>
+          </View>
+
+          {/* Plain Data Entering Container */}
+          <Animated.View
+            style={[
+              styles.phonePlainFormArea,
+              {
+                opacity: opacityAnim,
+                transform: [{ translateY: slideAnim }, { translateX: shakeAnim }]
+              }
+            ]}
+          >
+            {renderFormFields()}
+          </Animated.View>
+        </ScrollView>
       ) : (
-        /* ── DESKTOP LAYOUT ── */
+        /* ── DESKTOP SPLIT LAYOUT ── */
         <View style={styles.desktopContainer}>
-          {/* Left panel: teal gradient */}
+          {/* Left panel: teal gradient & brand */}
           <View style={styles.desktopLeftPanel}>
-            {/* Subtle grid SVG */}
             <View style={styles.desktopPatternOverlay} pointerEvents="none">
               <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
                 <defs>
@@ -524,7 +529,6 @@ function UserLoginInner() {
               </svg>
             </View>
 
-            {/* Back button on desktop left */}
             <TouchableOpacity
               style={styles.desktopBackBtn}
               onPress={() => navigate(ROUTES.ROLE_SELECT)}
@@ -558,7 +562,7 @@ function UserLoginInner() {
             </View>
           </View>
 
-          {/* Right panel: white form area */}
+          {/* Right panel: clean data entry area */}
           <View style={styles.desktopRightArea}>
             <Animated.View
               style={[
@@ -569,7 +573,18 @@ function UserLoginInner() {
                 }
               ]}
             >
-              <FormCard />
+              <View style={styles.desktopFormHeader}>
+                <Text style={styles.desktopFormTitle}>
+                  {mode === 'login' ? 'Sign in to your account' : 'Join HB Plus Workforce'}
+                </Text>
+                <Text style={styles.desktopFormSubtitle}>
+                  {mode === 'login'
+                    ? 'Access shifts, geofence clock-in and payroll records'
+                    : 'Fill in your details below to activate employee portal access'}
+                </Text>
+              </View>
+
+              {renderFormFields()}
             </Animated.View>
           </View>
         </View>
@@ -683,10 +698,6 @@ export function UserLoginScreen() {
   );
 }
 
-const TEAL_GRADIENT = Platform.OS === 'web'
-  ? { backgroundImage: 'linear-gradient(170deg, #0F766E 0%, #14B8A6 45%, #F0FDFA 100%)' }
-  : { backgroundColor: '#0F766E' };
-
 const TEAL_BTN_GRADIENT = Platform.OS === 'web'
   ? { backgroundImage: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)' }
   : { backgroundColor: '#0F766E' };
@@ -699,86 +710,97 @@ const styles = StyleSheet.create({
   /* ── Root ── */
   container: {
     flex: 1,
-    backgroundColor: '#F0FDFA',
-    position: 'relative',
-    overflow: 'hidden'
+    backgroundColor: '#FFFFFF',
+    position: 'relative'
   },
 
-  /* ── Phone gradient background ── */
-  phoneBg: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    ...TEAL_GRADIENT
-  },
-
-  /* ── Phone back button ── */
-  phoneBackBtn: {
-    position: 'absolute',
-    top: Platform.OS === 'web' ? 'max(40px, env(safe-area-inset-top, 40px))' : 40,
-    left: 18,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 50
-  },
-
-  /* ── Phone header (illustration + title) ── */
-  phoneHeader: {
-    paddingTop: Platform.OS === 'web' ? 'max(48px, env(safe-area-inset-top, 48px))' : 48,
-    paddingBottom: 14,
-    alignItems: 'center',
-    gap: 8,
-    width: '100%'
-  },
-  phoneTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8
-  },
-  phoneTitleText: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: -0.3
-  },
-
-  /* ── Phone scrollable card area ── */
+  /* ── Phone Layout (Plain data entering system) ── */
   phoneScroll: {
-    flex: 1
+    flex: 1,
+    backgroundColor: '#FFFFFF'
   },
   phoneScrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: Platform.OS === 'web' ? 'max(36px, env(safe-area-inset-bottom, 36px))' : 36,
+    paddingHorizontal: 22,
+    paddingTop: Platform.OS === 'web' ? 'max(20px, env(safe-area-inset-top, 20px))' : 20,
+    paddingBottom: Platform.OS === 'web' ? 'max(40px, env(safe-area-inset-bottom, 40px))' : 40,
     alignItems: 'center',
     flexGrow: 1
   },
-  phoneCardWrapper: {
+  phoneTopBar: {
+    width: '100%',
+    maxWidth: 440,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16
+  },
+  backPillBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  roleBadgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#F0FDFA',
+    borderWidth: 1,
+    borderColor: '#CCFBF1'
+  },
+  roleBadgeDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#0F766E'
+  },
+  roleBadgeText: {
+    color: '#0F766E',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.2
+  },
+
+  phoneHeaderArea: {
+    alignItems: 'center',
+    marginBottom: 20,
+    width: '100%',
+    maxWidth: 440,
+    gap: 6
+  },
+  mainTitleText: {
+    color: '#0F172A',
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+    marginTop: 6,
+    textAlign: 'center'
+  },
+  subTitleText: {
+    color: '#64748B',
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '500',
+    textAlign: 'center',
+    paddingHorizontal: 12
+  },
+
+  phonePlainFormArea: {
     width: '100%',
     maxWidth: 440
   },
 
-  /* ── Shared form card ── */
-  userCard: {
+  /* ── Shared Form Fields Container (Plain layout, NO card borders/shadows) ── */
+  formFieldsContainer: {
     width: '100%',
-    padding: 24,
-    gap: 14,
-    borderRadius: 28,
-    backgroundColor: '#FFFFFF',
-    ...(Platform.OS === 'web'
-      ? {
-          boxShadow:
-            '0 4px 6px -1px rgba(0,0,0,0.06), 0 20px 40px -8px rgba(15,118,110,0.18)',
-          backdropFilter: 'blur(12px)'
-        }
-      : { elevation: 8 })
+    gap: 14
   },
 
   /* ── Google button ── */
@@ -787,14 +809,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    height: 52,
+    height: 50,
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#CBD5E1',
     ...(Platform.OS === 'web'
-      ? { boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }
-      : { elevation: 2 })
+      ? { boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }
+      : { elevation: 1 })
   },
   googleBtnText: {
     color: '#0F172A',
@@ -807,7 +829,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginVertical: 2
+    marginVertical: 4
   },
   dividerLine: {
     flex: 1,
@@ -815,12 +837,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#E2E8F0'
   },
   dividerText: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#94A3B8',
     fontWeight: '600'
   },
 
-  /* ── Error / Success pills ── */
+  /* ── Error / Success banners ── */
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -828,7 +850,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    gap: 8
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#FECACA'
   },
   errorText: {
     flex: 1,
@@ -839,17 +863,17 @@ const styles = StyleSheet.create({
   successBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#E3F8EC',
+    backgroundColor: '#ECFDF5',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     gap: 8,
     borderWidth: 1,
-    borderColor: '#B5E8CE'
+    borderColor: '#A7F3D0'
   },
   successText: {
     flex: 1,
-    color: '#0B7A42',
+    color: '#065F46',
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '600'
@@ -858,7 +882,7 @@ const styles = StyleSheet.create({
   /* ── Forgot password ── */
   forgotButton: {
     alignSelf: 'flex-end',
-    minHeight: 32,
+    minHeight: 28,
     justifyContent: 'center',
     marginTop: -4,
     paddingHorizontal: 4
@@ -869,21 +893,22 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
 
-  /* ── Teal gradient sign-in button ── */
-  signInBtn: {
+  /* ── Primary action button ── */
+  primaryBtn: {
     height: 52,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     ...TEAL_BTN_GRADIENT,
+    marginTop: 4,
     ...(Platform.OS === 'web'
       ? { boxShadow: '0 4px 14px rgba(15,118,110,0.35)' }
-      : { elevation: 4 })
+      : { elevation: 3 })
   },
-  signInBtnDisabled: {
+  primaryBtnDisabled: {
     opacity: 0.65
   },
-  signInBtnText: {
+  primaryBtnText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '800',
@@ -896,7 +921,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    marginTop: 2
+    marginTop: 6
   },
   accountSwitchText: {
     color: '#64748B',
@@ -909,7 +934,7 @@ const styles = StyleSheet.create({
     fontWeight: '800'
   },
 
-  /* ── Signup-only fields ── */
+  /* ── Signup specific fields ── */
   fieldWrapper: {
     gap: 6,
     width: '100%'
@@ -923,8 +948,8 @@ const styles = StyleSheet.create({
     height: 52,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    borderRadius: CARD_RADIUS,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     overflow: 'hidden',
@@ -935,7 +960,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
     width: 0,
     height: '100%',
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     borderWidth: 0,
     outlineStyle: 'none',
     color: '#0F172A',
@@ -943,10 +968,10 @@ const styles = StyleSheet.create({
   },
   fixedDomain: {
     height: '100%',
-    paddingHorizontal: 10,
-    backgroundColor: '#E2E8F0',
+    paddingHorizontal: 12,
+    backgroundColor: '#F1F5F9',
     borderLeftWidth: 1,
-    borderLeftColor: '#CBD5E1',
+    borderLeftColor: '#E2E8F0',
     color: '#475569',
     fontSize: 13,
     fontWeight: '700',
@@ -969,8 +994,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    backgroundColor: '#F1F5F9',
-    borderRadius: CARD_RADIUS,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     flexShrink: 0
@@ -985,11 +1010,11 @@ const styles = StyleSheet.create({
     minWidth: 0,
     width: 0,
     height: 52,
-    backgroundColor: '#F1F5F9',
-    borderRadius: CARD_RADIUS,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     outlineStyle: 'none',
     color: '#0F172A',
     fontSize: 15,
@@ -1065,17 +1090,29 @@ const styles = StyleSheet.create({
   },
   desktopRightArea: {
     width: '58%',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 48,
-    ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(180deg, #FFFFFF 0%, #F0FDFA 100%)' }
-      : {})
+    padding: 48
   },
   desktopFormWrapper: {
     width: '100%',
-    maxWidth: 440
+    maxWidth: 420
+  },
+  desktopFormHeader: {
+    marginBottom: 24,
+    gap: 6
+  },
+  desktopFormTitle: {
+    color: '#0F172A',
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: -0.4
+  },
+  desktopFormSubtitle: {
+    color: '#64748B',
+    fontSize: 14,
+    fontWeight: '500'
   },
 
   /* ── Country picker modal ── */
