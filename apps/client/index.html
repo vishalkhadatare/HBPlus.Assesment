@@ -2,8 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#F7FBFA" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#FFFFFF" />
     <meta name="color-scheme" content="light" />
     <meta name="description" content="HBPlus - Secure Enterprise Role-Based Access Portal with Strict Domain Governance" />
     <title>HBPlus</title>
@@ -13,21 +13,38 @@
     <style>
       *, *::before, *::after {
         box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
       }
 
-      html, body, #root {
+      :root {
+        --sat: env(safe-area-inset-top, 0px);
+        --sar: env(safe-area-inset-right, 0px);
+        --sab: env(safe-area-inset-bottom, 0px);
+        --sal: env(safe-area-inset-left, 0px);
+      }
+
+      html, body {
         width: 100%;
-        min-height: 100%;
-        height: 100dvh;
+        height: 100%;
         margin: 0;
         padding: 0;
-        display: flex;
-        flex-direction: column;
-        background-color: #F7FBFA;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: none;
+        background-color: #F8FAFC;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         color: #0A1A17;
+      }
+
+      #root {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+        position: relative;
       }
 
       h1, h2, h3, h4, .font-heading {

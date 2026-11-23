@@ -38,68 +38,75 @@ export function RoleSelectScreen() {
         <Icon name="settings" size={20} color="#94A3B8" />
       </TouchableOpacity>
 
-      <View style={[styles.mainWrapper, isWide && styles.mainWrapperWide]}>
-        {/* Animated Logo (Keeps exact honeycomb component & animation) */}
-        <View style={styles.logoArea}>
-          <AnimatedLogo
-            size={isWide ? 120 : 104}
-            showWordmark={true}
-            showTagline={false}
-            textColor="#0F172A"
-          />
-        </View>
+      <ScrollView
+        contentContainerStyle={styles.scrollRoot}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        <View style={[styles.mainWrapper, isWide && styles.mainWrapperWide]}>
+          {/* Animated Logo (Keeps exact honeycomb component & animation) */}
+          <View style={styles.logoArea}>
+            <AnimatedLogo
+              size={isWide ? 120 : 104}
+              showWordmark={true}
+              showTagline={false}
+              textColor="#0F172A"
+            />
+          </View>
 
-        {/* Two Clean, Large Choice Buttons */}
-        <View style={styles.cardArea}>
+          {/* Two Clean, Large Choice Buttons */}
+          <View style={styles.cardArea}>
             <View style={styles.introBlock}>
               <Text style={styles.eyebrow}>HBPlus workspace</Text>
               <Text style={styles.heading}>Choose how you want to continue</Text>
             </View>
-          {/* Admin Choice Button */}
-          <TouchableOpacity
-            style={styles.roleCard}
-            onPress={() => navigate(ROUTES.LOGIN_ADMIN)}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel="Admin"
-          >
-            <View style={styles.adminIconTile}>
-              <AdminRoleLogo size={36} />
-            </View>
 
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Admin</Text>
-              <Text style={styles.cardDescription}>Manage people, approvals and reports</Text>
-            </View>
+            {/* Admin Choice Button */}
+            <TouchableOpacity
+              style={styles.roleCard}
+              onPress={() => navigate(ROUTES.LOGIN_ADMIN)}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Admin"
+            >
+              <View style={styles.adminIconTile}>
+                <AdminRoleLogo size={36} />
+              </View>
 
-            <View style={styles.trailingArrow}>
-              <Icon name="chevronRight" size={20} color="#EA580C" strokeWidth={2.4} />
-            </View>
-          </TouchableOpacity>
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle}>Admin</Text>
+                <Text style={styles.cardDescription}>Manage people, approvals and reports</Text>
+              </View>
 
-          {/* User Choice Button */}
-          <TouchableOpacity
-            style={styles.roleCard}
-            onPress={() => navigate(ROUTES.LOGIN_USER)}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel="User"
-          >
-            <View style={styles.userIconTile}>
-              <UserRoleLogo size={36} />
-            </View>
+              <View style={styles.trailingArrow}>
+                <Icon name="chevronRight" size={20} color="#EA580C" strokeWidth={2.4} />
+              </View>
+            </TouchableOpacity>
 
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>User</Text>
-              <Text style={styles.cardDescription}>Access your workspace, tasks and payroll</Text>
-            </View>
+            {/* User Choice Button */}
+            <TouchableOpacity
+              style={styles.roleCard}
+              onPress={() => navigate(ROUTES.LOGIN_USER)}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="User"
+            >
+              <View style={styles.userIconTile}>
+                <UserRoleLogo size={36} />
+              </View>
 
-            <View style={styles.trailingArrow}>
-              <Icon name="chevronRight" size={20} color="#00B386" strokeWidth={2.4} />
-            </View>
-          </TouchableOpacity>
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle}>User</Text>
+                <Text style={styles.cardDescription}>Access your workspace, tasks and payroll</Text>
+              </View>
+
+              <View style={styles.trailingArrow}>
+                <Icon name="chevronRight" size={20} color="#00B386" strokeWidth={2.4} />
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </ScrollView>
 
       {/* Developer Diagnostics Modal */}
       {isDevSheetOpen && (
@@ -139,10 +146,15 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: '#F7FBFA',
+    position: 'relative'
+  },
+  scrollRoot: {
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
-    position: 'relative'
+    paddingHorizontal: 20,
+    paddingVertical: 36,
+    width: '100%'
   },
   gradientBg: {
     position: 'absolute',

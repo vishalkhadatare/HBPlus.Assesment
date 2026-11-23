@@ -886,16 +886,18 @@ const styles = StyleSheet.create({
     flexDirection: 'column'
   },
   topBar: {
-    height: 60,
+    minHeight: 58,
     backgroundColor: '#FFFFFF',
     ...(Platform.OS === 'web' ? { backdropFilter: 'blur(10px)' } : {}),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
-    zIndex: 10
+    zIndex: 10,
+    width: '100%',
+    maxWidth: '100%'
   },
   searchBox: {
     flexDirection: 'row',
@@ -932,7 +934,8 @@ const styles = StyleSheet.create({
   mobileTopBrand: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8
+    gap: 8,
+    flexShrink: 0
   },
   mobileRoleBadge: {
     flexDirection: 'row',
@@ -965,15 +968,16 @@ const styles = StyleSheet.create({
   topBarRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12
+    gap: 8,
+    flexShrink: 0
   },
   statusDotRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
     backgroundColor: '#FFF7ED',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: CARD_RADIUS
   },
   pulsingDot: {
@@ -988,10 +992,12 @@ const styles = StyleSheet.create({
     color: '#EA580C'
   },
   iconCircleBtn: {
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
     borderRadius: CARD_RADIUS,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative'
@@ -1347,7 +1353,7 @@ const styles = StyleSheet.create({
   },
   // Phone Bottom Bar
   phoneBottomBar: {
-    height: 60,
+    height: 64,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
@@ -1358,7 +1364,13 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    zIndex: 90
+    zIndex: 90,
+    paddingBottom: Platform.OS === 'web' ? 'max(6px, env(safe-area-inset-bottom, 6px))' : 6,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 8
   },
   phoneBottomTab: {
     alignItems: 'center',

@@ -678,17 +678,20 @@ const styles = StyleSheet.create({
   contentColumn: {
     flex: 1,
     maxWidth: 1100,
+    width: '100%',
     height: '100%',
     display: 'flex',
     flexDirection: 'column'
   },
   topArea: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 14,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: '100%'
   },
   greetingCol: {
     gap: 4
@@ -1105,13 +1108,13 @@ const styles = StyleSheet.create({
   // Floating Bottom Tab Bar on Phones (Section 5.2)
   phoneFloatingTabWrapper: {
     position: 'absolute',
-    bottom: 16,
-    left: 16,
-    right: 16,
+    bottom: Platform.OS === 'web' ? 'max(14px, env(safe-area-inset-bottom, 14px))' : 14,
+    left: 12,
+    right: 12,
     zIndex: 90
   },
   phoneFloatingBar: {
-    height: 64,
+    height: 62,
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     flexDirection: 'row',
@@ -1119,10 +1122,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingHorizontal: 8,
     shadowColor: '#00775B',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 4
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 18,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 179, 134, 0.12)'
   },
   phoneTabBtn: {
     alignItems: 'center',
