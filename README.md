@@ -22,6 +22,19 @@
 
 </div>
 
+# 🔑 Official Login Credentials (Admin & Employee)
+
+> ## 📢 Use this email and password for login, or you can create a new account!
+
+| Portal Role | Official Email (`@hbplus.fit`) | Password | Access Capabilities |
+| :--- | :--- | :--- | :--- |
+| 🛡️ **Admin** | `admin@hbplus.fit` | `AdminPassword2026!` | Admin Control Room, Live Headcount, Pending Approvals Queue, Broadcasts, Audit Feed |
+| 👤 **User / Employee** | `employee@hbplus.fit` | `UserPassword2026!` | Employee Workspace, 1-Tap Geofence Attendance, Apply Leave, Tasks, Interactive Profile |
+
+> 💡 **New Account Registration**: You can also click **"Create Account"** on the login screen to register your own custom account using any `@hbplus.fit` email address. Any unauthorized external domain (such as `@gmail.com`) is strictly blocked by the security firewall.
+
+---
+
 ## 📌 Project Overview
 
 HB Plus is a cross-platform role-based access and workforce management application built with a single shared codebase using **React Native for Web** and **Capacitor Android**.
