@@ -317,7 +317,16 @@ function AdminShellContent({ onSignOut }) {
     showToast(`Broadcast published to ${broadcastDept}`);
   };
 
-  const workforceUsers = storeState.employees || [];
+  const defaultUsers = [
+    { id: 'usr-1', name: 'Elena Rostova', email: 'elena.rostova@hbplus.fit', role: 'Admin', department: 'Security Operations', status: 'Active' },
+    { id: 'usr-2', name: 'Rachel Green', email: 'rachel.green@hbplus.fit', role: 'User', department: 'Engineering Systems', status: 'Active' },
+    { id: 'usr-3', name: 'Marcus Vance', email: 'marcus.vance@hbplus.fit', role: 'User', department: 'Core Infrastructure', status: 'Active' },
+    { id: 'usr-4', name: 'Aaliyah Khan', email: 'aaliyah.khan@hbplus.fit', role: 'User', department: 'Frontend Systems', status: 'Active' },
+    { id: 'usr-5', name: 'Lucas Sterling', email: 'lucas.s@hbplus.fit', role: 'User', department: 'Product Engineering', status: 'On Leave' }
+  ];
+
+  const workforceUsers = (storeState && storeState.employees && storeState.employees.length > 0) ? storeState.employees : defaultUsers;
+  const sampleUsers = workforceUsers;
 
   const filteredUsers = workforceUsers.filter((u) => {
     const nameStr = (u.name || '').toLowerCase();
@@ -1481,16 +1490,34 @@ function AdminShellContent({ onSignOut }) {
 
             {activeTab === 'users' && (
               <SquaredCard style={styles.tableCard}>
-                <Text style={styles.cardTitle}>Workforce Directory & Role Provisioning</Text>
-                <Text style={styles.cardSub}>Full employee roster with direct privilege elevation tools.</Text>
+                <View style={styles.tableHeaderRow}>
+                  <View>
+                    <Text style={styles.cardTitle}>Workforce Directory & Role Provisioning</Text>
+                    <Text style={styles.cardSub}>Full employee roster with direct privilege elevation tools.</Text>
+                  </View>
+                  <View style={styles.filterPillsRow}>
+                    {['all', 'admin', 'user'].map((f) => (
+                      <TouchableOpacity
+                        key={f}
+                        style={[styles.filterPill, selectedUserFilter === f && styles.filterPillActive]}
+                        onPress={() => setSelectedUserFilter(f)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.filterPillText, selectedUserFilter === f && styles.filterPillTextActive]}>
+                          {f.toUpperCase()}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
                 <View style={{ marginTop: 16 }}>
-                  {sampleUsers.map((u) => (
+                  {filteredUsers.map((u) => (
                     <View key={u.id} style={styles.tableTr}>
                       <View style={{ flex: 2 }}>
                         <Text style={styles.userName}>{u.name}</Text>
                         <Text style={styles.userEmail}>{u.email}</Text>
                       </View>
-                      <Text style={[styles.tableTdText, { flex: 1.5 }]}>{u.dept}</Text>
+                      <Text style={[styles.tableTdText, { flex: 1.5 }]}>{u.department || u.dept || 'Engineering'}</Text>
                       <Text style={[styles.tableTdText, { flex: 1 }]}>{u.role}</Text>
                     </View>
                   ))}
