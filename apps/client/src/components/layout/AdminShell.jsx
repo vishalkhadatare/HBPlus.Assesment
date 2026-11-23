@@ -2716,12 +2716,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'web' ? 'max(46px, env(safe-area-inset-top, 46px))' : 46,
-    paddingBottom: 12,
+    paddingTop: 54,
+    paddingBottom: 14,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
-    minHeight: Platform.OS === 'web' ? 'calc(60px + max(46px, env(safe-area-inset-top, 46px)))' : 106,
+    minHeight: 90,
     zIndex: 20,
     ...(Platform.OS === 'web'
       ? { boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }
@@ -2801,7 +2801,7 @@ const styles = StyleSheet.create({
   mobileScrollInner: {
     paddingHorizontal: 14,
     paddingTop: 14,
-    paddingBottom: 100,
+    paddingBottom: 140,
     gap: 12
   },
 

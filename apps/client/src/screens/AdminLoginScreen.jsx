@@ -447,8 +447,8 @@ const styles = StyleSheet.create({
   },
   phoneScrollContent: {
     paddingHorizontal: 22,
-    paddingTop: Platform.OS === 'web' ? 'max(44px, env(safe-area-inset-top, 44px))' : 44,
-    paddingBottom: Platform.OS === 'web' ? 'max(40px, env(safe-area-inset-bottom, 40px))' : 40,
+    paddingTop: 52,
+    paddingBottom: 40,
     alignItems: 'center',
     flexGrow: 1
   },

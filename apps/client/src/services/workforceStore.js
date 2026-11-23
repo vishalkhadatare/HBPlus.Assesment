@@ -7,23 +7,23 @@
 
 import { initialEmployees, initialLeaveBalances, initialLeaveRequests, initialTasks, initialAnnouncements } from './dataStore.js';
 
-const STORAGE_KEY = 'hbplus_workforce_store_v1';
+const STORAGE_KEY = 'hbplus_workforce_store_v2';
 
 // Initial state
 const defaultState = {
   profile: {
-    displayName: 'Rachel Green',
-    email: 'rachel.green@hbplus.fit',
-    phone: '+91 98765 43210',
+    displayName: '',
+    email: '',
+    phone: '',
     countryCode: '+91',
     countryIso: 'IN',
     department: 'Engineering Systems',
-    designation: 'Senior Frontend Engineer',
-    employeeId: 'HBP-2026-0412',
-    joinDate: '2023-03-15',
+    designation: 'Enterprise Specialist',
+    employeeId: 'HBP-2026-0001',
+    joinDate: '2026-01-15',
     location: 'Bangalore HQ (Campus Alpha)',
-    emergencyContact: 'Mark Green (+91 98111 22334)',
-    bio: 'Lead engineer building high-performance cross-platform enterprise experiences.',
+    emergencyContact: 'Security Operations (+91 98000 11223)',
+    bio: 'Enterprise workforce member with verified domain access.',
     notificationsEnabled: true,
     shift: 'General Corporate Shift (09:00 AM – 06:00 PM)'
   },
@@ -97,6 +97,12 @@ function loadState() {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...defaultState };
     const parsed = JSON.parse(raw);
+    if (parsed.profile?.displayName === 'Rachel Green') {
+      parsed.profile.displayName = '';
+    }
+    if (parsed.profile?.email === 'rachel.green@hbplus.fit') {
+      parsed.profile.email = '';
+    }
     return {
       ...defaultState,
       ...parsed,

@@ -200,15 +200,26 @@ function UserShellContent({ onSignOut }) {
   };
 
   const profile = storeState.profile;
-  const displayName = authProfile?.displayName || user?.displayName || authProfile?.name || profile.displayName || 'Employee';
-  const displayEmail = user?.email || authProfile?.email || profile.email;
+  const userEmail = (user?.email || authProfile?.email || profile?.email || '').trim().toLowerCase();
+  const emailUsername = userEmail ? userEmail.split('@')[0] : '';
+  const formattedEmailName = emailUsername
+    ? emailUsername.split(/[._-]/).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')
+    : 'Employee';
+
+  const displayName =
+    authProfile?.displayName ||
+    user?.displayName ||
+    authProfile?.name ||
+    (profile?.displayName && profile.displayName !== 'Rachel Green' ? profile.displayName : null) ||
+    formattedEmailName;
+  const displayEmail = user?.email || authProfile?.email || (profile?.email !== 'rachel.green@hbplus.fit' && profile?.email ? profile.email : userEmail);
   const displayPhone = authProfile?.phone || profile.phone || '+91 98765 43210';
   const displayDepartment = authProfile?.department || profile.department || 'Engineering Systems';
   const displayDesignation = authProfile?.designation || profile.designation || 'Enterprise Specialist';
   const displayEmployeeId = authProfile?.employeeId || profile.employeeId || `HBP-${user?.uid ? user.uid.slice(-4).toUpperCase() : '2026'}`;
   const displayBio = authProfile?.bio || profile.bio;
   const displayEmergency = authProfile?.emergencyContact || profile.emergencyContact;
-  const firstName = (displayName || '').split(' ')[0] || 'Team';
+  const firstName = (displayName || '').split(' ')[0] || 'Employee';
 
   // Synchronize edit form fields whenever the authenticated account updates
   useEffect(() => {
@@ -1221,7 +1232,7 @@ const styles = StyleSheet.create({
   },
   mobileTopArea: {
     paddingHorizontal: 18,
-    paddingTop: Platform.OS === 'web' ? 'max(46px, env(safe-area-inset-top, 46px))' : 46,
+    paddingTop: 54,
     paddingBottom: 14,
     gap: 12
   },
@@ -1318,7 +1329,7 @@ const styles = StyleSheet.create({
   },
   scrollInnerMobile: {
     padding: 16,
-    paddingBottom: 120
+    paddingBottom: 160
   },
 
   /* Hero shift card */
@@ -2067,7 +2078,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 16,
-    paddingBottom: Platform.OS === 'web' ? 'max(16px, env(safe-area-inset-bottom, 16px))' : 16,
+    paddingBottom: 20,
     backgroundColor: 'transparent',
     pointerEvents: 'box-none'
   },

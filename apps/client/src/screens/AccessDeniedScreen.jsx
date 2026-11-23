@@ -34,7 +34,7 @@ export function AccessDeniedScreen() {
 
           {/* Title and Exact Message */}
           <View style={styles.messageBlock}>
-            <Text style={styles.title}>Login denied</Text>
+            <Text style={styles.title}>Access restricted</Text>
             <Text style={styles.messageText}>{displayMessage}</Text>
           </View>
 
