@@ -1,4 +1,13 @@
-import { GoogleAuthProvider, signInWithCredential, signOut as firebaseSignOut } from 'firebase/auth';
+import {
+  GoogleAuthProvider,
+  signInWithCredential,
+  signOut as firebaseSignOut,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  updateProfile
+} from 'firebase/auth';
 import { auth } from '../config/firebase.js';
 
 /**
@@ -59,8 +68,37 @@ export async function signOut() {
   await firebaseSignOut(auth);
 }
 
+export async function signUpWithEmailPassword(email, password, fullName) {
+  const result = await createUserWithEmailAndPassword(auth, email.trim(), password);
+  if (fullName?.trim()) {
+    await updateProfile(result.user, { displayName: fullName.trim() });
+  }
+  await sendEmailVerification(result.user);
+  return { user: result.user, idToken: null, verificationRequired: true };
+}
+
+export async function signInWithEmailPassword(email, password) {
+  const result = await signInWithEmailAndPassword(auth, email.trim(), password);
+  const idToken = await result.user.getIdToken();
+  return { user: result.user, idToken };
+}
+
+export async function resetPassword(email) {
+  await sendPasswordResetEmail(auth, email.trim());
+}
+
+export async function resendVerificationEmail(user) {
+  const targetUser = user || auth.currentUser;
+  if (!targetUser) throw new Error('No authenticated user available.');
+  await sendEmailVerification(targetUser);
+}
+
 export default {
   signInWithGoogle,
   signOut,
-  configureNativeGoogleSignIn
+  configureNativeGoogleSignIn,
+  signUpWithEmailPassword,
+  signInWithEmailPassword,
+  resetPassword,
+  resendVerificationEmail
 };

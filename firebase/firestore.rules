@@ -2,48 +2,25 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
     function isAuthenticated() {
       return request.auth != null;
+    }
+
+    function isHbPlusDomain() {
+      return isAuthenticated() && 
+        request.auth.token.email.matches('.*@hbplus[.]fit$');
     }
 
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    function isHbPlusDomain() {
-      return isAuthenticated() && 
-        request.auth.token.email.matches('.*@hbplus[.]fit$') &&
-        request.auth.token.email_verified == true;
-    }
-
-    function isAdmin() {
-      return isAuthenticated() && (
-        request.auth.token.role == 'admin' ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
-      );
-    }
-
-    // Users Collection
+    // Users Collection: Only authenticated users with @hbplus.fit emails can read/write their own document
     match /users/{userId} {
-      // Authorized corporate employees can read profiles in directory
-      allow read: if isHbPlusDomain();
-
-      // Only backend (Firebase Admin) creates user profiles.
-      // If client write is permitted, enforce:
-      // 1. Owner can only edit their own document
-      // 2. Cannot alter role or isActive status
-      allow create: if false; // Provisioning is strictly managed via server API
-
-      allow update: if isOwner(userId) &&
-        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isActive', 'uid', 'email', 'createdAt']) &&
-        isHbPlusDomain();
-
-      // Only administrators can deactivate or delete users
-      allow delete: if isAdmin();
+      allow read, write: if isOwner(userId) && isHbPlusDomain();
     }
 
-    // Default deny for all other collections
+    // Default deny for all other paths
     match /{document=**} {
       allow read, write: if false;
     }

@@ -7,7 +7,7 @@ import config from '../config/environment.js';
 /**
  * Authentication Middleware
  * 
- * Verifies Firebase ID Token, enforces exact company email domain restriction,
+ * Verifies Firebase ID Token, enforces exact company email domain restriction (@hbplus.fit),
  * provisions or fetches user profile from Firestore, and verifies active account status.
  */
 export async function authenticate(req, res, next) {
@@ -71,16 +71,19 @@ export async function authenticate(req, res, next) {
     }
 
     // 2. Email verification check
-    // Google OAuth accounts are usually email_verified = true
     if (decodedToken.email_verified === false) {
       return res.status(403).json(
         errorResponse('Email address is not verified by Google.', 'EMAIL_NOT_VERIFIED')
       );
     }
 
-    // 3. Strict Server-Side Email Domain Restriction
-    const isAllowed = isAllowedEmailDomain(email, config.ALLOWED_EMAIL_DOMAIN);
-    if (!isAllowed) {
+    // 3. Strict Server-Side Email Domain Restriction (@hbplus.fit ONLY)
+    const normalizedEmail = email.trim().toLowerCase();
+    const isDomainAllowed =
+      normalizedEmail.endsWith('@hbplus.fit') &&
+      isAllowedEmailDomain(normalizedEmail, config.ALLOWED_EMAIL_DOMAIN);
+
+    if (!isDomainAllowed) {
       return res.status(403).json(
         errorResponse('Access restricted. Please login using your official domain email.', 'DOMAIN_NOT_ALLOWED')
       );
@@ -112,7 +115,7 @@ export async function authenticate(req, res, next) {
       email: userProfile.email,
       displayName: userProfile.displayName,
       photoURL: userProfile.photoURL,
-      role: userProfile.role || 'user',
+      role: userProfile.role || 'User',
       isActive: userProfile.isActive,
       token: decodedToken
     };

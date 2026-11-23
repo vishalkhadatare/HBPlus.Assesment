@@ -7,17 +7,16 @@ import { spacing } from '../../styles/spacing.js';
 export function DashboardHeader({ displayName }) {
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
-    year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric'
   });
 
   return (
     <View style={styles.header}>
       <Text style={styles.dateText}>{currentDate}</Text>
-      <Text style={styles.greeting}>Welcome back, {displayName || 'Colleague'}</Text>
+      <Text style={styles.greeting}>Welcome, {displayName || 'Member'}</Text>
       <Text style={styles.subheading}>
-        HBPlus Secure Access Portal — Your authenticated corporate workspace
+        Authorized access to HBPlus secure corporate environment
       </Text>
     </View>
   );
@@ -29,14 +28,14 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: typography.sizes.xs,
-    color: colors.textMuted,
+    color: colors.primaryHover,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    fontWeight: typography.weights.semibold,
+    fontWeight: typography.weights.bold,
     marginBottom: 4
   },
   greeting: {
-    fontSize: typography.sizes.xxxl,
+    fontSize: typography.sizes.xxl,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
     letterSpacing: -0.5

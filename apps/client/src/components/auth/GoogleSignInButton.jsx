@@ -4,9 +4,6 @@ import colors from '../../styles/colors.js';
 import typography from '../../styles/typography.js';
 import { spacing, borderRadius, shadows } from '../../styles/spacing.js';
 
-/**
- * High-quality Google Sign-In button following Google Identity branding guidelines.
- */
 export function GoogleSignInButton({ onPress, isLoading = false, disabled = false }) {
   const isInteractive = !disabled && !isLoading;
 
@@ -24,16 +21,14 @@ export function GoogleSignInButton({ onPress, isLoading = false, disabled = fals
     >
       {isLoading ? (
         <View style={styles.loadingRow}>
-          <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={styles.loadingText}>Authenticating with Google...</Text>
+          <ActivityIndicator size="small" color={colors.primaryHover} />
+          <Text style={styles.loadingText}>Connecting to Google...</Text>
         </View>
       ) : (
         <View style={styles.buttonContent}>
-          {/* Crisp, cross-platform Google 'G' icon rendered with vector circles */}
+          {/* Crisp, cross-platform Google G badge */}
           <View style={styles.googleIconContainer}>
-            <View style={styles.googleGContainer}>
-              <Text style={styles.googleGLetter}>G</Text>
-            </View>
+            <Text style={styles.googleGLetter}>G</Text>
           </View>
           <Text style={styles.buttonText}>Continue with Google</Text>
         </View>
@@ -46,9 +41,9 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: borderRadius.md,
-    paddingVertical: 12,
+    borderColor: colors.borderDark,
+    borderRadius: borderRadius.lg,
+    paddingVertical: 13,
     paddingHorizontal: 20,
     width: '100%',
     alignItems: 'center',
@@ -57,7 +52,7 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.65,
-    backgroundColor: '#F3F4F6'
+    backgroundColor: colors.surfaceSubtle
   },
   buttonContent: {
     flexDirection: 'row',
@@ -69,14 +64,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  googleGContainer: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
     backgroundColor: '#4285F4',
     alignItems: 'center',
     justifyContent: 'center'
@@ -89,7 +76,7 @@ const styles = StyleSheet.create({
     lineHeight: 18
   },
   buttonText: {
-    color: '#1F2937',
+    color: colors.textPrimary,
     fontSize: typography.sizes.base,
     fontWeight: typography.weights.semibold,
     letterSpacing: 0.1

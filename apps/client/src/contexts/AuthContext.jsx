@@ -4,7 +4,8 @@ import { auth } from '../config/firebase.js';
 import {
   signInWithGooglePlatform,
   verifyWithBackend,
-  signOutPlatform
+  signOutPlatform,
+  checkRedirectResultPlatform
 } from '../services/authService.js';
 import { formatAuthError, EXACT_RESTRICTION_MESSAGE } from '../utils/errorFormatter.js';
 import { isAllowedEmailDomain } from '../utils/domainValidator.js';
@@ -15,17 +16,16 @@ export const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null); // Firebase user
   const [profile, setProfile] = useState(null); // Backend authorized profile
-  const [role, setRole] = useState(null);
+  const [role, setRole] = useState(null); // 'Admin' | 'User'
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorizing, setIsAuthorizing] = useState(false);
   const [error, setError] = useState(null);
   const [errorCode, setErrorCode] = useState(null);
 
-  // Track ongoing authorization requests to prevent duplicate submissions or race conditions
   const isVerifyingRef = useRef(false);
 
   /**
-   * Clears all authentication and authorization state in memory.
+   * Clears all session data in memory.
    */
   const clearSession = useCallback(() => {
     setUser(null);
@@ -34,8 +34,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   /**
-   * Verifies the user's authorization against the backend.
-   * If domain is invalid or backend rejects, signs out user and displays restriction message.
+   * Verifies the user's authorization against the strict @hbplus.fit domain.
+   * If domain is not @hbplus.fit, immediately revokes access, signs out from Firebase,
+   * clears session, and keeps the user on the Login page with the exact restriction message.
    */
   const verifyAuthorization = useCallback(
     async (firebaseUser) => {
@@ -52,30 +53,38 @@ export function AuthProvider({ children }) {
       setErrorCode(null);
 
       try {
-        const email = firebaseUser.email;
+        const rawEmail = firebaseUser.email || '';
+        const normalizedEmail = rawEmail.trim().toLowerCase();
 
-        // Immediate client-side validation check
-        if (!isAllowedEmailDomain(email, config.ALLOWED_EMAIL_DOMAIN)) {
-          setErrorCode('DOMAIN_NOT_ALLOWED');
-          setError(EXACT_RESTRICTION_MESSAGE);
-          // Sign out unauthorized Firebase user
+        // 1. Strict Domain Check: email MUST end with @hbplus.fit
+        const isDomainValid =
+          normalizedEmail.endsWith('@hbplus.fit') &&
+          isAllowedEmailDomain(normalizedEmail, config.ALLOWED_EMAIL_DOMAIN);
+
+        if (!isDomainValid) {
+          // Immediately revoke session, sign out of Firebase, and display exact error banner
           await signOutPlatform().catch(() => {});
           clearSession();
+          setErrorCode('DOMAIN_NOT_ALLOWED');
+          setError(EXACT_RESTRICTION_MESSAGE);
           setIsLoading(false);
           setIsAuthorizing(false);
           isVerifyingRef.current = false;
           return false;
         }
 
-        // Retrieve cryptographic ID token
+        // 2. Retrieve cryptographic ID token
         const idToken = await firebaseUser.getIdToken();
 
-        // Independent backend token & domain verification
+        // 3. Verify independently with backend (also provisions user in Firestore)
         const authorizedProfile = await verifyWithBackend(idToken);
+
+        const normalizedRole =
+          (authorizedProfile?.role || 'user').toLowerCase() === 'admin' ? 'Admin' : 'User';
 
         setUser(firebaseUser);
         setProfile(authorizedProfile);
-        setRole(authorizedProfile.role || 'user');
+        setRole(normalizedRole);
         setError(null);
         setErrorCode(null);
         setIsLoading(false);
@@ -83,15 +92,15 @@ export function AuthProvider({ children }) {
         isVerifyingRef.current = false;
         return true;
       } catch (err) {
-        console.error('[AuthContext] Authorization failed:', err);
+        console.error('[AuthContext] Verification failed:', err);
 
-        const formattedErr = formatAuthError(err);
-        setError(formattedErr);
-        setErrorCode(err.code || 'AUTH_ERROR');
-
-        // Immediately revoke and sign out unauthorized user from Firebase client
+        // Always sign out on error to prevent any unauthorized session
         await signOutPlatform().catch(() => {});
         clearSession();
+
+        const formattedErr = formatAuthError(err);
+        setError(formattedErr || EXACT_RESTRICTION_MESSAGE);
+        setErrorCode(err.code || 'AUTH_ERROR');
         setIsLoading(false);
         setIsAuthorizing(false);
         isVerifyingRef.current = false;
@@ -107,11 +116,19 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let isMounted = true;
 
+    // Check for redirect result on web first
+    checkRedirectResultPlatform()
+      .then((res) => {
+        if (isMounted && res?.user) {
+          verifyAuthorization(res.user);
+        }
+      })
+      .catch((e) => console.warn('[AuthContext] Redirect check:', e));
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!isMounted) return;
 
       if (firebaseUser) {
-        // Session restoration: verify backend authorization before displaying dashboard
         await verifyAuthorization(firebaseUser);
       } else {
         clearSession();
@@ -126,7 +143,7 @@ export function AuthProvider({ children }) {
   }, [verifyAuthorization, clearSession]);
 
   /**
-   * Trigger Google Sign-In flow
+   * Google Sign-In action
    */
   const signInWithGoogle = useCallback(async () => {
     if (isVerifyingRef.current || isAuthorizing) return;
@@ -138,7 +155,6 @@ export function AuthProvider({ children }) {
     try {
       const authResult = await signInWithGooglePlatform();
       if (!authResult || !authResult.user) {
-        // Redirect initiated or popup closed without error
         setIsAuthorizing(false);
         return;
       }
@@ -146,17 +162,20 @@ export function AuthProvider({ children }) {
       const verified = await verifyAuthorization(authResult.user);
       return verified;
     } catch (err) {
-      console.error('[AuthContext] Google Sign-in error:', err);
+      console.error('[AuthContext] Google Sign-In error:', err);
+      // Immediately ensure signed out
+      await signOutPlatform().catch(() => {});
+      clearSession();
+
       const formatted = formatAuthError(err);
-      setError(formatted);
+      setError(formatted || EXACT_RESTRICTION_MESSAGE);
       setErrorCode(err.code || 'SIGN_IN_ERROR');
       setIsAuthorizing(false);
-      clearSession();
     }
   }, [isAuthorizing, verifyAuthorization, clearSession]);
 
   /**
-   * User Sign-Out
+   * Sign-Out action
    */
   const signOut = useCallback(async () => {
     setIsLoading(true);
@@ -173,28 +192,17 @@ export function AuthProvider({ children }) {
     }
   }, [clearSession]);
 
-  /**
-   * Refresh current profile
-   */
-  const refreshUserProfile = useCallback(async () => {
-    if (auth.currentUser) {
-      await verifyAuthorization(auth.currentUser);
-    }
-  }, [verifyAuthorization]);
-
   const value = {
     user,
     profile,
-    role,
+    role, // 'Admin' | 'User'
     isLoading,
     isAuthorizing,
     isAuthenticated: Boolean(user),
-    isAuthorized: Boolean(user && profile && profile.role),
+    isAuthorized: Boolean(user && profile && (user.email || '').toLowerCase().endsWith('@hbplus.fit')),
     error,
     errorCode,
     signInWithGoogle,
-    verifyAuthorization,
-    refreshUserProfile,
     signOut,
     clearError: () => {
       setError(null);

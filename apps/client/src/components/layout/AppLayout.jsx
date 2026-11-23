@@ -22,10 +22,7 @@ export function AppLayout({ children, showHeader = true }) {
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              © {new Date().getFullYear()} HBPlus Fitness & Health Ltd. All rights reserved.
-            </Text>
-            <Text style={styles.footerSubText}>
-              Authorized personnel only. All access attempts are cryptographically audited.
+              © {new Date().getFullYear()} HBPlus. Corporate Access Portal.
             </Text>
           </View>
         </ScrollView>
@@ -52,12 +49,12 @@ const styles = StyleSheet.create({
   },
   mainContainer: {
     width: '100%',
-    maxWidth: 1200,
+    maxWidth: 960,
     alignSelf: 'center',
     padding: spacing.md
   },
   footer: {
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     alignItems: 'center',
     borderTopWidth: 1,
@@ -67,12 +64,6 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: typography.sizes.xs,
     color: colors.textMuted,
-    textAlign: 'center'
-  },
-  footerSubText: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 4,
     textAlign: 'center'
   }
 });

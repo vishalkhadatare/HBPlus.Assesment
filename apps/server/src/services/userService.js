@@ -38,10 +38,7 @@ export class UserService {
 
   /**
    * Provisions a new user profile or updates last login time for an existing profile.
-   * Enforces trusted role assignment:
-   * - Default role is 'user'
-   * - Accounts listed in ADMIN_EMAILS receive 'admin' role upon initial provisioning
-   * - Existing roles and isActive flags cannot be overwritten by client data.
+   * Stores fields: name, email, photoURL, role ("Admin" | "User"), lastLogin
    * 
    * @param {object} decodedToken - Verified Firebase ID token
    * @returns {Promise<object>} User profile
@@ -62,10 +59,16 @@ export class UserService {
       }
 
       // Safe update: update login timestamp and profile metadata if changed
+      const currentTimestamp = admin.firestore
+        ? admin.firestore.FieldValue.serverTimestamp()
+        : new Date().toISOString();
+
       const updateData = {
-        lastLoginAt: admin.firestore ? admin.firestore.FieldValue.serverTimestamp() : new Date().toISOString(),
-        displayName: name || existingUser.displayName || '',
-        photoURL: picture || existingUser.photoURL || ''
+        name: name || existingUser.name || existingUser.displayName || normalizedEmail.split('@')[0],
+        displayName: name || existingUser.displayName || existingUser.name || normalizedEmail.split('@')[0],
+        photoURL: picture || existingUser.photoURL || '',
+        lastLogin: currentTimestamp,
+        lastLoginAt: currentTimestamp
       };
 
       if (adminDb && (!config.isTest || process.env.FIRESTORE_EMULATOR_HOST)) {
@@ -81,25 +84,31 @@ export class UserService {
       const updatedProfile = {
         ...existingUser,
         ...updateData,
+        lastLogin: new Date().toISOString(),
         lastLoginAt: new Date().toISOString()
       };
       inMemoryUsers.set(uid, updatedProfile);
       return updatedProfile;
     }
 
-    // New User Provisioning
+    // New User Provisioning: Role is "Admin" or "User"
     const isInitialAdmin = config.ADMIN_EMAILS.includes(normalizedEmail);
-    const assignedRole = isInitialAdmin ? 'admin' : 'user';
+    const assignedRole = isInitialAdmin ? 'Admin' : 'User';
+    const currentTimestamp = admin.firestore
+      ? admin.firestore.FieldValue.serverTimestamp()
+      : new Date().toISOString();
 
     const newProfile = {
       uid,
-      email: normalizedEmail,
+      name: name || normalizedEmail.split('@')[0] || 'User',
       displayName: name || normalizedEmail.split('@')[0] || 'User',
+      email: normalizedEmail,
       photoURL: picture || '',
       role: assignedRole,
       isActive: true,
-      createdAt: admin.firestore ? admin.firestore.FieldValue.serverTimestamp() : new Date().toISOString(),
-      lastLoginAt: admin.firestore ? admin.firestore.FieldValue.serverTimestamp() : new Date().toISOString()
+      lastLogin: currentTimestamp,
+      lastLoginAt: currentTimestamp,
+      createdAt: currentTimestamp
     };
 
     if (adminDb && (!config.isTest || process.env.FIRESTORE_EMULATOR_HOST)) {
@@ -115,6 +124,7 @@ export class UserService {
     const savedProfile = {
       ...newProfile,
       createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString(),
       lastLoginAt: new Date().toISOString()
     };
     inMemoryUsers.set(uid, savedProfile);
@@ -123,9 +133,6 @@ export class UserService {
 
   /**
    * Updates non-sensitive user profile fields.
-   * @param {string} uid 
-   * @param {object} fields { displayName, photoURL }
-   * @returns {Promise<object>}
    */
   static async updateSafeProfile(uid, { displayName, photoURL }) {
     const existing = await this.getUserProfile(uid);
@@ -137,7 +144,10 @@ export class UserService {
     }
 
     const updates = {};
-    if (typeof displayName === 'string') updates.displayName = displayName.trim();
+    if (typeof displayName === 'string') {
+      updates.displayName = displayName.trim();
+      updates.name = displayName.trim();
+    }
     if (typeof photoURL === 'string') updates.photoURL = photoURL.trim();
 
     if (adminDb && (!config.isTest || process.env.FIRESTORE_EMULATOR_HOST)) {
@@ -155,7 +165,6 @@ export class UserService {
 
   /**
    * Retrieves all users (Admin only).
-   * @returns {Promise<Array<object>>}
    */
   static async getAllUsers() {
     if (adminDb && (!config.isTest || process.env.FIRESTORE_EMULATOR_HOST)) {

@@ -8,13 +8,13 @@ import {
 import { auth } from '../config/firebase.js';
 
 const googleProvider = new GoogleAuthProvider();
-// Prompt user to select account (enables easy account switching if wrong account was clicked)
+// Prompt user to select account (enables easy account switching)
 googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
 /**
- * Web Google Sign-In implementation using Firebase Auth Popup/Redirect.
+ * Web Google Sign-In implementation using Firebase Auth Popup / Redirect.
  */
 export async function signInWithGoogle() {
   try {
@@ -25,7 +25,6 @@ export async function signInWithGoogle() {
       idToken
     };
   } catch (error) {
-    // If popup was blocked by browser or mobile browser, fall back to redirect if appropriate
     if (error.code === 'auth/popup-blocked') {
       console.warn('[authService.web] Popup blocked, attempting redirect sign-in...');
       await signInWithRedirect(auth, googleProvider);

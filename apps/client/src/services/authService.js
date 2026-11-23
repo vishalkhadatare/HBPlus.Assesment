@@ -3,17 +3,23 @@ import * as webAuth from './authService.web.js';
 import apiClient from './apiClient.js';
 
 /**
- * Cross-Platform Authentication Service
- * Automatically selects the appropriate platform adapter.
+ * Cross-Platform Authentication Service (Google OAuth)
  */
 
 export async function signInWithGooglePlatform() {
   if (Platform.OS === 'web') {
     return await webAuth.signInWithGoogle();
   }
-  // Dynamic import on native devices
+  // Native Android & iOS Google Sign-In
   const nativeAuth = await import('./authService.native.js');
   return await nativeAuth.signInWithGoogle();
+}
+
+export async function checkRedirectResultPlatform() {
+  if (Platform.OS === 'web') {
+    return await webAuth.checkRedirectResult();
+  }
+  return null;
 }
 
 /**
@@ -59,6 +65,7 @@ export async function signOutPlatform() {
 
 export default {
   signInWithGooglePlatform,
+  checkRedirectResultPlatform,
   verifyWithBackend,
   fetchCurrentProfile,
   signOutPlatform

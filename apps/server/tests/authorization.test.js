@@ -52,7 +52,7 @@ describe('Protected Routes and Role-Based Authorization Tests', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data.uid).toBe('user-profile-test');
-      expect(res.body.data.role).toBe('user');
+      expect(res.body.data.role).toBe('User');
       expect(res.body.data.isActive).toBe(true);
     });
   });
@@ -115,8 +115,8 @@ describe('Protected Routes and Role-Based Authorization Tests', () => {
 
       expect(patchRes.status).toBe(200);
       expect(patchRes.body.data.displayName).toBe('Updated Name');
-      // Role must remain strictly 'user'
-      expect(patchRes.body.data.role).toBe('user');
+      // Role must remain strictly 'User'
+      expect(patchRes.body.data.role).toBe('User');
 
       // Verify that admin route is STILL forbidden
       const adminRes = await request(app)

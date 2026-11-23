@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
-import path from 'path';
 
-// Load .env file from server root or repo root if present
+// Load .env file
 dotenv.config();
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -15,13 +14,12 @@ const CLIENT_ORIGINS = rawClientOrigins.split(',').map((origin) => origin.trim()
 // Firebase Admin configuration
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || '';
 const FIREBASE_CLIENT_EMAIL = process.env.FIREBASE_CLIENT_EMAIL || '';
-// Replace escaped newlines if private key is passed as an env var string
 const FIREBASE_PRIVATE_KEY = process.env.FIREBASE_PRIVATE_KEY
   ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
   : '';
 const FIREBASE_SERVICE_ACCOUNT_KEY_PATH = process.env.FIREBASE_SERVICE_ACCOUNT_KEY_PATH || '';
 
-// Admin emails (comma-separated list of emails that receive admin role upon registration/login)
+// Admin emails (comma-separated list of emails that receive Admin role upon registration/login)
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'admin@hbplus.fit')
   .split(',')
   .map((e) => e.trim().toLowerCase())
@@ -29,7 +27,6 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'admin@hbplus.fit')
 
 /**
  * Validates critical environment settings.
- * Does not throw fatal errors during test execution to allow lightweight mocking.
  */
 export function validateEnvironment() {
   if (NODE_ENV === 'test') {
@@ -39,13 +36,6 @@ export function validateEnvironment() {
   const warnings = [];
   if (!ALLOWED_EMAIL_DOMAIN) {
     throw new Error('FATAL CONFIGURATION ERROR: ALLOWED_EMAIL_DOMAIN must be defined.');
-  }
-
-  // Warn if Firebase credentials are completely absent in production
-  if (NODE_ENV === 'production') {
-    if (!FIREBASE_PROJECT_ID && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      warnings.push('FIREBASE_PROJECT_ID is not configured in production.');
-    }
   }
 
   if (warnings.length > 0) {

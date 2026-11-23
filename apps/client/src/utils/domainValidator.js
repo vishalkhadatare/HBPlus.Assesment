@@ -1,6 +1,6 @@
 /**
  * Client-Side Domain Validation Utility
- * Mirrors backend domain verification for immediate UX feedback.
+ * Enforces strict, normalized check against the authorized @hbplus.fit company domain.
  */
 
 export function isAllowedEmailDomain(email, configuredDomain = 'hbplus.fit') {
@@ -13,26 +13,28 @@ export function isAllowedEmailDomain(email, configuredDomain = 'hbplus.fit') {
     return false;
   }
 
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
-  if (!emailRegex.test(trimmed)) {
+  // Strict check that the email ends with @<configuredDomain>
+  const targetDomain = (configuredDomain || 'hbplus.fit').trim().toLowerCase();
+  const expectedSuffix = `@${targetDomain}`;
+
+  if (!trimmed.endsWith(expectedSuffix)) {
     return false;
   }
 
+  // Disallow lookalikes like user@not-hbplus.fit or user@hbplus.fit.example.com
   const atParts = trimmed.split('@');
   if (atParts.length !== 2) {
     return false;
   }
 
   const [, domainPart] = atParts;
-  const targetDomain = (configuredDomain || 'hbplus.fit').trim().toLowerCase();
-
   return domainPart === targetDomain;
 }
 
 export function extractEmailDomain(email) {
   if (!email || typeof email !== 'string') return '';
-  const parts = email.trim().split('@');
-  return parts.length === 2 ? parts[1].toLowerCase() : '';
+  const parts = email.trim().toLowerCase().split('@');
+  return parts.length === 2 ? parts[1] : '';
 }
 
 export default {

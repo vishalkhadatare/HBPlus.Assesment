@@ -93,6 +93,25 @@ describe('Authentication & Domain Verification API Tests', () => {
       expect(res.body.message).toBe('Access restricted. Please login using your official domain email.');
     });
 
+    test('should reject Gmail users even when authenticated via Google provider', async () => {
+      const token = createTestToken({
+        uid: 'gmail-google-user',
+        email: 'khadatarevishal@gmail.com',
+        name: 'Gmail Google User',
+        email_verified: true,
+        firebase: { sign_in_provider: 'google.com' }
+      });
+
+      const res = await request(app)
+        .post('/api/auth/verify')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.code).toBe('DOMAIN_NOT_ALLOWED');
+      expect(res.body.message).toBe('Access restricted. Please login using your official domain email.');
+    });
+
     test('should reject unauthorized suffix domain (employee@hbplus.fit.example.com)', async () => {
       const token = createTestToken({
         uid: 'phishing-user',
@@ -127,7 +146,7 @@ describe('Authentication & Domain Verification API Tests', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Authentication successful');
       expect(res.body.data.email).toBe('employee@hbplus.fit');
-      expect(res.body.data.role).toBe('user');
+      expect(res.body.data.role.toLowerCase()).toBe('user');
       expect(res.body.data.displayName).toBe('John Doe');
     });
 

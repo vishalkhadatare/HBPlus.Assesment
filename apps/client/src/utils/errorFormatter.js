@@ -8,8 +8,12 @@ export const EXACT_RESTRICTION_MESSAGE =
 export function formatAuthError(error) {
   if (!error) return '';
 
-  // 1. Direct code or string matches
-  if (error.code === 'DOMAIN_NOT_ALLOWED' || error.message?.includes('Access restricted')) {
+  // 1. Exact Domain Restriction Check
+  if (
+    error.code === 'DOMAIN_NOT_ALLOWED' ||
+    error.message?.includes('Access restricted') ||
+    error.message?.includes('official domain')
+  ) {
     return EXACT_RESTRICTION_MESSAGE;
   }
 
@@ -24,7 +28,7 @@ export function formatAuthError(error) {
     case 'auth/network-request-failed':
       return 'Network error encountered. Please check your internet connection.';
     case 'auth/user-disabled':
-      return 'Your Google account has been disabled. Please contact administrator.';
+      return 'Your Google account has been disabled. Please contact your administrator.';
     case 'auth/invalid-credential':
     case 'auth/invalid-verification-code':
       return 'Authentication credentials were invalid. Please try again.';

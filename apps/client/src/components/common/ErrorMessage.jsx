@@ -6,27 +6,22 @@ import { spacing, borderRadius } from '../../styles/spacing.js';
 
 /**
  * Reusable Accessible Error Message Banner
+ * Styled with soft rose background and crimson text.
  */
 export function ErrorMessage({
   message,
-  code,
   onRetry = null,
-  retryLabel = 'Try Again'
+  retryLabel = 'Dismiss'
 }) {
   if (!message) return null;
 
-  const isDomainError = code === 'DOMAIN_NOT_ALLOWED' || message.includes('Access restricted');
-
   return (
-    <View style={[styles.container, isDomainError ? styles.domainErrorContainer : styles.standardErrorContainer]}>
+    <View style={styles.container}>
       <View style={styles.contentRow}>
         <View style={styles.iconContainer}>
-          <Text style={styles.iconText}>{isDomainError ? '🔒' : '⚠️'}</Text>
+          <Text style={styles.iconText}>🔒</Text>
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.errorTitle}>
-            {isDomainError ? 'Domain Access Restricted' : 'Authentication Notice'}
-          </Text>
           <Text style={styles.errorMessage}>{message}</Text>
         </View>
       </View>
@@ -50,48 +45,37 @@ const styles = StyleSheet.create({
   container: {
     marginVertical: spacing.md,
     padding: spacing.md,
-    borderRadius: borderRadius.md,
-    borderWidth: 1
-  },
-  domainErrorContainer: {
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
     backgroundColor: '#FEF2F2',
-    borderColor: '#FCA5A5'
-  },
-  standardErrorContainer: {
-    backgroundColor: '#FFFBEB',
-    borderColor: '#FDE68A'
+    borderColor: '#FECACA',
+    width: '100%'
   },
   contentRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start'
+    alignItems: 'center'
   },
   iconContainer: {
-    marginRight: spacing.sm,
-    marginTop: 2
+    marginRight: spacing.sm
   },
   iconText: {
-    fontSize: 18
+    fontSize: 16
   },
   textContainer: {
     flex: 1
   },
-  errorTitle: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: '#991B1B',
-    marginBottom: 4
-  },
   errorMessage: {
     fontSize: typography.sizes.sm,
-    color: '#7F1D1D',
+    fontWeight: typography.weights.medium,
+    color: '#DC2626',
     lineHeight: 20
   },
   retryButton: {
     marginTop: spacing.sm,
     alignSelf: 'flex-start',
     backgroundColor: '#DC2626',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
     borderRadius: borderRadius.sm
   },
   retryText: {

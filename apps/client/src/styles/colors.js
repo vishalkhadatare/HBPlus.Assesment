@@ -1,37 +1,39 @@
 /**
- * Design Tokens: Color Palette
- * Modern, corporate, restrained color system with high-contrast accessibility.
+ * Design Tokens: Modern Fitness-Tech Color Palette
+ * High contrast, minimal, with Vibrant Emerald/Mint accent and Deep Slate typography.
  */
 
 export const colors = {
-  // Backgrounds
-  background: '#F8FAFC',
-  surface: '#FFFFFF',
-  surfaceSubtle: '#F1F5F9',
+  // Backgrounds & Surfaces
+  background: '#F8FAFC',       // Soft off-white / slate
+  surface: '#FFFFFF',          // Crisp elevated white card
+  surfaceSubtle: '#F1F5F9',    // Light slate container
   surfaceMuted: '#E2E8F0',
 
-  // Brand / Primary
-  primary: '#1D4ED8',       // Deep Royal Blue
-  primaryHover: '#1E40AF',
-  primaryActive: '#1E3A8A',
-  primarySubtle: '#EFF6FF',
-  primaryBorder: '#BFDBFE',
+  // Primary Accent: Vibrant Emerald & Deep Mint
+  primary: '#10B981',          // Vibrant Emerald
+  primaryHover: '#059669',     // Deep Mint
+  primaryActive: '#047857',
+  primarySubtle: '#ECFDF5',    // Soft Mint Tint
+  primaryBorder: '#A7F3D0',
 
-  // Text & Typography (Dark Charcoal)
-  textPrimary: '#0F172A',   // Slate 900
-  textSecondary: '#475569', // Slate 600
-  textMuted: '#64748B',     // Slate 500
+  // Deep Slate / Charcoal Typography & High Contrast Surfaces
+  textPrimary: '#0F172A',      // Slate 900
+  textSecondary: '#334155',    // Slate 700
+  textMuted: '#64748B',        // Slate 500
   textInverse: '#FFFFFF',
+  slateDark: '#1E293B',        // Slate 800
 
   // Status & Feedback
-  success: '#15803D',
-  successSubtle: '#F0FDF4',
-  successBorder: '#BBF7D0',
+  success: '#059669',
+  successSubtle: '#ECFDF5',
+  successBorder: '#A7F3D0',
 
-  warning: '#B45309',
+  warning: '#D97706',
   warningSubtle: '#FFFBEB',
   warningBorder: '#FDE68A',
 
+  // Error States: Soft rose background with crimson text
   danger: '#DC2626',
   dangerSubtle: '#FEF2F2',
   dangerBorder: '#FECACA',
@@ -39,13 +41,13 @@ export const colors = {
   // Borders & Dividers
   border: '#E2E8F0',
   borderDark: '#CBD5E1',
-  borderFocus: '#2563EB',
+  borderFocus: '#10B981',
 
-  // Neutral Accents & Badges
+  // Role Badges
   badgeAdminBg: '#FEF3C7',
   badgeAdminText: '#92400E',
-  badgeUserBg: '#EFF6FF',
-  badgeUserText: '#1E40AF'
+  badgeUserBg: '#ECFDF5',
+  badgeUserText: '#065F46'
 };
 
 export default colors;
