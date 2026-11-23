@@ -1,53 +1,129 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
 import GlassCard from './GlassCard.jsx';
 
 /**
- * Clean Cross-Platform Attendance Trend Chart (Mon - Sun)
+ * Apple Fitness-style Circular Progress Ring
  */
-export function AttendanceTrendChart({ data = [92, 96, 98, 94, 99, 85, 90] }) {
+export function ProgressRing({
+  size = 76,
+  strokeWidth = 8,
+  progress = 75,
+  color = '#5B5BF0',
+  trackColor,
+  centerContent
+}) {
   const { colors } = useTheme();
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+  return (
+    <View style={{ width: size, height: size, position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
+      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={trackColor || colors.surfaceAlt}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          fill="transparent"
+          style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+        />
+      </svg>
+      {centerContent ? (
+        <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
+          {centerContent}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * Modern Attendance Trend Chart
+ */
+export function AttendanceTrendChart({ data = [94, 98, 97, 95, 99, 86, 92] }) {
+  const { colors } = useTheme();
+  const [selectedDay, setSelectedDay] = useState(4); // default to Friday
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   return (
     <GlassCard style={styles.chartCard}>
       <View style={styles.chartHeader}>
         <View>
-          <Text style={[styles.chartTitle, { color: colors.textPrimary }]}>
-            Attendance Trend
+          <Text style={[styles.chartTitle, { color: colors.text }]}>
+            Attendance Pulse
           </Text>
-          <Text style={[styles.chartSubtitle, { color: colors.textSecondary }]}>
+          <Text style={[styles.chartSubtitle, { color: colors.textMuted }]}>
             Past 7 business days presence rate
           </Text>
         </View>
-        <View style={[styles.ratePill, { backgroundColor: colors.successSubtle }]}>
-          <Text style={[styles.rateText, { color: colors.successText }]}>97.2% Avg</Text>
+        <View style={[styles.ratePill, { backgroundColor: colors.successSoft }]}>
+          <Text style={[styles.rateText, { color: colors.successText }]}>97.4% Avg</Text>
         </View>
       </View>
 
       <View style={styles.barsContainer}>
         {data.map((value, idx) => {
           const heightPercent = `${value}%`;
-          const isHighest = value >= 98;
+          const isSelected = selectedDay === idx;
           return (
-            <View key={idx} style={styles.barColumn}>
-              <Text style={[styles.barValue, { color: colors.textMuted }]}>{value}%</Text>
-              <View style={[styles.barTrack, { backgroundColor: colors.surfaceSubtle }]}>
+            <TouchableOpacity
+              key={idx}
+              style={styles.barColumn}
+              onPress={() => setSelectedDay(idx)}
+              activeOpacity={0.8}
+            >
+              <Text
+                style={[
+                  styles.barValue,
+                  {
+                    color: isSelected ? colors.primary : colors.textSubtle,
+                    fontWeight: isSelected ? '700' : '500'
+                  }
+                ]}
+              >
+                {value}%
+              </Text>
+              <View style={[styles.barTrack, { backgroundColor: colors.surfaceAlt }]}>
                 <View
                   style={[
                     styles.barFill,
                     {
                       height: heightPercent,
-                      backgroundColor: isHighest ? colors.primary : colors.primaryLight
+                      backgroundColor: isSelected ? colors.primary : colors.primarySoft,
+                      backgroundImage: isSelected
+                        ? 'linear-gradient(180deg, #6A5CFF 0%, #4A3DF0 100%)'
+                        : undefined
                     }
                   ]}
                 />
               </View>
-              <Text style={[styles.barLabel, { color: colors.textSecondary }]}>
+              <Text
+                style={[
+                  styles.barLabel,
+                  {
+                    color: isSelected ? colors.text : colors.textMuted,
+                    fontWeight: isSelected ? '700' : '500'
+                  }
+                ]}
+              >
                 {days[idx]}
               </Text>
-            </View>
+            </TouchableOpacity>
           );
         })}
       </View>
@@ -56,25 +132,25 @@ export function AttendanceTrendChart({ data = [92, 96, 98, 94, 99, 85, 90] }) {
 }
 
 /**
- * Clean Cross-Platform Department Distribution Donut / Progress Bar
+ * Modern Department Headcount Stacked Bar & Legend
  */
 export function DepartmentDistributionChart({
   departments = [
-    { name: 'Engineering', count: 42, color: '#10B981', percent: 45 },
-    { name: 'Product & Design', count: 18, color: '#3B82F6', percent: 20 },
+    { name: 'Engineering', count: 42, color: '#5B5BF0', percent: 45 },
+    { name: 'Product & Design', count: 18, color: '#14C8D9', percent: 20 },
     { name: 'Operations & Fitness', count: 20, color: '#8B5CF6', percent: 22 },
-    { name: 'People & Admin', count: 12, color: '#F59E0B', percent: 13 }
+    { name: 'People & Admin', count: 12, color: '#F5A524', percent: 13 }
   ]
 }) {
   const { colors } = useTheme();
 
   return (
     <GlassCard style={styles.chartCard}>
-      <Text style={[styles.chartTitle, { color: colors.textPrimary }]}>
-        Department Distribution
+      <Text style={[styles.chartTitle, { color: colors.text }]}>
+        Workforce Distribution
       </Text>
-      <Text style={[styles.chartSubtitle, { color: colors.textSecondary }]}>
-        Active headcount breakdown (92 total)
+      <Text style={[styles.chartSubtitle, { color: colors.textMuted }]}>
+        Active headcount across 4 core departments (92 total)
       </Text>
 
       {/* Stacked Ratio Bar */}
@@ -84,7 +160,7 @@ export function DepartmentDistributionChart({
             key={i}
             style={{
               flex: dept.percent,
-              height: 12,
+              height: 10,
               backgroundColor: dept.color,
               marginRight: i === departments.length - 1 ? 0 : 3,
               borderRadius: 3
@@ -98,10 +174,10 @@ export function DepartmentDistributionChart({
         {departments.map((dept, i) => (
           <View key={i} style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: dept.color }]} />
-            <Text style={[styles.legendName, { color: colors.textSecondary }]}>
+            <Text style={[styles.legendName, { color: colors.textMuted }]}>
               {dept.name}
             </Text>
-            <Text style={[styles.legendValue, { color: colors.textPrimary }]}>
+            <Text style={[styles.legendValue, { color: colors.text }]}>
               {dept.count} ({dept.percent}%)
             </Text>
           </View>
@@ -113,18 +189,18 @@ export function DepartmentDistributionChart({
 
 const styles = StyleSheet.create({
   chartCard: {
-    marginVertical: 8
+    marginVertical: 6
   },
   chartHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20
+    marginBottom: 16
   },
   chartTitle: {
     fontSize: 16,
     fontWeight: '700',
-    letterSpacing: -0.3
+    letterSpacing: -0.2
   },
   chartSubtitle: {
     fontSize: 12,
@@ -133,19 +209,19 @@ const styles = StyleSheet.create({
   },
   ratePill: {
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: 8
   },
   rateText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700'
   },
   barsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    height: 140,
-    paddingTop: 10
+    height: 130,
+    paddingTop: 8
   },
   barColumn: {
     alignItems: 'center',
@@ -153,12 +229,12 @@ const styles = StyleSheet.create({
   },
   barValue: {
     fontSize: 10,
-    fontWeight: '600',
-    marginBottom: 4
+    marginBottom: 4,
+    fontFamily: "'JetBrains Mono', monospace"
   },
   barTrack: {
-    width: 22,
-    height: 90,
+    width: 20,
+    height: 84,
     borderRadius: 6,
     overflow: 'hidden',
     justifyContent: 'flex-end'
@@ -169,33 +245,32 @@ const styles = StyleSheet.create({
   },
   barLabel: {
     fontSize: 11,
-    fontWeight: '600',
     marginTop: 6
   },
   stackedBar: {
     flexDirection: 'row',
-    height: 12,
-    borderRadius: 6,
+    height: 10,
+    borderRadius: 5,
     overflow: 'hidden',
-    marginVertical: 16
+    marginVertical: 14
   },
   legendGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
-    marginTop: 8
+    gap: 10,
+    marginTop: 6
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    minWidth: 140,
-    marginVertical: 4
+    minWidth: 130,
+    marginVertical: 2
   },
   legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 8
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6
   },
   legendName: {
     fontSize: 12,
@@ -205,11 +280,13 @@ const styles = StyleSheet.create({
   legendValue: {
     fontSize: 12,
     fontWeight: '700',
-    marginLeft: 6
+    marginLeft: 4,
+    fontFamily: "'JetBrains Mono', monospace"
   }
 });
 
 export default {
+  ProgressRing,
   AttendanceTrendChart,
   DepartmentDistributionChart
 };

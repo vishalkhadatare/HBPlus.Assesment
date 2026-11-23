@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
 import GlassCard from '../ui/GlassCard.jsx';
 import Badge from '../ui/Badge.jsx';
+import Icon from '../ui/Icon.jsx';
 import { initialDocuments } from '../../services/dataStore.js';
 
 export function DocumentsView() {
@@ -18,36 +19,38 @@ export function DocumentsView() {
   return (
     <View style={styles.container}>
       <View style={styles.headerBar}>
-        <View>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Documents & Policies</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Official employee handbooks, security manuals, and compliance resources
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[styles.title, { color: colors.text }]}>Policies & Handbook</Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+            Downloadable guidelines, security standards, and benefit manuals
           </Text>
         </View>
-        <Badge label="4 Documents Available" variant="info" />
+        <Badge label="4 Documents Available" variant="info" showDot={false} />
       </View>
 
       <View style={styles.grid}>
         {docs.map((doc) => (
           <GlassCard key={doc.id} style={styles.docCard}>
             <View style={styles.docTop}>
-              <View style={styles.docIconBox}>
-                <Text style={styles.docIcon}>📄</Text>
+              <View style={[styles.docIconBox, { backgroundColor: colors.surfaceAlt }]}>
+                <Icon name="documents" size={18} color={colors.primary} />
               </View>
-              <Badge label={doc.category} variant="purple" size="small" />
+              <Badge label={doc.category} variant="primary" size="small" showDot={false} />
             </View>
 
-            <Text style={[styles.docTitle, { color: colors.textPrimary }]}>{doc.title}</Text>
-            <Text style={[styles.docMeta, { color: colors.textMuted }]}>
+            <Text style={[styles.docTitle, { color: colors.text }]}>{doc.title}</Text>
+            <Text style={[styles.docMeta, { color: colors.textSubtle }]}>
               {doc.format} • {doc.size} • Updated {doc.updatedAt}
             </Text>
 
             <TouchableOpacity
-              style={[styles.downloadBtn, { backgroundColor: colors.primarySubtle }]}
+              style={[styles.downloadBtn, { backgroundColor: colors.primarySoft }]}
               onPress={() => handleDownload(doc.id)}
+              activeOpacity={0.8}
             >
+              <Icon name="download" size={14} color={colors.primary} />
               <Text style={[styles.downloadBtnText, { color: colors.primary }]}>
-                {downloadedId === doc.id ? '✓ Downloaded' : 'Download Document ↓'}
+                {downloadedId === doc.id ? 'Downloaded' : 'Download Document'}
               </Text>
             </TouchableOpacity>
           </GlassCard>
@@ -59,17 +62,16 @@ export function DocumentsView() {
 
 const styles = StyleSheet.create({
   container: { width: '100%' },
-  headerBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  title: { fontSize: 20, fontWeight: '800' },
+  headerBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 },
+  title: { fontSize: 22, fontWeight: '800', letterSpacing: -0.4 },
   subtitle: { fontSize: 13, fontWeight: '500', marginTop: 2 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  docCard: { flex: 1, minWidth: 260, maxWidth: 440 },
+  docCard: { flex: 1, minWidth: 260, maxWidth: 540, marginVertical: 0 },
   docTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  docIconBox: { width: 36, height: 36, borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.04)', alignItems: 'center', justifyContent: 'center' },
-  docIcon: { fontSize: 18 },
-  docTitle: { fontSize: 15, fontWeight: '800', lineHeight: 20, marginBottom: 6 },
-  docMeta: { fontSize: 12, marginBottom: 14 },
-  downloadBtn: { paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
+  docIconBox: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  docTitle: { fontSize: 15, fontWeight: '800', lineHeight: 20, marginBottom: 4 },
+  docMeta: { fontSize: 11, marginBottom: 12 },
+  downloadBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 10, gap: 6 },
   downloadBtnText: { fontSize: 12, fontWeight: '700' }
 });
 

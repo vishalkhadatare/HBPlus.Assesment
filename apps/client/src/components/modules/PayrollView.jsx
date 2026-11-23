@@ -4,12 +4,14 @@ import { useTheme } from '../../contexts/ThemeContext.jsx';
 import GlassCard from '../ui/GlassCard.jsx';
 import Badge from '../ui/Badge.jsx';
 import Button from '../ui/Button.jsx';
+import Icon from '../ui/Icon.jsx';
 import { initialPayslips } from '../../services/dataStore.js';
 
 export function PayrollView({ role = 'User' }) {
   const { colors, borderRadius } = useTheme();
   const [payslips] = useState(initialPayslips);
   const [selectedPayslip, setSelectedPayslip] = useState(null);
+  const [showAmounts, setShowAmounts] = useState(true);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
 
   const currentSalary = {
@@ -19,137 +21,114 @@ export function PayrollView({ role = 'User' }) {
     hra: '$2,200.00',
     allowances: '$1,300.00',
     pf: '$600.00',
-    tax: '$900.00',
-    currency: 'USD'
+    tax: '$900.00'
   };
 
   const handleDownload = () => {
     setDownloadSuccess(true);
-    setTimeout(() => {
-      setDownloadSuccess(false);
-    }, 2000);
+    setTimeout(() => setDownloadSuccess(false), 2000);
   };
 
   return (
     <View style={styles.container}>
-      {/* Top Header */}
+      {/* Header */}
       <View style={styles.headerBar}>
-        <View>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Payroll & Payslips</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Confidential compensation breakdown and tax receipts
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[styles.title, { color: colors.text }]}>Payroll & Compensation</Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+            Confidential earnings, automated tax deductions, and historical pay statements
           </Text>
         </View>
-        <Badge label="Direct Deposit Active" variant="success" />
+
+        <TouchableOpacity
+          style={[styles.eyeToggleBtn, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}
+          onPress={() => setShowAmounts(!showAmounts)}
+        >
+          <Icon name={showAmounts ? 'eyeOff' : 'eye'} size={16} color={colors.textMuted} />
+          <Text style={[styles.eyeToggleText, { color: colors.text }]}>
+            {showAmounts ? 'Hide Amounts' : 'Show Amounts'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Salary Overview Card */}
       <GlassCard style={styles.overviewCard}>
-        <Text style={[styles.sectionHeading, { color: colors.textPrimary }]}>
-          Monthly Compensation Structure
+        <Text style={[styles.sectionHeading, { color: colors.text }]}>
+          Monthly Compensation Breakdown
         </Text>
 
         <View style={styles.salaryGrid}>
           <View style={styles.salaryItem}>
-            <Text style={[styles.salaryLabel, { color: colors.textSecondary }]}>Gross Monthly Pay</Text>
-            <Text style={[styles.salaryAmount, { color: colors.textPrimary }]}>{currentSalary.gross}</Text>
+            <Text style={[styles.salaryLabel, { color: colors.textMuted }]}>Gross Monthly</Text>
+            <Text style={[styles.salaryAmount, { color: colors.text }]}>
+              {showAmounts ? currentSalary.gross : '••••••••'}
+            </Text>
           </View>
           <View style={styles.salaryItem}>
-            <Text style={[styles.salaryLabel, { color: colors.textSecondary }]}>Total Deductions (PF+Tax)</Text>
-            <Text style={[styles.salaryAmount, { color: colors.dangerText }]}>-$1,500.00</Text>
+            <Text style={[styles.salaryLabel, { color: colors.textMuted }]}>Total Deductions</Text>
+            <Text style={[styles.salaryAmount, { color: colors.dangerText }]}>
+              {showAmounts ? '-$1,500.00' : '••••••••'}
+            </Text>
           </View>
           <View style={styles.salaryItem}>
-            <Text style={[styles.salaryLabel, { color: colors.textSecondary }]}>Net Direct Deposit</Text>
-            <Text style={[styles.salaryAmount, { color: colors.primary }]}>{currentSalary.net}</Text>
+            <Text style={[styles.salaryLabel, { color: colors.textMuted }]}>Net Disbursed</Text>
+            <Text style={[styles.salaryAmount, { color: colors.primary }]}>
+              {showAmounts ? currentSalary.net : '••••••••'}
+            </Text>
           </View>
         </View>
 
         {/* Detailed Line Items */}
-        <View style={styles.lineItemsTable}>
+        <View style={[styles.lineItemsTable, { borderTopColor: colors.borderSubtle }]}>
           <View style={[styles.lineRow, { borderBottomColor: colors.borderSubtle }]}>
-            <Text style={[styles.lineDesc, { color: colors.textSecondary }]}>Basic Salary</Text>
-            <Text style={[styles.lineVal, { color: colors.textPrimary }]}>{currentSalary.basic}</Text>
+            <Text style={[styles.lineDesc, { color: colors.textMuted }]}>Basic Salary</Text>
+            <Text style={[styles.lineVal, { color: colors.text }]}>{showAmounts ? currentSalary.basic : '••••'}</Text>
           </View>
           <View style={[styles.lineRow, { borderBottomColor: colors.borderSubtle }]}>
-            <Text style={[styles.lineDesc, { color: colors.textSecondary }]}>House Rent Allowance (HRA)</Text>
-            <Text style={[styles.lineVal, { color: colors.textPrimary }]}>{currentSalary.hra}</Text>
+            <Text style={[styles.lineDesc, { color: colors.textMuted }]}>House Rent Allowance (HRA)</Text>
+            <Text style={[styles.lineVal, { color: colors.text }]}>{showAmounts ? currentSalary.hra : '••••'}</Text>
           </View>
           <View style={[styles.lineRow, { borderBottomColor: colors.borderSubtle }]}>
-            <Text style={[styles.lineDesc, { color: colors.textSecondary }]}>Special Wellness Stipend</Text>
-            <Text style={[styles.lineVal, { color: colors.textPrimary }]}>{currentSalary.allowances}</Text>
+            <Text style={[styles.lineDesc, { color: colors.textMuted }]}>Wellness & Fitness Stipend</Text>
+            <Text style={[styles.lineVal, { color: colors.text }]}>{showAmounts ? currentSalary.allowances : '••••'}</Text>
           </View>
           <View style={[styles.lineRow, { borderBottomColor: colors.borderSubtle }]}>
-            <Text style={[styles.lineDesc, { color: colors.dangerText }]}>Provident Fund (Employee PF)</Text>
-            <Text style={[styles.lineVal, { color: colors.dangerText }]}>-{currentSalary.pf}</Text>
+            <Text style={[styles.lineDesc, { color: colors.dangerText }]}>Provident Fund (PF Contribution)</Text>
+            <Text style={[styles.lineVal, { color: colors.dangerText }]}>{showAmounts ? `-${currentSalary.pf}` : '••••'}</Text>
           </View>
           <View style={[styles.lineRow, { borderBottomColor: colors.borderSubtle }]}>
-            <Text style={[styles.lineDesc, { color: colors.dangerText }]}>Federal & State Income Tax</Text>
-            <Text style={[styles.lineVal, { color: colors.dangerText }]}>-{currentSalary.tax}</Text>
+            <Text style={[styles.lineDesc, { color: colors.dangerText }]}>Income Tax Withholding (TDS)</Text>
+            <Text style={[styles.lineVal, { color: colors.dangerText }]}>{showAmounts ? `-${currentSalary.tax}` : '••••'}</Text>
           </View>
         </View>
       </GlassCard>
 
-      {/* Admin Corporate Payroll Summary (If Admin) */}
-      {role === 'Admin' ? (
-        <GlassCard style={[styles.adminCard, { borderColor: colors.primary }]}>
-          <View style={styles.adminHeader}>
-            <View>
-              <Text style={[styles.adminTitle, { color: colors.primary }]}>
-                🛡️ Admin Payroll Run Summary (November 2026)
-              </Text>
-              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-                Corporate bank batch #HB-202611-BATCH01
-              </Text>
-            </View>
-            <Badge label="Batch Cleared" variant="success" size="small" />
-          </View>
-
-          <View style={styles.adminStatsRow}>
-            <View>
-              <Text style={{ fontSize: 11, color: colors.textMuted }}>Total Disbursed</Text>
-              <Text style={{ fontSize: 20, fontWeight: '800', color: colors.textPrimary }}>$846,200.00</Text>
-            </View>
-            <View>
-              <Text style={{ fontSize: 11, color: colors.textMuted }}>Employees Paid</Text>
-              <Text style={{ fontSize: 20, fontWeight: '800', color: colors.textPrimary }}>92 / 92</Text>
-            </View>
-            <View>
-              <Text style={{ fontSize: 11, color: colors.textMuted }}>Payment Gateway</Text>
-              <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginTop: 4 }}>Silicon Valley Bank / ACH</Text>
-            </View>
-          </View>
-        </GlassCard>
-      ) : null}
-
-      {/* Past Payslips List */}
+      {/* Historical Payslips */}
       <GlassCard style={styles.payslipsCard}>
-        <Text style={[styles.sectionHeading, { color: colors.textPrimary }]}>
-          Historical Payslips
+        <Text style={[styles.sectionHeading, { color: colors.text }]}>
+          Historical Pay Statements
         </Text>
 
         <View style={styles.payslipList}>
           {payslips.map((ps) => (
-            <View
-              key={ps.id}
-              style={[styles.payslipRow, { borderBottomColor: colors.borderSubtle }]}
-            >
-              <View style={styles.psIconContainer}>
-                <Text style={styles.psIcon}>🧾</Text>
+            <View key={ps.id} style={[styles.payslipRow, { borderBottomColor: colors.borderSubtle }]}>
+              <View style={[styles.psIconContainer, { backgroundColor: colors.surfaceAlt }]}>
+                <Icon name="wallet" size={18} color={colors.primary} />
               </View>
 
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={[styles.psMonth, { color: colors.textPrimary }]}>{ps.month}</Text>
-                <Text style={[styles.psBank, { color: colors.textMuted }]}>
+              <View style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
+                <Text style={[styles.psMonth, { color: colors.text }]}>{ps.month}</Text>
+                <Text style={[styles.psBank, { color: colors.textSubtle }]}>
                   Disbursed on {ps.disbursedOn} • {ps.bankAccount}
                 </Text>
               </View>
 
               <View style={styles.psRight}>
-                <Text style={[styles.psAmount, { color: colors.textPrimary }]}>
-                  ${ps.net.toLocaleString()}
+                <Text style={[styles.psAmount, { color: colors.text }]}>
+                  {showAmounts ? `$${ps.net.toLocaleString()}` : '••••'}
                 </Text>
                 <TouchableOpacity
-                  style={[styles.viewSlipBtn, { backgroundColor: colors.primarySubtle }]}
+                  style={[styles.viewSlipBtn, { backgroundColor: colors.primarySoft }]}
                   onPress={() => setSelectedPayslip(ps)}
                 >
                   <Text style={[styles.viewSlipText, { color: colors.primary }]}>
@@ -162,7 +141,7 @@ export function PayrollView({ role = 'User' }) {
         </View>
       </GlassCard>
 
-      {/* Interactive Payslip Modal */}
+      {/* Payslip Modal */}
       {selectedPayslip ? (
         <Modal
           visible={Boolean(selectedPayslip)}
@@ -174,46 +153,40 @@ export function PayrollView({ role = 'User' }) {
             <GlassCard style={styles.modalCard}>
               <View style={styles.slipModalHeader}>
                 <View>
-                  <Text style={[styles.slipBrand, { color: colors.primary }]}>HBPlus Corporate</Text>
-                  <Text style={[styles.slipTitle, { color: colors.textPrimary }]}>
+                  <Text style={[styles.slipBrand, { color: colors.primary }]}>HBPlus Corporate Portal</Text>
+                  <Text style={[styles.slipTitle, { color: colors.text }]}>
                     Pay Statement: {selectedPayslip.month}
                   </Text>
                 </View>
                 <TouchableOpacity onPress={() => setSelectedPayslip(null)}>
-                  <Text style={{ fontSize: 20, color: colors.textMuted }}>✕</Text>
+                  <Icon name="x" size={18} color={colors.textMuted} />
                 </TouchableOpacity>
               </View>
 
               <View style={styles.slipBody}>
                 <View style={styles.slipRow}>
-                  <Text style={[styles.slipLabel, { color: colors.textSecondary }]}>Gross Earnings:</Text>
-                  <Text style={[styles.slipVal, { color: colors.textPrimary }]}>${selectedPayslip.gross.toLocaleString()}</Text>
+                  <Text style={[styles.slipLabel, { color: colors.textMuted }]}>Gross Earnings:</Text>
+                  <Text style={[styles.slipVal, { color: colors.text }]}>${selectedPayslip.gross.toLocaleString()}</Text>
                 </View>
                 <View style={styles.slipRow}>
-                  <Text style={[styles.slipLabel, { color: colors.textSecondary }]}>Total Deductions:</Text>
+                  <Text style={[styles.slipLabel, { color: colors.textMuted }]}>Total Deductions:</Text>
                   <Text style={[styles.slipVal, { color: colors.dangerText }]}>-${(selectedPayslip.gross - selectedPayslip.net).toLocaleString()}</Text>
                 </View>
                 <View style={[styles.slipRow, styles.slipTotalRow, { borderColor: colors.primary }]}>
-                  <Text style={[styles.slipTotalLabel, { color: colors.textPrimary }]}>Net Pay Credited:</Text>
+                  <Text style={[styles.slipTotalLabel, { color: colors.text }]}>Net Disbursed:</Text>
                   <Text style={[styles.slipTotalVal, { color: colors.primary }]}>${selectedPayslip.net.toLocaleString()}</Text>
                 </View>
-                <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 8 }}>
-                  Direct deposit processed to {selectedPayslip.bankAccount} on {selectedPayslip.disbursedOn}.
-                </Text>
               </View>
 
               <View style={styles.modalFooter}>
                 <Button
                   title={downloadSuccess ? 'Downloaded!' : 'Download PDF Statement'}
+                  icon="download"
                   variant="primary"
                   onPress={handleDownload}
                   style={{ marginRight: 8 }}
                 />
-                <Button
-                  title="Close"
-                  variant="secondary"
-                  onPress={() => setSelectedPayslip(null)}
-                />
+                <Button title="Close" variant="secondary" onPress={() => setSelectedPayslip(null)} />
               </View>
             </GlassCard>
           </View>
@@ -224,201 +197,45 @@ export function PayrollView({ role = 'User' }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    width: '100%'
-  },
-  headerBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '800'
-  },
-  subtitle: {
-    fontSize: 13,
-    fontWeight: '500',
-    marginTop: 2
-  },
-  overviewCard: {
-    marginBottom: 16
-  },
-  sectionHeading: {
-    fontSize: 16,
-    fontWeight: '800',
-    marginBottom: 16
-  },
-  salaryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-    marginBottom: 20
-  },
-  salaryItem: {
-    flex: 1,
-    minWidth: 160
-  },
-  salaryLabel: {
-    fontSize: 12,
-    fontWeight: '600'
-  },
-  salaryAmount: {
-    fontSize: 24,
-    fontWeight: '900',
-    marginTop: 4
-  },
-  lineItemsTable: {
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.06)',
-    paddingTop: 12
-  },
-  lineRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1
-  },
-  lineDesc: {
-    fontSize: 13,
-    fontWeight: '500'
-  },
-  lineVal: {
-    fontSize: 13,
-    fontWeight: '700'
-  },
-  adminCard: {
-    marginBottom: 16,
-    borderWidth: 1.5
-  },
-  adminHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12
-  },
-  adminTitle: {
-    fontSize: 15,
-    fontWeight: '800'
-  },
-  adminStatsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: 12
-  },
-  payslipsCard: {
-    marginBottom: 16
-  },
-  payslipList: {
-    gap: 4
-  },
-  payslipRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1
-  },
-  psIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: 'rgba(0,0,0,0.04)',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  psIcon: {
-    fontSize: 18
-  },
-  psMonth: {
-    fontSize: 15,
-    fontWeight: '700'
-  },
-  psBank: {
-    fontSize: 12,
-    marginTop: 2
-  },
-  psRight: {
-    alignItems: 'flex-end',
-    gap: 4
-  },
-  psAmount: {
-    fontSize: 15,
-    fontWeight: '800'
-  },
-  viewSlipBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6
-  },
-  viewSlipText: {
-    fontSize: 11,
-    fontWeight: '700'
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 480
-  },
-  slipModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16
-  },
-  slipBrand: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.5
-  },
-  slipTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    marginTop: 2
-  },
-  slipBody: {
-    gap: 8,
-    marginVertical: 12
-  },
-  slipRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 6
-  },
-  slipLabel: {
-    fontSize: 13,
-    fontWeight: '500'
-  },
-  slipVal: {
-    fontSize: 14,
-    fontWeight: '700'
-  },
-  slipTotalRow: {
-    borderTopWidth: 2,
-    borderBottomWidth: 2,
-    paddingVertical: 10,
-    marginTop: 8
-  },
-  slipTotalLabel: {
-    fontSize: 15,
-    fontWeight: '800'
-  },
-  slipTotalVal: {
-    fontSize: 18,
-    fontWeight: '900'
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 16
-  }
+  container: { width: '100%' },
+  headerBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 },
+  title: { fontSize: 22, fontWeight: '800', letterSpacing: -0.4 },
+  subtitle: { fontSize: 13, fontWeight: '500', marginTop: 2 },
+  eyeToggleBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10, borderWidth: 1, gap: 6 },
+  eyeToggleText: { fontSize: 12, fontWeight: '700' },
+  overviewCard: { marginBottom: 14 },
+  sectionHeading: { fontSize: 16, fontWeight: '800', marginBottom: 14, letterSpacing: -0.2 },
+  salaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginBottom: 16 },
+  salaryItem: { flex: 1, minWidth: 140 },
+  salaryLabel: { fontSize: 12, fontWeight: '600' },
+  salaryAmount: { fontSize: 24, fontWeight: '800', marginTop: 4, fontFamily: "'JetBrains Mono', monospace" },
+  lineItemsTable: { borderTopWidth: 1, paddingTop: 10 },
+  lineRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7, borderBottomWidth: 1 },
+  lineDesc: { fontSize: 13, fontWeight: '500' },
+  lineVal: { fontSize: 13, fontWeight: '700', fontFamily: "'JetBrains Mono', monospace" },
+  payslipsCard: { marginBottom: 14 },
+  payslipList: { gap: 2 },
+  payslipRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1 },
+  psIconContainer: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  psMonth: { fontSize: 14, fontWeight: '700' },
+  psBank: { fontSize: 11, marginTop: 2 },
+  psRight: { alignItems: 'flex-end', gap: 2 },
+  psAmount: { fontSize: 14, fontWeight: '800', fontFamily: "'JetBrains Mono', monospace" },
+  viewSlipBtn: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  viewSlipText: { fontSize: 11, fontWeight: '700' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 16 },
+  modalCard: { width: '100%', maxWidth: 460 },
+  slipModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  slipBrand: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
+  slipTitle: { fontSize: 17, fontWeight: '800', marginTop: 2 },
+  slipBody: { gap: 6, marginVertical: 10 },
+  slipRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5 },
+  slipLabel: { fontSize: 13, fontWeight: '500' },
+  slipVal: { fontSize: 13, fontWeight: '700', fontFamily: "'JetBrains Mono', monospace" },
+  slipTotalRow: { borderTopWidth: 2, borderBottomWidth: 2, paddingVertical: 8, marginTop: 6 },
+  slipTotalLabel: { fontSize: 14, fontWeight: '800' },
+  slipTotalVal: { fontSize: 17, fontWeight: '900', fontFamily: "'JetBrains Mono', monospace" },
+  modalFooter: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 14 }
 });
 
 export default PayrollView;

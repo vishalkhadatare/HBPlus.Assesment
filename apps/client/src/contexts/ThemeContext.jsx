@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { lightPalette, darkPalette, typography, spacing, borderRadius, shadows } from '../theme/index.js';
+import { lightTheme, darkTheme, typography, spacing, borderRadius, shadows } from '../theme/tokens.js';
 
 const ThemeContext = createContext({
   isDark: false,
   toggleTheme: () => {},
-  colors: lightPalette,
+  colors: lightTheme,
   typography,
   spacing,
   borderRadius,
@@ -28,7 +28,7 @@ export function ThemeProvider({ children }) {
   }, [isDark]);
 
   const toggleTheme = () => setIsDark((prev) => !prev);
-  const colors = isDark ? darkPalette : lightPalette;
+  const colors = isDark ? darkTheme : lightTheme;
 
   const value = {
     isDark,

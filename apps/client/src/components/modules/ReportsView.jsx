@@ -18,22 +18,23 @@ export function ReportsView() {
   return (
     <View style={styles.container}>
       <View style={styles.headerBar}>
-        <View>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Executive Reports & Analytics</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Workforce intelligence, retention rates, and operational telemetry
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[styles.title, { color: colors.text }]}>Executive Intelligence & Reports</Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+            Workforce retention metrics, attendance telemetry, and leave distribution
           </Text>
         </View>
 
         <Button
-          title={exported ? "✓ CSV Downloaded" : "Export Monthly CSV"}
+          title={exported ? "CSV Downloaded" : "Export Monthly CSV"}
+          icon="download"
           variant="primary"
           onPress={handleExport}
         />
       </View>
 
       <View style={styles.kpiGrid}>
-        <StatCard title="Team Retention" value="98.2%" subtitle="Industry avg: 89%" trend="1.2%" trendType="up" />
+        <StatCard title="Team Retention" value="98.2%" subtitle="Industry benchmark: 89%" trend="1.2%" trendType="up" />
         <StatCard title="Avg Check-In Time" value="09:04 AM" subtitle="San Francisco HQ" trend="On Time" trendType="up" />
         <StatCard title="Leave Utilization" value="68%" subtitle="Healthy distribution" trend="Optimal" trendType="up" />
       </View>
@@ -52,12 +53,12 @@ export function ReportsView() {
 
 const styles = StyleSheet.create({
   container: { width: '100%' },
-  headerBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  title: { fontSize: 20, fontWeight: '800' },
+  headerBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 },
+  title: { fontSize: 22, fontWeight: '800', letterSpacing: -0.4 },
   subtitle: { fontSize: 13, fontWeight: '500', marginTop: 2 },
-  kpiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 16 },
+  kpiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 14 },
   chartsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  chartCol: { flex: 1, minWidth: 300 }
+  chartCol: { flex: 1, minWidth: 290 }
 });
 
 export default ReportsView;

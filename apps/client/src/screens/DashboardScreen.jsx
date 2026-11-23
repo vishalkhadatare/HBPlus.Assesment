@@ -19,6 +19,7 @@ import DocumentsView from '../components/modules/DocumentsView.jsx';
 import HelpdeskView from '../components/modules/HelpdeskView.jsx';
 import ReportsView from '../components/modules/ReportsView.jsx';
 import AdminSettingsView from '../components/modules/AdminSettingsView.jsx';
+import UiGalleryScreen from './UiGalleryScreen.jsx';
 
 export function DashboardScreen() {
   const { user, profile, role: initialRole, isLoading, error, clearError } = useAuth();
@@ -73,8 +74,11 @@ export function DashboardScreen() {
             profile={profile}
             role={currentRole}
             onToggleRole={toggleRole}
+            onOpenGallery={() => setActiveModule('ui-gallery')}
           />
         );
+      case 'ui-gallery':
+        return <UiGalleryScreen onBack={() => setActiveModule('admin')} />;
       default:
         return (
           <DashboardOverviewView

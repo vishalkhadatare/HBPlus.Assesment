@@ -2,46 +2,64 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
 import GlassCard from './GlassCard.jsx';
+import Icon from './Icon.jsx';
+import IconTile from './IconTile.jsx';
 
-export function StatCard({ title, value, subtitle, icon, trend, trendType = 'up', style }) {
-  const { colors, typography } = useTheme();
+export function StatCard({
+  title,
+  value,
+  subtitle,
+  iconName,
+  module = 'dashboard',
+  trend,
+  trendType = 'up',
+  style
+}) {
+  const { colors } = useTheme();
 
   const isUp = trendType === 'up';
 
   return (
     <GlassCard style={[styles.card, style]} contentStyle={styles.content}>
       <View style={styles.headerRow}>
-        <Text style={[styles.title, { color: colors.textSecondary }]}>{title}</Text>
-        {icon ? (
-          <View style={[styles.iconContainer, { backgroundColor: colors.primarySubtle }]}>
-            <Text style={styles.iconText}>{icon}</Text>
-          </View>
+        <Text style={[styles.title, { color: colors.textMuted }]} numberOfLines={1}>
+          {title}
+        </Text>
+        {iconName ? (
+          <IconTile name={iconName} module={module} size={32} iconSize={16} />
         ) : null}
       </View>
 
-      <Text style={[styles.value, { color: colors.textPrimary }]}>{value}</Text>
+      <Text style={[styles.value, { color: colors.text }]}>{value}</Text>
 
       <View style={styles.footerRow}>
         {trend ? (
           <View
             style={[
               styles.trendBadge,
-              { backgroundColor: isUp ? colors.successSubtle : colors.dangerSubtle }
+              { backgroundColor: isUp ? colors.successSoft : colors.dangerSoft }
             ]}
           >
+            <Icon
+              name={isUp ? 'arrowUp' : 'arrowDown'}
+              size={12}
+              color={isUp ? colors.successText : colors.dangerText}
+              strokeWidth={3}
+            />
             <Text
               style={[
                 styles.trendText,
                 { color: isUp ? colors.successText : colors.dangerText }
               ]}
             >
-              {isUp ? '↑ ' : '↓ '}
               {trend}
             </Text>
           </View>
         ) : null}
         {subtitle ? (
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>{subtitle}</Text>
+          <Text style={[styles.subtitle, { color: colors.textSubtle }]} numberOfLines={1}>
+            {subtitle}
+          </Text>
         ) : null}
       </View>
     </GlassCard>
@@ -51,7 +69,7 @@ export function StatCard({ title, value, subtitle, icon, trend, trendType = 'up'
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    minWidth: 160
+    minWidth: 150
   },
   content: {
     padding: 16
@@ -65,33 +83,29 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 13,
     fontWeight: '600',
-    letterSpacing: -0.2
-  },
-  iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  iconText: {
-    fontSize: 16
+    letterSpacing: -0.1,
+    flex: 1
   },
   value: {
     fontSize: 26,
     fontWeight: '800',
-    letterSpacing: -0.8,
-    marginBottom: 8
+    letterSpacing: -0.6,
+    marginBottom: 8,
+    fontFamily: "'JetBrains Mono', monospace"
   },
   footerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8
+    gap: 6,
+    flexWrap: 'wrap'
   },
   trendBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 6
+    borderRadius: 6,
+    gap: 2
   },
   trendText: {
     fontSize: 11,
@@ -99,7 +113,8 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 12,
-    fontWeight: '500'
+    fontWeight: '500',
+    flex: 1
   }
 });
 
