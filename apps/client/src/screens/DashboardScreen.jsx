@@ -8,6 +8,7 @@ import DashboardHeader from '../components/dashboard/DashboardHeader.jsx';
 import ProfileCard from '../components/dashboard/ProfileCard.jsx';
 import LoadingSpinner from '../components/common/LoadingSpinner.jsx';
 import ErrorMessage from '../components/common/ErrorMessage.jsx';
+import DiagnosticsPanel from '../components/common/DiagnosticsPanel.jsx';
 
 export function DashboardScreen() {
   const { user, profile, isLoading, error, clearError } = useAuth();
@@ -36,6 +37,9 @@ export function DashboardScreen() {
 
         {/* Single Well-Designed User Profile Card */}
         <ProfileCard user={user} profile={profile} />
+
+        {/* Live Firebase Connectivity & Storage Diagnostics */}
+        <DiagnosticsPanel currentUser={user} />
       </View>
     </AppLayout>
   );

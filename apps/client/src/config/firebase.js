@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 import config from './environment.js';
 
 /**
@@ -15,5 +16,8 @@ if (getApps().length === 0) {
 
 // Export Authentication singleton
 export const auth = getAuth(app);
+
+// Export Cloud Firestore singleton
+export const db = getFirestore(app);
 
 export default app;

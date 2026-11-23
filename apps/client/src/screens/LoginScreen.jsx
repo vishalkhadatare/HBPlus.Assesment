@@ -6,6 +6,7 @@ import { spacing, borderRadius, shadows } from '../styles/spacing.js';
 import { useAuth } from '../hooks/useAuth.js';
 import GoogleSignInButton from '../components/auth/GoogleSignInButton.jsx';
 import ErrorMessage from '../components/common/ErrorMessage.jsx';
+import DiagnosticsPanel from '../components/common/DiagnosticsPanel.jsx';
 import AppLayout from '../components/layout/AppLayout.jsx';
 
 export function LoginScreen() {
@@ -124,6 +125,9 @@ export function LoginScreen() {
                     Allow personal Google email for this test session
                   </Text>
                 </TouchableOpacity>
+
+                {/* Live Diagnostic Runner */}
+                <DiagnosticsPanel />
               </View>
             ) : null}
           </View>
