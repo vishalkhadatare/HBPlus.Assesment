@@ -1,6 +1,9 @@
+import { Capacitor } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import {
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithCredential,
   signInWithRedirect,
   getRedirectResult,
   signInWithEmailAndPassword,
@@ -20,9 +23,77 @@ googleProvider.setCustomParameters({
 });
 
 /**
- * Web Google Sign-In implementation using Firebase Auth Popup / Redirect.
+ * Cross-platform Google Sign-In implementation.
+ * Uses native Google Play Services on Android/iOS via Capacitor plugin,
+ * and standard OAuth popup on Web.
  */
 export async function signInWithGoogle() {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const result = await FirebaseAuthentication.signInWithGoogle();
+      if (!result || !result.user) {
+        throw new Error('Sign-in was cancelled.');
+      }
+
+      const nativeUser = result.user;
+      const normalizedEmail = (nativeUser.email || '').trim().toLowerCase();
+      let idToken = result.credential?.idToken || '';
+
+      // Sync credential with webview Firebase Auth instance if token available
+      if (idToken) {
+        try {
+          const credential = GoogleAuthProvider.credential(idToken);
+          await signInWithCredential(auth, credential);
+        } catch (credErr) {
+          console.warn('[authService.web] Native credential sync notice:', credErr.message);
+        }
+      }
+
+      if (normalizedEmail.endsWith('@hbplus.fit')) {
+        try {
+          await setDoc(doc(db, 'users', nativeUser.uid), {
+            uid: nativeUser.uid,
+            name: nativeUser.displayName || normalizedEmail.split('@')[0],
+            displayName: nativeUser.displayName || normalizedEmail.split('@')[0],
+            email: normalizedEmail,
+            photoURL: nativeUser.photoUrl || '',
+            role: 'User',
+            roleKey: 'user',
+            isActive: true,
+            emailVerified: true,
+            updatedAt: serverTimestamp(),
+            lastLoginAt: serverTimestamp()
+          }, { merge: true });
+        } catch (err) {
+          console.warn('[authService.web] Direct profile sync notice:', err.message);
+        }
+      }
+
+      const userObj = {
+        uid: nativeUser.uid,
+        email: nativeUser.email,
+        displayName: nativeUser.displayName || normalizedEmail.split('@')[0],
+        photoURL: nativeUser.photoUrl || '',
+        getIdToken: async () => idToken,
+        getIdTokenResult: async () => ({
+          token: idToken,
+          claims: { role: 'user' }
+        })
+      };
+
+      return {
+        user: userObj,
+        idToken
+      };
+    } catch (error) {
+      if (error.message?.includes('cancel') || error.code === '12501' || error.message?.includes('12501')) {
+        throw new Error('Sign-in was cancelled.');
+      }
+      throw error;
+    }
+  }
+
+  // Web Browser Flow
   try {
     const result = await signInWithPopup(auth, googleProvider);
     const idToken = await result.user.getIdToken();
@@ -56,9 +127,7 @@ export async function signInWithGoogle() {
     };
   } catch (error) {
     if (error.code === 'auth/popup-blocked') {
-      console.warn('[authService.web] Popup blocked, attempting redirect sign-in...');
-      await signInWithRedirect(auth, googleProvider);
-      return null;
+      throw new Error('Popup blocked by browser. Please enable popups or tap Continue with Google again.');
     }
     throw error;
   }
@@ -171,6 +240,11 @@ export async function sendPasswordReset(email) {
  * Signs out the current Firebase user.
  */
 export async function signOut() {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      await FirebaseAuthentication.signOut();
+    } catch (_) {}
+  }
   await firebaseSignOut(auth);
 }
 

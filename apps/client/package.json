@@ -13,6 +13,7 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "dependencies": {
+    "@capacitor-firebase/authentication": "^8.6.0",
     "country-flag-icons": "^1.6.20",
     "firebase": "^11.4.0",
     "lucide-react": "^1.78.0",

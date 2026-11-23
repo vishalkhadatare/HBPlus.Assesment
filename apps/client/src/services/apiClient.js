@@ -45,8 +45,14 @@ class ApiClient {
 
 
 
+    // If baseUrl points to localhost and we are in mobile/production environment, fail fast without hanging
+    const isLocalhostHost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    if (this.baseUrl.includes('localhost') && !isLocalhostHost) {
+      throw new Error('Local backend server is not reachable from mobile client.');
+    }
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), options.timeout || 15000);
+    const timeoutId = setTimeout(() => controller.abort(), options.timeout || 2500);
 
     try {
       const response = await fetch(url, {

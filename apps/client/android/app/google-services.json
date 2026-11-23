@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "64669850819",
+    "project_id": "hbplus-rivalry-20261122",
+    "storage_bucket": "hbplus-rivalry-20261122.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:64669850819:android:bb36dcf3c541554b501676",
+        "android_client_info": {
+          "package_name": "fit.hbplus.secureaccess"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "64669850819-udd8g02cjqk9uoig0gk022e58btbc8jo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "fit.hbplus.secureaccess",
+            "certificate_hash": "d8b52d51a53ece9ac883e9c47327cc82249f67a2"
+          }
+        },
+        {
+          "client_id": "64669850819-m54hqe7lgtmd5bn7p3asffa1qekqn08r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsnq_ubRd4OfmoU0lK3ze__VN3ea4u2zA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "64669850819-m54hqe7lgtmd5bn7p3asffa1qekqn08r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
