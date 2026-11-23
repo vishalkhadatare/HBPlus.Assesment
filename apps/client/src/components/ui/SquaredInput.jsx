@@ -158,7 +158,15 @@ const styles = StyleSheet.create({
     height: '100%',
     fontSize: 15,
     borderWidth: 0,
-    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {})
+    backgroundColor: 'transparent',
+    ...(Platform.OS === 'web'
+      ? {
+          outline: 'none',
+          outlineStyle: 'none',
+          outlineWidth: 0,
+          boxShadow: 'none'
+        }
+      : {})
   },
   eyeBtn: {
     position: 'absolute',
