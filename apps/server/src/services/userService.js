@@ -138,7 +138,17 @@ export class UserService {
   /**
    * Updates non-sensitive user profile fields.
    */
-  static async updateSafeProfile(uid, { displayName, photoURL }) {
+  static async updateSafeProfile(uid, {
+    displayName,
+    photoURL,
+    phone,
+    countryCode,
+    department,
+    designation,
+    bio,
+    emergencyContact,
+    notificationsEnabled
+  }) {
     const existing = await this.getUserProfile(uid);
     if (!existing) {
       const error = new Error('User profile not found.');
@@ -153,6 +163,18 @@ export class UserService {
       updates.name = displayName.trim();
     }
     if (typeof photoURL === 'string') updates.photoURL = photoURL.trim();
+    if (typeof phone === 'string') updates.phone = phone.trim();
+    if (typeof countryCode === 'string') updates.countryCode = countryCode.trim();
+    if (typeof department === 'string') updates.department = department.trim();
+    if (typeof designation === 'string') updates.designation = designation.trim();
+    if (typeof bio === 'string') updates.bio = bio.trim();
+    if (typeof emergencyContact === 'string') updates.emergencyContact = emergencyContact.trim();
+    if (typeof notificationsEnabled === 'boolean') updates.notificationsEnabled = notificationsEnabled;
+
+    const currentTimestamp = admin.firestore
+      ? admin.firestore.FieldValue.serverTimestamp()
+      : new Date().toISOString();
+    updates.updatedAt = currentTimestamp;
 
     if (adminDb && (!config.isTest || process.env.FIRESTORE_EMULATOR_HOST)) {
       try {
@@ -162,7 +184,11 @@ export class UserService {
       }
     }
 
-    const updated = { ...existing, ...updates };
+    const updated = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
     inMemoryUsers.set(uid, updated);
     return updated;
   }

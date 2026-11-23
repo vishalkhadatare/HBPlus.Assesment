@@ -31,7 +31,7 @@ The application restricts access exclusively to authenticated accounts from the 
 
 ---
 
-## 🎨 Technology Stack
+## 🛠️ Technology Stack
 
 <div align="center">
 

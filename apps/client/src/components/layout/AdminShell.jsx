@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import Icon from '../ui/Icon.jsx';
 import SquaredCard from '../ui/SquaredCard.jsx';
 import SquaredButton from '../ui/SquaredButton.jsx';
 import SimpleCharts from '../ui/SimpleCharts.jsx';
+import workforceStore from '../../services/workforceStore.js';
 
 // ─── Metric Card for Mobile 2×2 grid ────────────────────────────────────────
 function MetricCard({ value, badge, badgeColor, badgeBg, subtitle, iconName, iconBg, label }) {
@@ -224,16 +225,51 @@ function AdminShellContent({ onSignOut }) {
   const isDesktop = width >= 900;
   const isTablet = width >= 600 && width < 900;
 
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'users' | 'approvals' | 'reports' | 'audit' | 'settings'
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'users' | 'approvals' | 'reports' | 'audit' | 'settings' | 'profile'
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUserFilter, setSelectedUserFilter] = useState('all');
-  const [approvalsList, setApprovalsList] = useState([
-    { id: 'app-1', name: 'David Miller', type: 'Annual Leave', dates: 'Nov 26 - Nov 30', dept: 'Engineering', status: 'Pending' },
-    { id: 'app-2', name: 'Sarah Chen', type: 'Overtime Claim', dates: '12.5 hrs (Sprint 42)', dept: 'Product', status: 'Pending' },
-    { id: 'app-3', name: 'Alex Johnson', type: 'Remote Request', dates: 'Dec 01 - Dec 05', dept: 'Security', status: 'Pending' }
-  ]);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Workforce reactive state subscription
+  const [storeState, setStoreState] = useState(workforceStore.getState());
+  useEffect(() => {
+    return workforceStore.subscribe((s) => setStoreState({ ...s }));
+  }, []);
+
+  const adminProfile = storeState.adminProfile || {
+    displayName: 'Elena Rostova',
+    email: user?.email || 'elena.rostova@hbplus.fit',
+    phone: '+91 99887 76655',
+    department: 'Platform Governance & Security',
+    designation: 'Principal Security Administrator',
+    employeeId: 'HBP-ADM-001',
+    clearanceLevel: 'Level 4 (Full Governance Authority)',
+    location: 'Bangalore HQ (Security Command Room)',
+    emergencyContact: 'Chief Security Officer (+91 98000 11223)',
+    bio: 'Principal system security architect managing enterprise access governance, strict domain compliance, and organizational telemetry across HB Plus.'
+  };
+
+  const pendingApprovals = (storeState.leaveRequests || []).filter(
+    (req) => (req.status || '').toLowerCase() === 'pending'
+  );
+
+  // Broadcast Modal State
+  const [broadcastModalOpen, setBroadcastModalOpen] = useState(false);
+  const [broadcastTitle, setBroadcastTitle] = useState('');
+  const [broadcastContent, setBroadcastContent] = useState('');
+  const [broadcastPriority, setBroadcastPriority] = useState('High');
+  const [broadcastDept, setBroadcastDept] = useState('All Departments');
+
+  // Admin Profile Edit State
+  const [isEditingAdminProfile, setIsEditingAdminProfile] = useState(false);
+  const [adminName, setAdminName] = useState(adminProfile.displayName);
+  const [adminPhone, setAdminPhone] = useState(adminProfile.phone);
+  const [adminDept, setAdminDept] = useState(adminProfile.department);
+  const [adminDesignation, setAdminDesignation] = useState(adminProfile.designation);
+  const [adminBio, setAdminBio] = useState(adminProfile.bio);
+  const [adminEmergency, setAdminEmergency] = useState(adminProfile.emergencyContact);
+  const [adminClearance, setAdminClearance] = useState(adminProfile.clearanceLevel || 'Level 4 (Full Governance Authority)');
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -241,31 +277,58 @@ function AdminShellContent({ onSignOut }) {
   };
 
   const handleApprove = (id, name) => {
-    setApprovalsList((prev) => prev.filter((item) => item.id !== id));
-    showToast(`Approved request for ${name}`);
+    workforceStore.actionLeaveRequest(id, 'approve');
+    showToast(`Approved leave request for ${name}`);
   };
 
   const handleReject = (id, name) => {
-    setApprovalsList((prev) => prev.filter((item) => item.id !== id));
+    workforceStore.actionLeaveRequest(id, 'reject');
     showToast(`Rejected request for ${name}`);
   };
 
-  // Sample Users Table Data
-  const sampleUsers = [
-    { id: 'usr-1', name: 'Elena Rostova', email: 'elena.rostova@hbplus.fit', role: 'Admin', dept: 'Security Operations', status: 'Active', lastActive: '2m ago' },
-    { id: 'usr-2', name: 'Marcus Vance', email: 'marcus.vance@hbplus.fit', role: 'User', dept: 'Core Infrastructure', status: 'Active', lastActive: '14m ago' },
-    { id: 'usr-3', name: 'Aaliyah Khan', email: 'aaliyah.khan@hbplus.fit', role: 'User', dept: 'Frontend Systems', status: 'Active', lastActive: '1h ago' },
-    { id: 'usr-4', name: 'Lucas Sterling', email: 'lucas.s@hbplus.fit', role: 'User', dept: 'Product Engineering', status: 'On Leave', lastActive: 'Yesterday' },
-    { id: 'usr-5', name: 'Priya Sharma', email: 'priya.s@hbplus.fit', role: 'Admin', dept: 'Platform Governance', status: 'Active', lastActive: 'Just now' }
-  ];
+  const handleSaveAdminProfile = () => {
+    workforceStore.updateAdminProfile({
+      displayName: adminName,
+      phone: adminPhone,
+      department: adminDept,
+      designation: adminDesignation,
+      bio: adminBio,
+      emergencyContact: adminEmergency,
+      clearanceLevel: adminClearance
+    });
+    setIsEditingAdminProfile(false);
+    showToast('Admin Profile & Security Clearance updated.');
+  };
 
-  const filteredUsers = sampleUsers.filter((u) => {
-    const matchesSearch = u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          u.dept.toLowerCase().includes(searchQuery.toLowerCase());
+  const handlePublishBroadcast = () => {
+    if (!broadcastTitle.trim()) {
+      showToast('Please enter an announcement title');
+      return;
+    }
+    workforceStore.addAnnouncement({
+      title: broadcastTitle.trim(),
+      content: broadcastContent.trim() || 'Important corporate operational update for all personnel.',
+      priority: broadcastPriority,
+      department: broadcastDept
+    });
+    setBroadcastTitle('');
+    setBroadcastContent('');
+    setBroadcastModalOpen(false);
+    showToast(`Broadcast published to ${broadcastDept}`);
+  };
+
+  const workforceUsers = storeState.employees || [];
+
+  const filteredUsers = workforceUsers.filter((u) => {
+    const nameStr = (u.name || '').toLowerCase();
+    const emailStr = (u.email || '').toLowerCase();
+    const deptStr = (u.department || u.dept || '').toLowerCase();
+    const query = searchQuery.toLowerCase();
+    const matchesSearch = nameStr.includes(query) || emailStr.includes(query) || deptStr.includes(query);
+
     if (selectedUserFilter === 'all') return matchesSearch;
-    if (selectedUserFilter === 'admin') return matchesSearch && u.role === 'Admin';
-    if (selectedUserFilter === 'user') return matchesSearch && u.role === 'User';
+    if (selectedUserFilter === 'admin') return matchesSearch && (u.role || '').toLowerCase().includes('admin');
+    if (selectedUserFilter === 'user') return matchesSearch && !(u.role || '').toLowerCase().includes('admin');
     return matchesSearch;
   });
 
@@ -285,7 +348,7 @@ function AdminShellContent({ onSignOut }) {
     {
       title: 'Operations',
       items: [
-        { id: 'approvals', label: 'Pending Approvals', icon: 'checkSquare', badge: approvalsList.length > 0 ? approvalsList.length : null }
+        { id: 'approvals', label: 'Pending Approvals', icon: 'checkSquare', badge: pendingApprovals.length > 0 ? pendingApprovals.length : null }
       ]
     },
     {
@@ -294,6 +357,12 @@ function AdminShellContent({ onSignOut }) {
         { id: 'reports', label: 'Reports & Analytics', icon: 'reports' },
         { id: 'audit', label: 'Audit Log Feed', icon: 'activity' },
         { id: 'settings', label: 'System Settings', icon: 'settings' }
+      ]
+    },
+    {
+      title: 'Administrator',
+      items: [
+        { id: 'profile', label: 'Admin Profile', icon: 'user' }
       ]
     }
   ];
@@ -360,10 +429,27 @@ function AdminShellContent({ onSignOut }) {
           {/* ── Tab: Overview ── */}
           {activeTab === 'overview' && (
             <>
+              {/* Broadcast Banner */}
+              <View style={[styles.mobileSectionCard, { backgroundColor: '#FFF7ED', borderColor: '#FFEDD5', borderWidth: 1, paddingVertical: 12 }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text style={[styles.mobileSectionTitle, { color: '#C2410C' }]}>Admin Broadcast Center</Text>
+                    <Text style={styles.mobileSectionSub}>Push real-time notices to all employee portals</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.approveCircleBtn, { backgroundColor: '#EA580C', width: 'auto', paddingHorizontal: 12, borderRadius: 10, height: 36, flexDirection: 'row', gap: 6 }]}
+                    onPress={() => setBroadcastModalOpen(true)}
+                  >
+                    <Icon name="bell" size={14} color="#FFFFFF" />
+                    <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>+ Broadcast</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
               {/* 4 Metric Cards 2×2 grid */}
               <View style={styles.metricsGrid}>
                 <MetricCard
-                  value="248"
+                  value={String(storeState.totalWorkforce || 248)}
                   badge="+12%"
                   badgeColor="#059669"
                   badgeBg="#ECFDF5"
@@ -373,8 +459,8 @@ function AdminShellContent({ onSignOut }) {
                   iconBg="#0F766E"
                 />
                 <MetricCard
-                  value="231"
-                  badge="93.1%"
+                  value={String(storeState.presentCount || 231)}
+                  badge={`${Math.round(((storeState.presentCount || 231) / (storeState.totalWorkforce || 248)) * 100)}%`}
                   badgeColor="#059669"
                   badgeBg="#ECFDF5"
                   label="Present Today"
@@ -395,10 +481,10 @@ function AdminShellContent({ onSignOut }) {
                   iconBg="#D97706"
                 />
                 <MetricCard
-                  value={String(approvalsList.length)}
-                  badge="Action"
-                  badgeColor="#D97706"
-                  badgeBg="#FEF3C7"
+                  value={String(pendingApprovals.length)}
+                  badge={pendingApprovals.length > 0 ? "Action" : "Clear"}
+                  badgeColor={pendingApprovals.length > 0 ? "#D97706" : "#059669"}
+                  badgeBg={pendingApprovals.length > 0 ? "#FEF3C7" : "#ECFDF5"}
                   label="Pending Approvals"
                   subtitle="Requires admin review"
                   iconName="bell"
@@ -443,7 +529,7 @@ function AdminShellContent({ onSignOut }) {
                     </TouchableOpacity>
                   ))}
                 </View>
-                {filteredUsers.map((u) => (
+                {filteredUsers.slice(0, 5).map((u) => (
                   <EmployeeCard key={u.id} user={u} />
                 ))}
               </View>
@@ -452,37 +538,44 @@ function AdminShellContent({ onSignOut }) {
               <View style={styles.mobileSectionCard}>
                 <Text style={styles.mobileSectionTitle}>Pending Approvals Queue</Text>
                 <Text style={[styles.mobileSectionSub, { marginBottom: 8 }]}>Real-time requests awaiting sign-off</Text>
-                {approvalsList.length === 0 ? (
+                {pendingApprovals.length === 0 ? (
                   <View style={styles.emptyState}>
-                    <Icon name="checkCircle" size={28} color="#EA580C" />
+                    <Icon name="checkCircle" size={28} color="#059669" />
                     <Text style={styles.emptyStateText}>All pending approvals cleared!</Text>
                   </View>
                 ) : (
-                  approvalsList.map((req) => (
-                    <View key={req.id} style={styles.mobileApprovalCard}>
-                      <View style={{ flex: 1, gap: 2 }}>
-                        <Text style={styles.approvalName}>{req.name}</Text>
-                        <Text style={styles.approvalMeta}>{req.dept} • {req.type}</Text>
-                        <Text style={styles.approvalMeta}>{req.dates}</Text>
+                  pendingApprovals.map((req) => {
+                    const reqName = req.employeeName || req.name;
+                    const reqDept = req.department || req.dept || 'Engineering';
+                    const reqType = req.leaveType || req.type;
+                    const reqDates = req.dates || `${req.startDate} to ${req.endDate} (${req.days} days)`;
+                    return (
+                      <View key={req.id} style={styles.mobileApprovalCard}>
+                        <View style={{ flex: 1, gap: 2 }}>
+                          <Text style={styles.approvalName}>{reqName}</Text>
+                          <Text style={styles.approvalMeta}>{reqDept} • {reqType}</Text>
+                          <Text style={styles.approvalMeta}>{reqDates}</Text>
+                          {req.reason ? <Text style={[styles.approvalMeta, { fontStyle: 'italic' }]}>"{req.reason}"</Text> : null}
+                        </View>
+                        <View style={styles.approvalActions}>
+                          <TouchableOpacity
+                            style={styles.approveCircleBtn}
+                            onPress={() => handleApprove(req.id, reqName)}
+                            activeOpacity={0.8}
+                          >
+                            <Icon name="checkCircle" size={20} color="#FFFFFF" strokeWidth={2} />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.rejectCircleBtn}
+                            onPress={() => handleReject(req.id, reqName)}
+                            activeOpacity={0.8}
+                          >
+                            <Icon name="xCircle" size={20} color="#FFFFFF" strokeWidth={2} />
+                          </TouchableOpacity>
+                        </View>
                       </View>
-                      <View style={styles.approvalActions}>
-                        <TouchableOpacity
-                          style={styles.approveCircleBtn}
-                          onPress={() => handleApprove(req.id, req.name)}
-                          activeOpacity={0.8}
-                        >
-                          <Icon name="checkCircle" size={20} color="#FFFFFF" strokeWidth={2} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.rejectCircleBtn}
-                          onPress={() => handleReject(req.id, req.name)}
-                          activeOpacity={0.8}
-                        >
-                          <Icon name="xCircle" size={20} color="#FFFFFF" strokeWidth={2} />
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  ))
+                    );
+                  })
                 )}
               </View>
 
@@ -490,17 +583,12 @@ function AdminShellContent({ onSignOut }) {
               <View style={styles.mobileSectionCard}>
                 <Text style={styles.mobileSectionTitle}>Audit Log Feed</Text>
                 <Text style={[styles.mobileSectionSub, { marginBottom: 8 }]}>Immutable compliance telemetry</Text>
-                {[
-                  { time: '14:02:11', actor: 'admin@hbplus.fit', action: 'Custom claim verified', ip: '10.0.4.12' },
-                  { time: '13:58:45', actor: 'marcus.v@hbplus.fit', action: 'Geofence check-in [HQ-East]', ip: '192.168.1.84' },
-                  { time: '13:42:09', actor: 'system-governance', action: 'Nightly payroll sync complete', ip: 'internal' },
-                  { time: '13:10:33', actor: 'sarah.c@hbplus.fit', action: 'Submitted overtime claim', ip: '10.0.2.91' }
-                ].map((log, idx) => (
-                  <View key={idx} style={styles.mobileAuditRow}>
+                {(storeState.auditLogs || []).slice(0, 5).map((log) => (
+                  <View key={log.id} style={styles.mobileAuditRow}>
                     <Text style={styles.auditTime}>{log.time}</Text>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.auditAction}>{log.action}</Text>
-                      <Text style={styles.auditActor}>{log.actor} • {log.ip}</Text>
+                      <Text style={styles.auditAction}>{log.text || log.action}</Text>
+                      <Text style={styles.auditActor}>{(log.type || 'SYSTEM').toUpperCase()} • Verified</Text>
                     </View>
                   </View>
                 ))}
@@ -536,37 +624,44 @@ function AdminShellContent({ onSignOut }) {
             <View style={styles.mobileSectionCard}>
               <Text style={styles.mobileSectionTitle}>Pending Approvals</Text>
               <Text style={[styles.mobileSectionSub, { marginBottom: 8 }]}>Review time-off and reimbursement requests.</Text>
-              {approvalsList.length === 0 ? (
+              {pendingApprovals.length === 0 ? (
                 <View style={styles.emptyState}>
-                  <Icon name="checkCircle" size={28} color="#EA580C" />
+                  <Icon name="checkCircle" size={28} color="#059669" />
                   <Text style={styles.emptyStateText}>All pending approvals cleared!</Text>
                 </View>
               ) : (
-                approvalsList.map((req) => (
-                  <View key={req.id} style={styles.mobileApprovalCard}>
-                    <View style={{ flex: 1, gap: 2 }}>
-                      <Text style={styles.approvalName}>{req.name}</Text>
-                      <Text style={styles.approvalMeta}>{req.dept} • {req.type}</Text>
-                      <Text style={styles.approvalMeta}>{req.dates}</Text>
+                pendingApprovals.map((req) => {
+                  const reqName = req.employeeName || req.name;
+                  const reqDept = req.department || req.dept || 'Engineering';
+                  const reqType = req.leaveType || req.type;
+                  const reqDates = req.dates || `${req.startDate} to ${req.endDate} (${req.days} days)`;
+                  return (
+                    <View key={req.id} style={styles.mobileApprovalCard}>
+                      <View style={{ flex: 1, gap: 2 }}>
+                        <Text style={styles.approvalName}>{reqName}</Text>
+                        <Text style={styles.approvalMeta}>{reqDept} • {reqType}</Text>
+                        <Text style={styles.approvalMeta}>{reqDates}</Text>
+                        {req.reason ? <Text style={[styles.approvalMeta, { fontStyle: 'italic' }]}>"{req.reason}"</Text> : null}
+                      </View>
+                      <View style={styles.approvalActions}>
+                        <TouchableOpacity
+                          style={styles.approveCircleBtn}
+                          onPress={() => handleApprove(req.id, reqName)}
+                          activeOpacity={0.8}
+                        >
+                          <Icon name="checkCircle" size={20} color="#FFFFFF" strokeWidth={2} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.rejectCircleBtn}
+                          onPress={() => handleReject(req.id, reqName)}
+                          activeOpacity={0.8}
+                        >
+                          <Icon name="xCircle" size={20} color="#FFFFFF" strokeWidth={2} />
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                    <View style={styles.approvalActions}>
-                      <TouchableOpacity
-                        style={styles.approveCircleBtn}
-                        onPress={() => handleApprove(req.id, req.name)}
-                        activeOpacity={0.8}
-                      >
-                        <Icon name="checkCircle" size={20} color="#FFFFFF" strokeWidth={2} />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.rejectCircleBtn}
-                        onPress={() => handleReject(req.id, req.name)}
-                        activeOpacity={0.8}
-                      >
-                        <Icon name="xCircle" size={20} color="#FFFFFF" strokeWidth={2} />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                ))
+                  );
+                })
               )}
             </View>
           )}
@@ -615,19 +710,227 @@ function AdminShellContent({ onSignOut }) {
             <View style={styles.mobileSectionCard}>
               <Text style={styles.mobileSectionTitle}>System Audit Log</Text>
               <Text style={[styles.mobileSectionSub, { marginBottom: 10 }]}>Every authenticated interaction is permanently logged.</Text>
-              {[
-                { time: '14:02:11', actor: 'admin@hbplus.fit', action: 'Custom claim verified' },
-                { time: '13:58:45', actor: 'marcus.v@hbplus.fit', action: 'Geofence check-in [HQ-East]' },
-                { time: '13:42:09', actor: 'system-governance', action: 'Nightly payroll sync complete' }
-              ].map((l, i) => (
-                <View key={i} style={styles.mobileAuditRow}>
+              {(storeState.auditLogs || []).map((l) => (
+                <View key={l.id} style={styles.mobileAuditRow}>
                   <Text style={styles.auditTime}>{l.time}</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.auditAction}>{l.action}</Text>
-                    <Text style={styles.auditActor}>{l.actor}</Text>
+                    <Text style={styles.auditAction}>{l.text || l.action}</Text>
+                    <Text style={styles.auditActor}>{(l.type || 'SYSTEM').toUpperCase()} • Immutable Trail</Text>
                   </View>
                 </View>
               ))}
+            </View>
+          )}
+
+          {/* ══ MOBILE ADMIN PROFILE SECTION ══ */}
+          {activeTab === 'profile' && (
+            <View style={styles.profileSectionWrapper}>
+              {/* 1. Admin Hero Card */}
+              <View style={styles.profileHeroCard}>
+                <View style={styles.profileHeroTop}>
+                  <View style={[styles.profileAvatarLarge, { backgroundColor: '#EA580C' }]}>
+                    <Text style={styles.profileAvatarLargeText}>
+                      {(adminProfile.displayName || 'E').charAt(0).toUpperCase()}
+                    </Text>
+                    <View style={styles.profileOnlineDot} />
+                  </View>
+                  <View style={styles.profileHeroInfo}>
+                    <View style={styles.profileNameRow}>
+                      <Text style={styles.profileNameText}>{adminProfile.displayName}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>
+                      <View style={[styles.domainBadge, { backgroundColor: '#FFF7ED', borderColor: '#FFEDD5' }]}>
+                        <Text style={[styles.domainBadgeText, { color: '#EA580C' }]}>Administrator</Text>
+                      </View>
+                      <View style={styles.domainBadge}>
+                        <Text style={styles.domainBadgeText}>@hbplus.fit</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.profileRoleTitle}>{adminProfile.designation} • {adminProfile.department}</Text>
+                    <Text style={styles.profileEmployeeId}>ID: {adminProfile.employeeId} • {adminProfile.clearanceLevel}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.profileActionRow}>
+                  <TouchableOpacity
+                    style={[styles.editProfileToggleBtn, isEditingAdminProfile && styles.editProfileToggleBtnActive]}
+                    onPress={() => {
+                      setAdminName(adminProfile.displayName);
+                      setAdminPhone(adminProfile.phone);
+                      setAdminDept(adminProfile.department);
+                      setAdminDesignation(adminProfile.designation);
+                      setAdminBio(adminProfile.bio);
+                      setAdminEmergency(adminProfile.emergencyContact);
+                      setAdminClearance(adminProfile.clearanceLevel || 'Level 4 (Full Governance Authority)');
+                      setIsEditingAdminProfile(!isEditingAdminProfile);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Icon name={isEditingAdminProfile ? 'x' : 'user'} size={15} color={isEditingAdminProfile ? '#FFFFFF' : '#EA580C'} />
+                    <Text style={[styles.editProfileToggleBtnText, isEditingAdminProfile && { color: '#FFFFFF' }]}>
+                      {isEditingAdminProfile ? 'Cancel Editing' : 'Edit Admin Profile'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.resetPassBtn}
+                    onPress={() => showToast('Password reset dispatched to administrator email.')}
+                    activeOpacity={0.8}
+                  >
+                    <Icon name="lock" size={14} color="#475569" />
+                    <Text style={styles.resetPassBtnText}>Reset Password</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* 2. Mobile In-place Edit Form */}
+              {isEditingAdminProfile ? (
+                <View style={styles.editProfileCard}>
+                  <Text style={styles.cardTitle}>Edit Administrator Credentials</Text>
+                  <Text style={styles.tasksDueSub}>Updates reflect across audit trails and workforce records.</Text>
+
+                  <View style={styles.editFormGrid}>
+                    <View style={styles.formFieldBlock}>
+                      <Text style={styles.formFieldLabel}>Administrator Name</Text>
+                      <TextInput
+                        style={styles.formTextInput}
+                        value={adminName}
+                        onChangeText={setAdminName}
+                        placeholder="Admin Full Name"
+                      />
+                    </View>
+
+                    <View style={styles.formFieldBlock}>
+                      <Text style={styles.formFieldLabel}>Direct Phone</Text>
+                      <TextInput
+                        style={styles.formTextInput}
+                        value={adminPhone}
+                        onChangeText={setAdminPhone}
+                        placeholder="+91 99887 76655"
+                      />
+                    </View>
+
+                    <View style={styles.formFieldBlock}>
+                      <Text style={styles.formFieldLabel}>Department</Text>
+                      <TextInput
+                        style={styles.formTextInput}
+                        value={adminDept}
+                        onChangeText={setAdminDept}
+                        placeholder="Platform Governance & Security"
+                      />
+                    </View>
+
+                    <View style={styles.formFieldBlock}>
+                      <Text style={styles.formFieldLabel}>Designation / Role</Text>
+                      <TextInput
+                        style={styles.formTextInput}
+                        value={adminDesignation}
+                        onChangeText={setAdminDesignation}
+                        placeholder="Principal Security Administrator"
+                      />
+                    </View>
+
+                    <View style={styles.formFieldBlock}>
+                      <Text style={styles.formFieldLabel}>Clearance Level</Text>
+                      <TextInput
+                        style={styles.formTextInput}
+                        value={adminClearance}
+                        onChangeText={setAdminClearance}
+                        placeholder="Level 4 (Full Authority)"
+                      />
+                    </View>
+
+                    <View style={styles.formFieldBlock}>
+                      <Text style={styles.formFieldLabel}>Emergency Incident Contact</Text>
+                      <TextInput
+                        style={styles.formTextInput}
+                        value={adminEmergency}
+                        onChangeText={setAdminEmergency}
+                        placeholder="CSO Direct Line"
+                      />
+                    </View>
+
+                    <View style={styles.formFieldBlock}>
+                      <Text style={styles.formFieldLabel}>Governance Bio</Text>
+                      <TextInput
+                        style={[styles.formTextInput, { height: 72, textAlignVertical: 'top' }]}
+                        value={adminBio}
+                        onChangeText={setAdminBio}
+                        placeholder="Executive bio and scope of authority"
+                        multiline
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.editFormActions}>
+                    <TouchableOpacity
+                      style={[styles.saveProfileBtn, { backgroundColor: '#EA580C' }]}
+                      onPress={handleSaveAdminProfile}
+                      activeOpacity={0.88}
+                    >
+                      <Icon name="check" size={16} color="#FFFFFF" strokeWidth={2.4} />
+                      <Text style={styles.saveProfileBtnText}>Save Changes</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.cancelProfileBtn}
+                      onPress={() => setIsEditingAdminProfile(false)}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.cancelProfileBtnText}>Discard</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : null}
+
+              {/* 3. Detail Cards */}
+              <View style={styles.profileDetailsGrid}>
+                <View style={styles.profileInfoCard}>
+                  <View style={styles.infoCardHeader}>
+                    <Icon name="directory" size={18} color="#EA580C" />
+                    <Text style={styles.infoCardTitle}>Executive Identity</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Official Email</Text>
+                    <Text style={styles.infoValue}>{user?.email || adminProfile.email}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Direct Phone</Text>
+                    <Text style={styles.infoValue}>{adminProfile.phone}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Department</Text>
+                    <Text style={styles.infoValue}>{adminProfile.department}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Location</Text>
+                    <Text style={styles.infoValue}>{adminProfile.location}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.profileInfoCard}>
+                  <View style={styles.infoCardHeader}>
+                    <Icon name="shieldCheck" size={18} color="#EA580C" />
+                    <Text style={styles.infoCardTitle}>Security Credentials</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Domain Policy</Text>
+                    <Text style={[styles.infoValue, { color: '#059669', fontWeight: '700' }]}>STRICT (@hbplus.fit)</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Auth Standard</Text>
+                    <Text style={styles.infoValue}>Hardware FIDO2 Enforced</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Compliance</Text>
+                    <Text style={[styles.infoValue, { color: '#0F766E', fontWeight: '700' }]}>SOC2 Type II</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Emergency Line</Text>
+                    <Text style={styles.infoValue}>{adminProfile.emergencyContact}</Text>
+                  </View>
+                </View>
+              </View>
             </View>
           )}
 
@@ -690,8 +993,8 @@ function AdminShellContent({ onSignOut }) {
           {[
             { id: 'overview', label: 'Dashboard', icon: 'dashboard' },
             { id: 'users', label: 'Users', icon: 'directory' },
-            { id: 'approvals', label: 'Approvals', icon: 'checkSquare', badge: approvalsList.length },
-            { id: 'reports', label: 'Reports', icon: 'reports' },
+            { id: 'approvals', label: 'Approvals', icon: 'checkSquare', badge: pendingApprovals.length },
+            { id: 'profile', label: 'Profile', icon: 'user' },
             { id: 'settings', label: 'More', icon: 'settings' }
           ].map((item) => {
             const isActive = activeTab === item.id;
@@ -891,12 +1194,37 @@ function AdminShellContent({ onSignOut }) {
           >
             {activeTab === 'overview' && (
               <>
+                {/* Desktop Broadcast Banner */}
+                <SquaredCard style={[styles.kpiCard, { marginBottom: 16, backgroundColor: '#FFF7ED', borderColor: '#FFEDD5', borderWidth: 1, padding: 18 }]}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                      <View style={[styles.kpiDeltaBadge, { backgroundColor: '#FFEDD5', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12 }]}>
+                        <Icon name="bell" size={20} color="#EA580C" />
+                      </View>
+                      <View>
+                        <Text style={{ fontSize: 16, fontWeight: '800', color: '#9A3412' }}>Real-Time Workforce Broadcast</Text>
+                        <Text style={{ fontSize: 13, color: '#C2410C', marginTop: 2 }}>
+                          Instant company-wide alerts push to all authenticated web and mobile user sessions.
+                        </Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.approveBtn, { backgroundColor: '#EA580C', paddingHorizontal: 18, height: 42, borderRadius: 10 }]}
+                      onPress={() => setBroadcastModalOpen(true)}
+                      activeOpacity={0.85}
+                    >
+                      <Icon name="bell" size={15} color="#FFFFFF" />
+                      <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '700', marginLeft: 6 }}>+ New Broadcast</Text>
+                    </TouchableOpacity>
+                  </View>
+                </SquaredCard>
+
                 {/* 4 KPI Cards */}
                 <View style={styles.kpiRow}>
                   <SquaredCard style={styles.kpiCard}>
                     <Text style={styles.kpiOverline}>TOTAL WORKFORCE</Text>
                     <View style={styles.kpiValRow}>
-                      <Text style={styles.kpiNumber}>248</Text>
+                      <Text style={styles.kpiNumber}>{storeState.totalWorkforce || 248}</Text>
                       <View style={[styles.kpiDeltaBadge, { backgroundColor: '#ECFDF5' }]}>
                         <Text style={[styles.kpiDeltaText, { color: '#059669' }]}>+12%</Text>
                       </View>
@@ -907,9 +1235,11 @@ function AdminShellContent({ onSignOut }) {
                   <SquaredCard style={styles.kpiCard}>
                     <Text style={styles.kpiOverline}>PRESENT TODAY</Text>
                     <View style={styles.kpiValRow}>
-                      <Text style={styles.kpiNumber}>231</Text>
+                      <Text style={styles.kpiNumber}>{storeState.presentCount || 231}</Text>
                       <View style={[styles.kpiDeltaBadge, { backgroundColor: '#ECFDF5' }]}>
-                        <Text style={[styles.kpiDeltaText, { color: '#059669' }]}>93.1%</Text>
+                        <Text style={[styles.kpiDeltaText, { color: '#059669' }]}>
+                          {Math.round(((storeState.presentCount || 231) / (storeState.totalWorkforce || 248)) * 100)}%
+                        </Text>
                       </View>
                     </View>
                     <Text style={styles.kpiSub}>1-tap geofence verified</Text>
@@ -929,9 +1259,11 @@ function AdminShellContent({ onSignOut }) {
                   <SquaredCard style={styles.kpiCard}>
                     <Text style={styles.kpiOverline}>PENDING APPROVALS</Text>
                     <View style={styles.kpiValRow}>
-                      <Text style={styles.kpiNumber}>{approvalsList.length}</Text>
-                      <View style={[styles.kpiDeltaBadge, { backgroundColor: '#FEF3C7' }]}>
-                        <Text style={[styles.kpiDeltaText, { color: '#D97706' }]}>Action</Text>
+                      <Text style={styles.kpiNumber}>{pendingApprovals.length}</Text>
+                      <View style={[styles.kpiDeltaBadge, { backgroundColor: pendingApprovals.length > 0 ? '#FEF3C7' : '#ECFDF5' }]}>
+                        <Text style={[styles.kpiDeltaText, { color: pendingApprovals.length > 0 ? '#D97706' : '#059669' }]}>
+                          {pendingApprovals.length > 0 ? 'Action' : 'Clear'}
+                        </Text>
                       </View>
                     </View>
                     <Text style={styles.kpiSub}>Queue requires admin review</Text>
@@ -1003,12 +1335,12 @@ function AdminShellContent({ onSignOut }) {
                             <Text style={styles.userName}>{item.name}</Text>
                             <Text style={styles.userEmail}>{item.email}</Text>
                           </View>
-                          <Text style={[styles.tableTdText, { width: 140 }]}>{item.dept}</Text>
+                          <Text style={[styles.tableTdText, { width: 140 }]}>{item.department || item.dept || 'Engineering'}</Text>
                           <View style={{ width: 90 }}>
                             <View
                               style={[
                                 styles.roleBadgeCell,
-                                item.role === 'Admin'
+                                (item.role || '').toLowerCase().includes('admin')
                                   ? { backgroundColor: '#EA580C' }
                                   : { backgroundColor: '#E2E8F0' }
                               ]}
@@ -1016,7 +1348,7 @@ function AdminShellContent({ onSignOut }) {
                               <Text
                                 style={[
                                   styles.roleBadgeCellText,
-                                  item.role === 'Admin' ? { color: '#FFFFFF' } : { color: '#334155' }
+                                  (item.role || '').toLowerCase().includes('admin') ? { color: '#FFFFFF' } : { color: '#334155' }
                                 ]}
                               >
                                 {item.role}
@@ -1074,38 +1406,52 @@ function AdminShellContent({ onSignOut }) {
                         <Text style={styles.cardTitle}>Pending Approvals Queue</Text>
                         <Text style={styles.cardSub}>Real-time requests awaiting supervisor sign-off</Text>
                       </View>
+                      <View style={[styles.kpiDeltaBadge, { backgroundColor: pendingApprovals.length > 0 ? '#FEF3C7' : '#ECFDF5' }]}>
+                        <Text style={[styles.kpiDeltaText, { color: pendingApprovals.length > 0 ? '#D97706' : '#059669' }]}>
+                          {pendingApprovals.length} Pending
+                        </Text>
+                      </View>
                     </View>
 
-                    {approvalsList.length === 0 ? (
+                    {pendingApprovals.length === 0 ? (
                       <View style={styles.emptyState}>
-                        <Icon name="checkCircle" size={28} color="#EA580C" />
+                        <Icon name="checkCircle" size={28} color="#059669" />
                         <Text style={styles.emptyStateText}>All pending approvals cleared!</Text>
                       </View>
                     ) : (
-                      approvalsList.map((req) => (
-                        <View key={req.id} style={styles.approvalItem}>
-                          <View style={styles.approvalInfo}>
-                            <Text style={styles.approvalName}>{req.name}</Text>
-                            <Text style={styles.approvalMeta}>{req.type} • {req.dates}</Text>
+                      pendingApprovals.map((req) => {
+                        const reqName = req.employeeName || req.name;
+                        const reqDept = req.department || req.dept || 'Engineering';
+                        const reqType = req.leaveType || req.type;
+                        const reqDates = req.dates || `${req.startDate} to ${req.endDate} (${req.days} days)`;
+                        return (
+                          <View key={req.id} style={styles.approvalItem}>
+                            <View style={styles.approvalInfo}>
+                              <Text style={styles.approvalName}>{reqName}</Text>
+                              <Text style={styles.approvalMeta}>{reqDept} • {reqType} • {reqDates}</Text>
+                              {req.reason ? <Text style={[styles.approvalMeta, { fontStyle: 'italic', marginTop: 2 }]}>"{req.reason}"</Text> : null}
+                            </View>
+                            <View style={styles.approvalActions}>
+                              <TouchableOpacity
+                                style={styles.approveBtn}
+                                onPress={() => handleApprove(req.id, reqName)}
+                                activeOpacity={0.8}
+                              >
+                                <Icon name="check" size={14} color="#FFFFFF" strokeWidth={2.6} />
+                                <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700', marginLeft: 4 }}>Approve</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                style={styles.rejectBtn}
+                                onPress={() => handleReject(req.id, reqName)}
+                                activeOpacity={0.8}
+                              >
+                                <Icon name="x" size={14} color="#DC2626" strokeWidth={2.6} />
+                                <Text style={{ color: '#DC2626', fontSize: 12, fontWeight: '700', marginLeft: 4 }}>Reject</Text>
+                              </TouchableOpacity>
+                            </View>
                           </View>
-                          <View style={styles.approvalActions}>
-                            <TouchableOpacity
-                              style={styles.approveBtn}
-                              onPress={() => handleApprove(req.id, req.name)}
-                              activeOpacity={0.8}
-                            >
-                              <Icon name="check" size={14} color="#FFFFFF" strokeWidth={2.6} />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                              style={styles.rejectBtn}
-                              onPress={() => handleReject(req.id, req.name)}
-                              activeOpacity={0.8}
-                            >
-                              <Icon name="x" size={14} color="#DC2626" strokeWidth={2.6} />
-                            </TouchableOpacity>
-                          </View>
-                        </View>
-                      ))
+                        );
+                      })
                     )}
                   </SquaredCard>
 
@@ -1118,17 +1464,12 @@ function AdminShellContent({ onSignOut }) {
                     </View>
 
                     <View style={styles.auditList}>
-                      {[
-                        { time: '14:02:11', actor: 'admin@hbplus.fit', action: 'Custom claim verified', ip: '10.0.4.12' },
-                        { time: '13:58:45', actor: 'marcus.v@hbplus.fit', action: 'Geofence check-in [HQ-East]', ip: '192.168.1.84' },
-                        { time: '13:42:09', actor: 'system-governance', action: 'Nightly payroll sync complete', ip: 'internal' },
-                        { time: '13:10:33', actor: 'sarah.c@hbplus.fit', action: 'Submitted overtime claim', ip: '10.0.2.91' }
-                      ].map((log, idx) => (
-                        <View key={idx} style={styles.auditRow}>
+                      {(storeState.auditLogs || []).slice(0, 5).map((log) => (
+                        <View key={log.id} style={styles.auditRow}>
                           <Text style={styles.auditTime}>{log.time}</Text>
                           <View style={styles.auditDetails}>
-                            <Text style={styles.auditAction}>{log.action}</Text>
-                            <Text style={styles.auditActor}>{log.actor} • {log.ip}</Text>
+                            <Text style={styles.auditAction}>{log.text || log.action}</Text>
+                            <Text style={styles.auditActor}>{(log.type || 'SYSTEM').toUpperCase()} • Verified</Text>
                           </View>
                         </View>
                       ))}
@@ -1159,30 +1500,61 @@ function AdminShellContent({ onSignOut }) {
 
             {activeTab === 'approvals' && (
               <SquaredCard style={styles.approvalsCard}>
-                <Text style={styles.cardTitle}>Pending Approvals</Text>
-                <Text style={styles.cardSub}>Review time-off and reimbursement requests.</Text>
-                {approvalsList.map((req) => (
-                  <View key={req.id} style={[styles.approvalItem, { marginTop: 12 }]}>
-                    <View style={styles.approvalInfo}>
-                      <Text style={styles.approvalName}>{req.name}</Text>
-                      <Text style={styles.approvalMeta}>{req.type} • {req.dates}</Text>
-                    </View>
-                    <View style={styles.approvalActions}>
-                      <TouchableOpacity
-                        style={styles.approveBtn}
-                        onPress={() => handleApprove(req.id, req.name)}
-                      >
-                        <Icon name="check" size={14} color="#FFFFFF" />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.rejectBtn}
-                        onPress={() => handleReject(req.id, req.name)}
-                      >
-                        <Icon name="x" size={14} color="#DC2626" />
-                      </TouchableOpacity>
-                    </View>
+                <View style={styles.cardHeader}>
+                  <View>
+                    <Text style={styles.cardTitle}>Pending Approvals Queue</Text>
+                    <Text style={styles.cardSub}>Review workforce time-off and shift claims in real time.</Text>
                   </View>
-                ))}
+                  <View style={[styles.kpiDeltaBadge, { backgroundColor: pendingApprovals.length > 0 ? '#FEF3C7' : '#ECFDF5' }]}>
+                    <Text style={[styles.kpiDeltaText, { color: pendingApprovals.length > 0 ? '#D97706' : '#059669' }]}>
+                      {pendingApprovals.length} Pending
+                    </Text>
+                  </View>
+                </View>
+
+                {pendingApprovals.length === 0 ? (
+                  <View style={[styles.emptyState, { paddingVertical: 48 }]}>
+                    <Icon name="checkCircle" size={36} color="#059669" />
+                    <Text style={[styles.emptyStateText, { fontSize: 16, marginTop: 8 }]}>All workforce approvals are cleared!</Text>
+                    <Text style={{ color: '#94A3B8', fontSize: 13, marginTop: 4 }}>
+                      New leave requests submitted by staff will appear dynamically in this queue.
+                    </Text>
+                  </View>
+                ) : (
+                  pendingApprovals.map((req) => {
+                    const reqName = req.employeeName || req.name;
+                    const reqDept = req.department || req.dept || 'Engineering';
+                    const reqType = req.leaveType || req.type;
+                    const reqDates = req.dates || `${req.startDate} to ${req.endDate} (${req.days} days)`;
+                    return (
+                      <View key={req.id} style={[styles.approvalItem, { marginTop: 12 }]}>
+                        <View style={styles.approvalInfo}>
+                          <Text style={styles.approvalName}>{reqName}</Text>
+                          <Text style={styles.approvalMeta}>{reqDept} • {reqType} • {reqDates}</Text>
+                          {req.reason ? <Text style={[styles.approvalMeta, { fontStyle: 'italic', marginTop: 2 }]}>"{req.reason}"</Text> : null}
+                        </View>
+                        <View style={styles.approvalActions}>
+                          <TouchableOpacity
+                            style={styles.approveBtn}
+                            onPress={() => handleApprove(req.id, reqName)}
+                            activeOpacity={0.8}
+                          >
+                            <Icon name="check" size={14} color="#FFFFFF" strokeWidth={2.4} />
+                            <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700', marginLeft: 4 }}>Approve</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.rejectBtn}
+                            onPress={() => handleReject(req.id, reqName)}
+                            activeOpacity={0.8}
+                          >
+                            <Icon name="x" size={14} color="#DC2626" strokeWidth={2.4} />
+                            <Text style={{ color: '#DC2626', fontSize: 12, fontWeight: '700', marginLeft: 4 }}>Reject</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    );
+                  })
+                )}
               </SquaredCard>
             )}
 
@@ -1266,14 +1638,10 @@ function AdminShellContent({ onSignOut }) {
                 <Text style={styles.cardTitle}>System Audit Log</Text>
                 <Text style={styles.cardSub}>Every authenticated interaction is permanently logged.</Text>
                 <View style={[styles.auditList, { marginTop: 16 }]}>
-                  {[
-                    { time: '14:02:11', actor: 'admin@hbplus.fit', action: 'Custom claim verified' },
-                    { time: '13:58:45', actor: 'marcus.v@hbplus.fit', action: 'Geofence check-in [HQ-East]' },
-                    { time: '13:42:09', actor: 'system-governance', action: 'Nightly payroll sync complete' }
-                  ].map((l, i) => (
-                    <View key={i} style={styles.auditRow}>
+                  {(storeState.auditLogs || []).map((l) => (
+                    <View key={l.id} style={styles.auditRow}>
                       <Text style={styles.auditTime}>{l.time}</Text>
-                      <Text style={styles.auditAction}>{l.action} ({l.actor})</Text>
+                      <Text style={styles.auditAction}>{l.text || l.action} ({(l.type || 'SYSTEM').toUpperCase()})</Text>
                     </View>
                   ))}
                 </View>
@@ -1340,9 +1708,352 @@ function AdminShellContent({ onSignOut }) {
                 </SquaredCard>
               </View>
             )}
+
+            {/* ══ DESKTOP ADMIN PROFILE SECTION ══ */}
+            {activeTab === 'profile' && (
+              <View style={styles.profileSectionWrapper}>
+                {/* 1. Admin Hero Card */}
+                <SquaredCard style={styles.profileHeroCard}>
+                  <View style={styles.profileHeroTop}>
+                    <View style={[styles.profileAvatarLarge, { backgroundColor: '#EA580C' }]}>
+                      <Text style={styles.profileAvatarLargeText}>
+                        {(adminProfile.displayName || 'E').charAt(0).toUpperCase()}
+                      </Text>
+                      <View style={styles.profileOnlineDot} />
+                    </View>
+
+                    <View style={styles.profileHeroInfo}>
+                      <View style={styles.profileNameRow}>
+                        <Text style={styles.profileNameText}>{adminProfile.displayName}</Text>
+                        <View style={[styles.domainBadge, { backgroundColor: '#FFF7ED', borderColor: '#FFEDD5' }]}>
+                          <Text style={[styles.domainBadgeText, { color: '#EA580C' }]}>Administrator</Text>
+                        </View>
+                        <View style={styles.domainBadge}>
+                          <Text style={styles.domainBadgeText}>@hbplus.fit</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.profileRoleTitle}>{adminProfile.designation} • {adminProfile.department}</Text>
+                      <Text style={styles.profileEmployeeId}>ID: {adminProfile.employeeId} • {adminProfile.clearanceLevel}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.profileActionRow}>
+                    <TouchableOpacity
+                      style={[styles.editProfileToggleBtn, isEditingAdminProfile && styles.editProfileToggleBtnActive]}
+                      onPress={() => {
+                        setAdminName(adminProfile.displayName);
+                        setAdminPhone(adminProfile.phone);
+                        setAdminDept(adminProfile.department);
+                        setAdminDesignation(adminProfile.designation);
+                        setAdminBio(adminProfile.bio);
+                        setAdminEmergency(adminProfile.emergencyContact);
+                        setAdminClearance(adminProfile.clearanceLevel || 'Level 4 (Full Governance Authority)');
+                        setIsEditingAdminProfile(!isEditingAdminProfile);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Icon name={isEditingAdminProfile ? 'x' : 'user'} size={16} color={isEditingAdminProfile ? '#FFFFFF' : '#EA580C'} />
+                      <Text style={[styles.editProfileToggleBtnText, isEditingAdminProfile && { color: '#FFFFFF' }]}>
+                        {isEditingAdminProfile ? 'Cancel Editing' : 'Edit Admin Profile'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.resetPassBtn}
+                      onPress={() => showToast('Password reset link dispatched to administrator email.')}
+                      activeOpacity={0.8}
+                    >
+                      <Icon name="lock" size={15} color="#475569" />
+                      <Text style={styles.resetPassBtnText}>Reset Credentials</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.resetPassBtn, { borderColor: '#FDBA74', backgroundColor: '#FFF7ED' }]}
+                      onPress={() => setBroadcastModalOpen(true)}
+                      activeOpacity={0.8}
+                    >
+                      <Icon name="bell" size={15} color="#EA580C" />
+                      <Text style={[styles.resetPassBtnText, { color: '#EA580C', fontWeight: '700' }]}>+ Broadcast Announcement</Text>
+                    </TouchableOpacity>
+                  </View>
+                </SquaredCard>
+
+                {/* 2. In-place Edit Form */}
+                {isEditingAdminProfile ? (
+                  <SquaredCard style={styles.editProfileCard}>
+                    <Text style={styles.cardTitle}>Edit Administrator Credentials & Profile</Text>
+                    <Text style={styles.tasksDueSub}>Updates reflect across governance audits, incident response contacts, and directory.</Text>
+
+                    <View style={styles.editFormGrid}>
+                      <View style={styles.formFieldBlock}>
+                        <Text style={styles.formFieldLabel}>Full Name</Text>
+                        <TextInput
+                          style={styles.formTextInput}
+                          value={adminName}
+                          onChangeText={setAdminName}
+                          placeholder="Administrator Full Name"
+                        />
+                      </View>
+
+                      <View style={styles.formFieldBlock}>
+                        <Text style={styles.formFieldLabel}>Direct Contact Phone</Text>
+                        <TextInput
+                          style={styles.formTextInput}
+                          value={adminPhone}
+                          onChangeText={setAdminPhone}
+                          placeholder="+91 99887 76655"
+                        />
+                      </View>
+
+                      <View style={styles.formFieldBlock}>
+                        <Text style={styles.formFieldLabel}>Administrative Department</Text>
+                        <TextInput
+                          style={styles.formTextInput}
+                          value={adminDept}
+                          onChangeText={setAdminDept}
+                          placeholder="Platform Governance & Security"
+                        />
+                      </View>
+
+                      <View style={styles.formFieldBlock}>
+                        <Text style={styles.formFieldLabel}>Designation / Role Title</Text>
+                        <TextInput
+                          style={styles.formTextInput}
+                          value={adminDesignation}
+                          onChangeText={setAdminDesignation}
+                          placeholder="Principal Security Administrator"
+                        />
+                      </View>
+
+                      <View style={styles.formFieldBlock}>
+                        <Text style={styles.formFieldLabel}>Clearance Level</Text>
+                        <TextInput
+                          style={styles.formTextInput}
+                          value={adminClearance}
+                          onChangeText={setAdminClearance}
+                          placeholder="Level 4 (Full Governance Authority)"
+                        />
+                      </View>
+
+                      <View style={styles.formFieldBlock}>
+                        <Text style={styles.formFieldLabel}>Emergency Incident Direct Line</Text>
+                        <TextInput
+                          style={styles.formTextInput}
+                          value={adminEmergency}
+                          onChangeText={setAdminEmergency}
+                          placeholder="CSO / Incident Command (+91 98000 11223)"
+                        />
+                      </View>
+
+                      <View style={styles.formFieldBlock}>
+                        <Text style={styles.formFieldLabel}>Executive Bio & Authority Summary</Text>
+                        <TextInput
+                          style={[styles.formTextInput, { height: 72, textAlignVertical: 'top' }]}
+                          value={adminBio}
+                          onChangeText={setAdminBio}
+                          placeholder="Summary of responsibilities and governance mandate"
+                          multiline
+                        />
+                      </View>
+                    </View>
+
+                    <View style={styles.editFormActions}>
+                      <TouchableOpacity
+                        style={[styles.saveProfileBtn, { backgroundColor: '#EA580C' }]}
+                        onPress={handleSaveAdminProfile}
+                        activeOpacity={0.88}
+                      >
+                        <Icon name="check" size={16} color="#FFFFFF" strokeWidth={2.4} />
+                        <Text style={styles.saveProfileBtnText}>Save Admin Profile</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.cancelProfileBtn}
+                        onPress={() => setIsEditingAdminProfile(false)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.cancelProfileBtnText}>Discard</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </SquaredCard>
+                ) : null}
+
+                {/* 3. Detailed Profile Overview Cards */}
+                <View style={styles.profileDetailsGrid}>
+                  {/* Card 1: Official Workplace Identity */}
+                  <SquaredCard style={styles.profileInfoCard}>
+                    <View style={styles.infoCardHeader}>
+                      <Icon name="directory" size={18} color="#EA580C" />
+                      <Text style={styles.infoCardTitle}>Executive Workplace Identity</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>Official Email</Text>
+                      <Text style={styles.infoValue}>{user?.email || adminProfile.email}</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>Mobile Number</Text>
+                      <Text style={styles.infoValue}>{adminProfile.phone}</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>Department</Text>
+                      <Text style={styles.infoValue}>{adminProfile.department}</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>Work Location</Text>
+                      <Text style={styles.infoValue}>{adminProfile.location}</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>Security Clearance</Text>
+                      <Text style={[styles.infoValue, { color: '#EA580C', fontWeight: '700' }]}>{adminProfile.clearanceLevel}</Text>
+                    </View>
+                  </SquaredCard>
+
+                  {/* Card 2: Security & Tenant Governance */}
+                  <SquaredCard style={styles.profileInfoCard}>
+                    <View style={styles.infoCardHeader}>
+                      <Icon name="shieldCheck" size={18} color="#EA580C" />
+                      <Text style={styles.infoCardTitle}>Security & Tenant Governance</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>Domain Enforcement</Text>
+                      <Text style={[styles.infoValue, { color: '#059669', fontWeight: '700' }]}>STRICT (@hbplus.fit)</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>Multi-Factor Auth</Text>
+                      <Text style={styles.infoValue}>Hardware FIDO2 Security Key</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>Transport Security</Text>
+                      <Text style={styles.infoValue}>TLS 1.3 End-to-End Encrypted</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>Compliance Standard</Text>
+                      <Text style={[styles.infoValue, { color: '#0F766E', fontWeight: '700' }]}>SOC2 Type II Certified</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>Emergency Direct Line</Text>
+                      <Text style={styles.infoValue}>{adminProfile.emergencyContact}</Text>
+                    </View>
+                  </SquaredCard>
+
+                  {/* Card 3: Executive Bio */}
+                  <SquaredCard style={[styles.profileInfoCard, { flex: 1, minWidth: '100%' }]}>
+                    <View style={styles.infoCardHeader}>
+                      <Icon name="user" size={18} color="#EA580C" />
+                      <Text style={styles.infoCardTitle}>Executive Mandate & Bio</Text>
+                    </View>
+                    <Text style={{ fontSize: 14, color: '#334155', lineHeight: 22, marginTop: 4 }}>
+                      {adminProfile.bio}
+                    </Text>
+                  </SquaredCard>
+                </View>
+              </View>
+            )}
           </ScrollView>
         </View>
       </View>
+
+      {/* Broadcast Modal */}
+      <Modal
+        visible={broadcastModalOpen}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setBroadcastModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={[styles.kpiDeltaBadge, { backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 4 }]}>
+                  <Icon name="bell" size={16} color="#D97706" />
+                </View>
+                <Text style={styles.modalTitle}>Broadcast Announcement</Text>
+              </View>
+              <TouchableOpacity onPress={() => setBroadcastModalOpen(false)}>
+                <Icon name="x" size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalSubtitle}>
+              Broadcast an operational alert or priority notice across employee portals in real-time.
+            </Text>
+
+            <View style={{ gap: 12, marginTop: 12 }}>
+              <View style={styles.formFieldBlock}>
+                <Text style={styles.formFieldLabel}>Announcement Title *</Text>
+                <TextInput
+                  style={styles.formTextInput}
+                  placeholder="e.g. Q4 All-Hands & Production Deployment"
+                  value={broadcastTitle}
+                  onChangeText={setBroadcastTitle}
+                />
+              </View>
+
+              <View style={styles.formFieldBlock}>
+                <Text style={styles.formFieldLabel}>Target Audience / Department</Text>
+                <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+                  {['All Departments', 'Engineering', 'Operations', 'Leadership'].map((d) => (
+                    <TouchableOpacity
+                      key={d}
+                      style={[styles.modalFilterChip, broadcastDept === d && styles.modalFilterChipActive]}
+                      onPress={() => setBroadcastDept(d)}
+                    >
+                      <Text style={[styles.modalFilterChipText, broadcastDept === d && styles.modalFilterChipTextActive]}>
+                        {d}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.formFieldBlock}>
+                <Text style={styles.formFieldLabel}>Priority Level</Text>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  {['Normal', 'High', 'Urgent'].map((p) => (
+                    <TouchableOpacity
+                      key={p}
+                      style={[styles.modalFilterChip, broadcastPriority === p && styles.modalFilterChipActive]}
+                      onPress={() => setBroadcastPriority(p)}
+                    >
+                      <Text style={[styles.modalFilterChipText, broadcastPriority === p && styles.modalFilterChipTextActive]}>
+                        {p}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.formFieldBlock}>
+                <Text style={styles.formFieldLabel}>Announcement Content</Text>
+                <TextInput
+                  style={[styles.formTextInput, { height: 80, textAlignVertical: 'top' }]}
+                  placeholder="Enter full details, agenda, and instructions..."
+                  value={broadcastContent}
+                  onChangeText={setBroadcastContent}
+                  multiline
+                />
+              </View>
+            </View>
+
+            <View style={styles.modalActionRow}>
+              <TouchableOpacity
+                style={styles.modalSubmitBtn}
+                onPress={handlePublishBroadcast}
+                activeOpacity={0.88}
+              >
+                <Icon name="check" size={16} color="#FFFFFF" strokeWidth={2.4} />
+                <Text style={styles.modalSubmitBtnText}>Publish Broadcast</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setBroadcastModalOpen(false)}
+              >
+                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -2242,6 +2953,327 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 9,
     fontWeight: '800'
+  },
+
+  // ── Admin Profile Styles ──
+  profileSectionWrapper: {
+    gap: 16
+  },
+  profileHeroCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 22,
+    gap: 16,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 2px 4px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.06)' }
+      : { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3 })
+  },
+  profileHeroTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16
+  },
+  profileAvatarLarge: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative'
+  },
+  profileAvatarLargeText: {
+    color: '#FFFFFF',
+    fontSize: 26,
+    fontWeight: '800'
+  },
+  profileOnlineDot: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#10B981',
+    borderWidth: 2,
+    borderColor: '#FFFFFF'
+  },
+  profileHeroInfo: {
+    flex: 1,
+    gap: 3
+  },
+  profileNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap'
+  },
+  profileNameText: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A'
+  },
+  domainBadge: {
+    backgroundColor: '#F0FDFA',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#CCFBF1'
+  },
+  domainBadgeText: {
+    color: '#0F766E',
+    fontSize: 11,
+    fontWeight: '700'
+  },
+  profileRoleTitle: {
+    fontSize: 13,
+    color: '#64748B',
+    fontWeight: '500'
+  },
+  profileEmployeeId: {
+    fontSize: 12,
+    color: '#94A3B8',
+    fontWeight: '600'
+  },
+  profileActionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    flexWrap: 'wrap',
+    marginTop: 4
+  },
+  editProfileToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FFEDD5',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 12
+  },
+  editProfileToggleBtnActive: {
+    backgroundColor: '#EA580C',
+    borderColor: '#EA580C'
+  },
+  editProfileToggleBtnText: {
+    color: '#EA580C',
+    fontSize: 13,
+    fontWeight: '700'
+  },
+  resetPassBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 12
+  },
+  resetPassBtnText: {
+    color: '#475569',
+    fontSize: 13,
+    fontWeight: '600'
+  },
+  editProfileCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 22,
+    gap: 14,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 2px 4px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.06)' }
+      : { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3 })
+  },
+  tasksDueSub: {
+    fontSize: 13,
+    color: '#64748B'
+  },
+  editFormGrid: {
+    gap: 12,
+    marginTop: 8
+  },
+  formFieldBlock: {
+    gap: 4
+  },
+  formFieldLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#334155'
+  },
+  formTextInput: {
+    height: 46,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    fontSize: 14,
+    color: '#0F172A',
+    outlineStyle: 'none'
+  },
+  editFormActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10
+  },
+  saveProfileBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 48,
+    borderRadius: 12
+  },
+  saveProfileBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700'
+  },
+  cancelProfileBtn: {
+    paddingHorizontal: 18,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#CBD5E1'
+  },
+  cancelProfileBtnText: {
+    color: '#64748B',
+    fontSize: 14,
+    fontWeight: '600'
+  },
+  profileDetailsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16
+  },
+  profileInfoCard: {
+    flex: 1,
+    minWidth: 280,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 18,
+    gap: 12,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 2px 4px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.06)' }
+      : { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3 })
+  },
+  infoCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9'
+  },
+  infoCardTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0F172A'
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  infoLabel: {
+    fontSize: 13,
+    color: '#64748B'
+  },
+  infoValue: {
+    fontSize: 13,
+    color: '#0F172A',
+    fontWeight: '600'
+  },
+
+  // ── Modal Styles ──
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 520,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    gap: 14,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2), 0 8px 10px -6px rgba(0,0,0,0.1)' }
+      : { elevation: 8 })
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A'
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: '#64748B'
+  },
+  modalFilterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#F1F5F9'
+  },
+  modalFilterChipActive: {
+    backgroundColor: '#EA580C'
+  },
+  modalFilterChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#475569'
+  },
+  modalFilterChipTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700'
+  },
+  modalActionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12
+  },
+  modalSubmitBtn: {
+    flex: 1,
+    height: 46,
+    backgroundColor: '#EA580C',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6
+  },
+  modalSubmitBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700'
+  },
+  modalCancelBtn: {
+    paddingHorizontal: 16,
+    height: 46,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  modalCancelBtnText: {
+    color: '#64748B',
+    fontSize: 14,
+    fontWeight: '600'
   }
 });
 
