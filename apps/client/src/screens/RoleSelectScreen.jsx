@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth.js';
 import AnimatedLogo from '../components/brand/AnimatedLogo.jsx';
+import { AdminRoleLogo, UserRoleLogo } from '../components/brand/RoleLogos.jsx';
 import Icon from '../components/ui/Icon.jsx';
 import DiagnosticsPanel from '../components/common/DiagnosticsPanel.jsx';
 import { ROUTES } from '../navigation/navigationConfig.js';
@@ -63,7 +64,7 @@ export function RoleSelectScreen() {
             accessibilityLabel="Admin"
           >
             <View style={styles.adminIconTile}>
-              <Icon name="shieldCheck" size={26} color="#EA580C" strokeWidth={2.2} />
+              <AdminRoleLogo size={36} />
             </View>
 
             <View style={styles.cardContent}>
@@ -85,7 +86,7 @@ export function RoleSelectScreen() {
             accessibilityLabel="User"
           >
             <View style={styles.userIconTile}>
-              <Icon name="userCircle" size={26} color="#FFB020" strokeWidth={2.2} />
+              <UserRoleLogo size={36} />
             </View>
 
             <View style={styles.cardContent}>
@@ -94,7 +95,7 @@ export function RoleSelectScreen() {
             </View>
 
             <View style={styles.trailingArrow}>
-              <Icon name="chevronRight" size={20} color="#FFB020" strokeWidth={2.4} />
+              <Icon name="chevronRight" size={20} color="#00B386" strokeWidth={2.4} />
             </View>
           </TouchableOpacity>
         </View>
@@ -235,19 +236,23 @@ const styles = StyleSheet.create({
     cursor: 'pointer'
   },
   adminIconTile: {
-    width: 48,
-    height: 48,
-    borderRadius: CARD_RADIUS,
-    backgroundColor: 'rgba(234, 88, 12, 0.12)',
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FED7AA',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16
   },
   userIconTile: {
-    width: 48,
-    height: 48,
-    borderRadius: CARD_RADIUS,
-    backgroundColor: 'rgba(255, 176, 32, 0.14)',
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#DCFCE7',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16

@@ -162,6 +162,20 @@ function UserLoginInner() {
           {/* Centered Small Logo & Title with UserCircle Icon */}
           <View style={styles.brandHeader}>
             <HBLogo size={56} />
+            {Platform.OS === 'web' ? (
+              <img
+                src="/src/assets/illustrations/user-workspace.svg"
+                alt="User workspace illustration"
+                style={{
+                  width: width >= 600 ? 220 : 170,
+                  height: width >= 600 ? 118 : 92,
+                  objectFit: 'contain',
+                  marginTop: -6,
+                  marginBottom: -6,
+                  display: 'block'
+                }}
+              />
+            ) : null}
             <View style={styles.titleRow}>
               <Icon name="userCircle" size={24} color="#FFB020" strokeWidth={2.4} />
               <Text style={styles.titleText}>User</Text>

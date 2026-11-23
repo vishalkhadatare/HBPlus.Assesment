@@ -135,6 +135,19 @@ function AdminLoginInner() {
               <View style={styles.controlPill}>
                 <Text style={styles.controlPillText}>Control Room</Text>
               </View>
+              {Platform.OS === 'web' ? (
+                <img
+                  src="/src/assets/illustrations/admin-secure-login.svg"
+                  alt="Secure administrator workspace illustration"
+                  style={{
+                    width: 'min(82%, 420px)',
+                    height: 220,
+                    objectFit: 'contain',
+                    marginTop: 8,
+                    display: 'block'
+                  }}
+                />
+              ) : null}
             </View>
           </View>
 
@@ -206,7 +219,20 @@ function AdminLoginInner() {
             </TouchableOpacity>
 
             <View style={styles.phoneBrandBox}>
-              <HBLogo size={46} />
+              {Platform.OS === 'web' ? (
+                <img
+                  src="/src/assets/illustrations/admin-secure-login.svg"
+                  alt=""
+                  style={{
+                    width: 200,
+                    height: 92,
+                    objectFit: 'contain',
+                    marginTop: -4,
+                    marginBottom: -4,
+                    display: 'block'
+                  }}
+                />
+              ) : null}
               <View style={styles.phoneTitleRow}>
                 <Icon name="shieldCheck" size={22} color="#FB923C" strokeWidth={2.4} />
                 <Text style={styles.phoneTitleText}>Admin</Text>
