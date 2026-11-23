@@ -1,104 +1,297 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated, Easing, Platform } from 'react-native';
 
 /**
- * Premium HBPlus "H+" Mark with Gradient, Squircle Geometry & Gloss Highlight (Section 8)
+ * Section 3.2 & 3.3: Modern Hexagonal Honeycomb HB+ Animated Mark
+ * Colors: Midnight, Emerald (#00B386) and Amber (#FFB020)
  */
-export function AnimatedLogo({ size = 44, showWordmark = false, showGlow = true, textColor }) {
-  const scaleAnim = useRef(new Animated.Value(0.85)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+export function AnimatedLogo({
+  size = 120,
+  showWordmark = true,
+  showTagline = true,
+  reduceMotion = false,
+  textColor = '#FFFFFF'
+}) {
+  // Animation Values
+  const bgRingOpacity = useRef(new Animated.Value(0)).current;
+  const hexScale = useRef(new Animated.Value(reduceMotion ? 1 : 0.2)).current;
+  const hexOpacity = useRef(new Animated.Value(reduceMotion ? 1 : 0)).current;
+  const hBarScaleY = useRef(new Animated.Value(reduceMotion ? 1 : 0)).current;
+  const bCurveOpacity = useRef(new Animated.Value(reduceMotion ? 1 : 0)).current;
+  const plusScale = useRef(new Animated.Value(reduceMotion ? 1 : 0)).current;
+  const plusRot = useRef(new Animated.Value(reduceMotion ? 0 : -180)).current;
+  const shineSweep = useRef(new Animated.Value(-1)).current;
+  const wordmarkSlide = useRef(new Animated.Value(reduceMotion ? 0 : 20)).current;
+  const wordmarkOpacity = useRef(new Animated.Value(reduceMotion ? 1 : 0)).current;
+  const taglineOpacity = useRef(new Animated.Value(reduceMotion ? 1 : 0)).current;
+
+  // Idle Loop Values
+  const glowPulse = useRef(new Animated.Value(1)).current;
+  const plusPulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    // Entrance bounce
-    Animated.spring(scaleAnim, {
+    if (reduceMotion) return;
+
+    // Sequence (Total 2.4s entrance)
+    // 1. 0.00 to 0.40s: faint ring and blurred emerald orbs fade in
+    Animated.timing(bgRingOpacity, {
       toValue: 1,
-      damping: 14,
-      stiffness: 180,
+      duration: 400,
       useNativeDriver: true
     }).start();
 
-    // Subtle breathing glow loop
-    Animated.loop(
+    // 2. 0.20 to 0.90s: hexagon outline & fill scales up with spring
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(hexOpacity, { toValue: 1, duration: 450, useNativeDriver: true }),
+        Animated.spring(hexScale, { toValue: 1, damping: 12, stiffness: 140, useNativeDriver: true })
+      ]).start();
+    }, 200);
+
+    // 3. 0.60 to 1.30s: H bars grow upward from the base
+    setTimeout(() => {
+      Animated.spring(hBarScaleY, { toValue: 1, damping: 14, stiffness: 120, useNativeDriver: true }).start();
+    }, 600);
+
+    // B curves draw / fade on staggered by 80ms
+    setTimeout(() => {
+      Animated.timing(bCurveOpacity, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+    }, 680);
+
+    // 4. 1.10 to 1.60s: amber "+" pops in with bouncy spring and spins 180 deg
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.spring(plusScale, { toValue: 1, damping: 9, stiffness: 180, useNativeDriver: true }),
+        Animated.spring(plusRot, { toValue: 0, damping: 11, stiffness: 120, useNativeDriver: true })
+      ]).start();
+    }, 1100);
+
+    // 5. 1.40 to 2.00s: diagonal light shine sweeps across hexagon
+    setTimeout(() => {
+      Animated.timing(shineSweep, {
+        toValue: 1,
+        duration: 700,
+        easing: Easing.inOut(Easing.quad),
+        useNativeDriver: true
+      }).start(() => {
+        shineSweep.setValue(-1);
+      });
+    }, 1400);
+
+    // 6. 1.60 to 2.40s: wordmark slides up and tagline fades in
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(wordmarkOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+        Animated.spring(wordmarkSlide, { toValue: 0, damping: 15, stiffness: 120, useNativeDriver: true })
+      ]).start();
+    }, 1600);
+
+    setTimeout(() => {
+      Animated.timing(taglineOpacity, { toValue: 1, duration: 600, useNativeDriver: true }).start();
+    }, 2000);
+
+    // 7. Idle Loop
+    const glowLoop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.08,
-          duration: 2200,
+        Animated.timing(glowPulse, { toValue: 1.15, duration: 2000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(glowPulse, { toValue: 1.0, duration: 2000, easing: Easing.inOut(Easing.sin), useNativeDriver: true })
+      ])
+    );
+    glowLoop.start();
+
+    // Amber '+' gentle pulse every 6s
+    const plusPulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(5000),
+        Animated.spring(plusPulse, { toValue: 1.25, damping: 6, stiffness: 200, useNativeDriver: true }),
+        Animated.spring(plusPulse, { toValue: 1.0, damping: 10, stiffness: 150, useNativeDriver: true })
+      ])
+    );
+    plusPulseLoop.start();
+
+    // Shine sweep repeat every 5s
+    const shineLoop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(5000),
+        Animated.timing(shineSweep, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.quad),
           useNativeDriver: true
         }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 2200,
-          useNativeDriver: true
-        })
+        Animated.timing(shineSweep, { toValue: -1, duration: 0, useNativeDriver: true })
       ])
-    ).start();
-  }, [scaleAnim, pulseAnim]);
+    );
+    shineLoop.start();
 
-  const cornerRadius = Math.round(size * 0.28);
+    return () => {
+      glowLoop.stop();
+      plusPulseLoop.stop();
+      shineLoop.stop();
+    };
+  }, [reduceMotion]);
+
+  const plusRotateStr = plusRot.interpolate({
+    inputRange: [-180, 0],
+    outputRange: ['-180deg', '0deg']
+  });
+
+  const shineTranslateX = shineSweep.interpolate({
+    inputRange: [-1, 1],
+    outputRange: [-size, size * 1.5]
+  });
 
   return (
     <View style={styles.root}>
-      <View style={[styles.container, { width: size, height: size }]}>
-        {showGlow ? (
-          <Animated.View
-            style={[
-              styles.glow,
-              {
-                width: size + 14,
-                height: size + 14,
-                borderRadius: cornerRadius + 6,
-                transform: [{ scale: pulseAnim }]
-              }
-            ]}
-          />
-        ) : null}
+      {/* Container for Hexagon & Glow */}
+      <View style={{ width: size * 1.3, height: size * 1.3, alignItems: 'center', justifyContent: 'center' }}>
+        {/* Step 1: Ambient Ring and Emerald Glow */}
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.glowRing,
+            {
+              width: size * 1.1,
+              height: size * 1.1,
+              borderRadius: (size * 1.1) / 2,
+              opacity: bgRingOpacity,
+              transform: [{ scale: glowPulse }]
+            }
+          ]}
+        />
 
-        {/* Geometric Mark Squircle Tile */}
+        {/* Step 2: Hexagonal Honeycomb Mark */}
         <Animated.View
           style={[
-            styles.tile,
+            styles.hexWrapper,
             {
               width: size,
               height: size,
-              borderRadius: cornerRadius,
-              transform: [{ scale: scaleAnim }]
+              opacity: hexOpacity,
+              transform: [{ scale: hexScale }]
             }
           ]}
         >
-          {/* Inner Gloss Sweep */}
-          <View style={styles.glossHighlight} />
-
-          {/* Precision H+ Geometric SVG Mark */}
           <svg
-            width={Math.round(size * 0.62)}
-            height={Math.round(size * 0.62)}
-            viewBox="0 0 32 32"
+            width={size}
+            height={size}
+            viewBox="0 0 120 120"
             fill="none"
-            style={{ display: 'block' }}
+            style={{ display: 'block', overflow: 'visible' }}
           >
-            {/* Left Vertical Stem of H */}
-            <rect x="5" y="6" width="5" height="20" rx="2.5" fill="#FFFFFF" />
-            
-            {/* Right Vertical Stem of H */}
-            <rect x="22" y="6" width="5" height="20" rx="2.5" fill="#FFFFFF" />
-            
-            {/* Horizontal Bar of H intersecting with + */}
-            <rect x="8" y="13.5" width="16" height="5" rx="2" fill="#FFFFFF" />
-            
-            {/* Vertical Stem of + in the middle */}
-            <rect x="13.5" y="8" width="5" height="16" rx="2" fill="#FFFFFF" />
+            <defs>
+              <linearGradient id="hbGradientBrand" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#00D9A5" />
+                <stop offset="55%" stopColor="#00B386" />
+                <stop offset="100%" stopColor="#0A84FF" />
+              </linearGradient>
+              <linearGradient id="hbGradientAmber" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FFC857" />
+                <stop offset="100%" stopColor="#FF9F1C" />
+              </linearGradient>
+              <filter id="hexDropShadow" x="-10%" y="-10%" width="130%" height="130%">
+                <feDropShadow dx="0" dy="8" stdDeviation="10" floodColor="#00775B" floodOpacity="0.45" />
+              </filter>
+            </defs>
 
-            {/* Glowing Accent Core in center of the + */}
-            <circle cx="16" cy="16" r="2.2" fill="#14C8D9" />
+            {/* Honeycomb Hexagon with Rounded Corners & Brand Gradient */}
+            <path
+              d="M 56,13 Q 60,10.5 64,13 L 101,34 Q 104,36 104,40 L 104,80 Q 104,84 101,86 L 64,107 Q 60,109.5 56,107 L 19,86 Q 16,84 16,80 L 16,40 Q 16,36 19,34 Z"
+              fill="url(#hbGradientBrand)"
+              stroke="rgba(255,255,255,0.45)"
+              strokeWidth="1.5"
+              filter="url(#hexDropShadow)"
+            />
+
+            {/* Glossy Top Edge Highlight */}
+            <path
+              d="M 22,38 L 60,15 L 98,38 Q 60,30 22,38 Z"
+              fill="rgba(255,255,255,0.22)"
+            />
+
+            {/* H Left Vertical Bar */}
+            <rect x="33" y="36" width="9" height="48" rx="4.5" fill="#FFFFFF" />
+
+            {/* H Crossbar */}
+            <rect x="38" y="56" width="22" height="8" rx="3" fill="#FFFFFF" />
+
+            {/* H and B Shared Middle Bar */}
+            <rect x="54" y="36" width="9" height="48" rx="4.5" fill="#FFFFFF" />
+
+            {/* B Upper Bowl */}
+            <path
+              d="M 59,36 H 70 C 78,36 82,41 82,48 C 82,55 78,60 70,60 H 59"
+              stroke="#FFFFFF"
+              strokeWidth="8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+
+            {/* B Lower Bowl */}
+            <path
+              d="M 59,60 H 72 C 81,60 85,66 85,73 C 85,80 81,84 72,84 H 59"
+              stroke="#FFFFFF"
+              strokeWidth="8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
           </svg>
+
+          {/* Diagonal Light Shine Sweep */}
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.shineSweep,
+              {
+                width: size * 0.35,
+                height: size * 1.5,
+                transform: [{ translateX: shineTranslateX }, { rotate: '25deg' }]
+              }
+            ]}
+          />
+
+          {/* Overlapping Amber '+' Badge at Top Right */}
+          <Animated.View
+            style={[
+              styles.amberBadge,
+              {
+                top: size * 0.06,
+                right: size * 0.08,
+                transform: [{ scale: Animated.multiply(plusScale, plusPulse) }, { rotate: plusRotateStr }]
+              }
+            ]}
+          >
+            <svg width={size * 0.28} height={size * 0.28} viewBox="0 0 32 32" fill="none">
+              <rect x="4" y="12" width="24" height="8" rx="4" fill="url(#hbGradientAmber)" />
+              <rect x="12" y="4" width="8" height="24" rx="4" fill="url(#hbGradientAmber)" />
+            </svg>
+          </Animated.View>
         </Animated.View>
       </View>
 
+      {/* Step 6: Wordmark "HBPlus" & Tagline */}
       {showWordmark ? (
-        <View style={styles.wordmarkContainer}>
-          <Text style={[styles.wordmarkTitle, textColor ? { color: textColor } : null]}>HBPlus</Text>
-          <Text style={styles.wordmarkSubtitle}>Workspace</Text>
-        </View>
+        <Animated.View
+          style={[
+            styles.wordmarkWrapper,
+            {
+              opacity: wordmarkOpacity,
+              transform: [{ translateY: wordmarkSlide }]
+            }
+          ]}
+        >
+          <View style={styles.titleRow}>
+            <Text style={[styles.brandHB, { color: textColor }]}>HB</Text>
+            <Text style={styles.brandPlus}>Plus</Text>
+          </View>
+          {showTagline ? (
+            <Animated.Text style={[styles.tagline, { opacity: taglineOpacity }]}>
+              Work, simplified.
+            </Animated.Text>
+          ) : null}
+        </Animated.View>
       ) : null}
     </View>
   );
@@ -106,54 +299,57 @@ export function AnimatedLogo({ size = 44, showWordmark = false, showGlow = true,
 
 const styles = StyleSheet.create({
   root: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  container: {
-    position: 'relative',
     alignItems: 'center',
     justifyContent: 'center'
   },
-  glow: {
+  glowRing: {
     position: 'absolute',
-    backgroundColor: 'rgba(91, 91, 240, 0.35)',
-    filter: 'blur(8px)'
+    backgroundColor: 'rgba(0, 179, 134, 0.35)',
+    ...(Platform.OS === 'web' ? { filter: 'blur(36px)' } : null)
   },
-  tile: {
-    backgroundColor: '#5B5BF0',
-    backgroundImage: 'linear-gradient(135deg, #6A5CFF 0%, #4A3DF0 50%, #2F8BFF 100%)',
+  hexWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
-    overflow: 'hidden',
-    boxShadow: '0 8px 24px rgba(74, 61, 240, 0.38), inset 0 1px 1px rgba(255, 255, 255, 0.45)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)'
+    position: 'relative'
   },
-  glossHighlight: {
+  shineSweep: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '48%',
-    backgroundColor: 'linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 100%)',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10
+    top: -20,
+    backgroundColor: 'rgba(255, 255, 255, 0.45)',
+    ...(Platform.OS === 'web' ? { filter: 'blur(6px)' } : null)
   },
-  wordmarkContainer: {
-    marginLeft: 10
+  amberBadge: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10
   },
-  wordmarkTitle: {
-    fontSize: 18,
+  wordmarkWrapper: {
+    alignItems: 'center',
+    marginTop: 4
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline'
+  },
+  brandHB: {
+    fontSize: 32,
     fontWeight: '800',
-    letterSpacing: -0.5,
-    color: '#0E1330'
+    letterSpacing: -0.8
   },
-  wordmarkSubtitle: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#5B6385',
-    letterSpacing: 0.2
+  brandPlus: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#FFB020',
+    letterSpacing: -0.8,
+    marginLeft: 1
+  },
+  tagline: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.72)',
+    fontWeight: '500',
+    marginTop: 2,
+    letterSpacing: 0.1
   }
 });
 

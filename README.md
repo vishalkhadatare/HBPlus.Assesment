@@ -1,240 +1,180 @@
-# HBPlus Access - Secure Corporate Portal
+# HBPlus — Secure Role-Based Corporate Access Portal
 
-> Cross-Platform Google Authentication with Strict `@hbplus.fit` Domain Restriction.
-> Built with **React Native**, **React Native for Web**, **Node.js + Express**, **Firebase Authentication**, **Cloud Firestore**, and **Firebase Admin SDK**.
-> Language: **100% Pure JavaScript (ES6+) & JSX** (Zero TypeScript).
+An executive-grade, cross-platform enterprise portal built with **one unified codebase** for **Web (React Native for Web)**, **Android (Installable APK)**, and **iOS**.
 
----
-
-## 1. Project Overview & Folder Structure
-
-**HBPlus Access** is a modern, minimalist corporate portal that restricts application access exclusively to authenticated Google accounts ending in `@hbplus.fit`. Any attempt to sign in using another domain (e.g. `@gmail.com` or `@yahoo.com`) is immediately rejected, signed out from Firebase Auth, and presented with the exact security notice:
-> `"Access restricted. Please login using your official domain email."`
-
-### Monorepo Structure
-
-```
-hbplus-access/
-├── apps/
-│   ├── client/                          # React Native + React Native Web (Expo)
-│   │   ├── public/                      # Static web assets & favicon
-│   │   ├── src/
-│   │   │   ├── assets/                  # Minimalist fitness-tech logo & Google SVGs
-│   │   │   ├── components/
-│   │   │   │   ├── auth/                # GoogleSignInButton.jsx
-│   │   │   │   ├── common/              # AppButton, ErrorMessage, LoadingSpinner
-│   │   │   │   ├── dashboard/           # ProfileCard.jsx, DashboardHeader.jsx
-│   │   │   │   └── layout/              # AppHeader.jsx, AppLayout.jsx
-│   │   │   ├── config/                  # firebase.js, environment.js
-│   │   │   ├── contexts/                # AuthContext.jsx (Centralized Auth & Guard)
-│   │   │   ├── hooks/                   # useAuth.js
-│   │   │   ├── navigation/              # RootNavigator.jsx, navigationConfig.js
-│   │   │   ├── screens/                 # LoginScreen.jsx, DashboardScreen.jsx
-│   │   │   ├── services/                # authService.js, authService.web.js, authService.native.js, apiClient.js
-│   │   │   ├── styles/                  # colors.js (Emerald & Slate), spacing.js, typography.js
-│   │   │   ├── utils/                   # domainValidator.js, errorFormatter.js
-│   │   │   ├── App.jsx                  # Main Application Component
-│   │   │   └── index.js                 # Cross-platform entrypoint
-│   │   ├── tests/                       # Domain validator unit tests
-│   │   ├── app.json                     # Android & Web Expo configuration
-│   │   ├── eas.json                     # Standalone Android APK preview build profile
-│   │   ├── vite.config.js               # Web bundler configuration
-│   │   └── package.json
-│   │
-│   └── server/                          # Node.js + Express REST API Gateway
-│       ├── src/
-│       │   ├── config/                  # environment.js, firebaseAdmin.js
-│       │   ├── controllers/             # authController.js, userController.js
-│       │   ├── middleware/              # authenticate.js, authorize.js, errorHandler.js, rateLimiter.js
-│       │   ├── routes/                  # authRoutes.js, userRoutes.js, healthRoutes.js
-│       │   ├── services/                # authService.js, userService.js
-│       │   ├── utils/                   # domainValidator.js, apiResponse.js
-│       │   ├── app.js                   # Express app configuration
-│       │   └── server.js                # Server entrypoint (Port 5000)
-│       ├── tests/                       # Domain, auth middleware, and RBAC tests
-│       └── package.json
-├── firebase/
-│   └── firestore.rules                  # Strict Firestore Security Rules
-├── docs/
-│   └── API.md                           # REST API specification
-├── eas.json                             # Root EAS build configuration
-├── .env.example                         # Environment configuration template
-├── package.json                         # Root orchestration scripts
-└── README.md
-```
+HBPlus enforces a zero-trust, domain-governed security architecture: **only authenticated accounts ending strictly with `@hbplus.fit` are admitted**.
 
 ---
 
-## 2. Setup & Configuration
+## 1. Architecture & Authentication Flow
+
+```mermaid
+flowchart TD
+    A["Welcome / Role Select (/)"] -->|"Admin Choice"| B["/login/admin"]
+    A -->|"User Choice"| C["/login/user"]
+    
+    B -->|"Email + Password"| D["Firebase Auth (Email/Pass)"]
+    D --> E{"claims.role === 'admin'?"}
+    E -->|"Yes"| F["/(admin)/dashboard"]
+    E -->|"No"| G["/access-denied (Rejected)"]
+    
+    C -->|"Google OAuth 2.0"| H["Google Account Chooser"]
+    C -->|"Email + Password"| I["Firebase Auth (Email/Pass)"]
+    
+    H --> J{"email.matches('.*@hbplus.fit$')?"}
+    I --> J
+    
+    J -->|"No (e.g. @gmail.com)"| K["Purge User from Firebase Auth & Clear Session"]
+    K --> L["/access-denied: 'Access restricted. Please login using your official domain email.'"]
+    
+    J -->|"Yes (@hbplus.fit)"| M["Backend Provisioning (/api/auth/provision)"]
+    M --> N["Enforce { role: 'user' } & Write users/{uid}"]
+    N --> O["/(user)/dashboard"]
+```
+
+### The Two Distinct Paths
+1. **Admin Path (`/login/admin`)**:
+   - **Email + Password only** (No Google OAuth button).
+   - Requires email validation against `isAllowedEmail`.
+   - Forces an ID token refresh and verifies cryptographic custom claim `claims.role === 'admin'`.
+   - Non-admins are immediately signed out and redirected to `/access-denied`.
+   - Admin accounts can **never be created publicly**; they are provisioned exclusively via the secure CLI tool `scripts/create-admin.js`.
+2. **User Path (`/login/user`)**:
+   - **Continue with Google (OAuth 2.0)** or User Email + Password.
+   - Enforces immediate client-side and server-side domain verification.
+   - External domains (`@gmail.com`) are immediately revoked, purged from Firebase Auth, and redirected to `/access-denied`.
+   - Google sign-in can **never produce an admin role**.
+
+---
+
+## 2. Four Layers of Domain & Role Enforcement
+
+Security is **never trusted to client-side checks alone**. The `@hbplus.fit` restriction is validated in 4 independent layers:
+
+1. **Client-Side Pure Validator (`isAllowedEmail`)**:
+   Instant feedback before network requests. Rejects non-ASCII, Unicode look-alikes, subdomains, quoted prefixes, or malicious suffixes.
+   ```typescript
+   export function isAllowedEmail(email: string, domain = 'hbplus.fit'): boolean {
+     const e = email.trim().toLowerCase();
+     if (/[^\x20-\x7E]/.test(e) || e.includes('"')) return false;
+     const at = e.lastIndexOf('@');
+     if (at < 1 || at !== e.indexOf('@')) return false;
+     return e.slice(at + 1) === domain.toLowerCase();
+   }
+   ```
+2. **Server Middleware & Deletion of Intruders**:
+   On every API request, `authenticate` verifies the Firebase ID token cryptographically. If an unauthorized email slips through Google OAuth, the server calls `adminAuth.deleteUser(uid)` to delete the account immediately from Firebase Auth, preventing outsiders from polluting the project.
+3. **Cloud Firestore Security Rules (`firestore.rules`)**:
+   Rules enforce token claims and domain regex directly on the database engine:
+   ```javascript
+   function signedIn()   { return request.auth != null; }
+   function inDomain()   { return signedIn()
+                              && request.auth.token.email_verified == true
+                              && request.auth.token.email.matches('.*@hbplus[.]fit$'); }
+   function isAdmin()    { return inDomain() && request.auth.token.role == 'admin'; }
+   function isOwner(uid) { return inDomain() && request.auth.uid == uid; }
+
+   match /users/{uid} {
+     allow read:   if isOwner(uid) || isAdmin();
+     allow create: if false; // only Server provisions
+     allow update: if isAdmin() || (isOwner(uid) && !('role' in request.resource.data.diff(resource.data).affectedKeys()));
+     allow delete: if isAdmin();
+   }
+   match /auditLogs/{id} { allow read: if isAdmin(); allow write: if false; }
+   match /{document=**}  { allow read, write: if false; }
+   ```
+4. **AuthGate Route Protection (`RootNavigator.jsx`)**:
+   Prevents unauthenticated URL navigation. Redirects unauthorized users to `/` and prevents role escalation.
+
+---
+
+## 3. Brand Tokens & Hexagonal Honeycomb Mark
+
+- **Palette ("Midnight, Emerald & Amber")**:
+  - `primary`: `#00B386` (Emerald) / dark `#2EE6B6`
+  - `primaryDeep`: `#00775B`
+  - `primarySoft`: `#E0F8F1` / dark `#0E2B26`
+  - `accent`: `#FFB020` (Amber) / dark `#FFC857`
+  - `bg`: `#F4F8F7` / dark `#06100E`
+  - `surface`: `#FFFFFF` / dark `#0D1B18`
+- **Hexagonal Honeycomb Tile**:
+  - Precision rounded hexagon filled with brand gradient (`#00D9A5` -> `#00B386` -> `#0A84FF`).
+  - Integrated geometric **H** and **B** glyphs sharing the central vertical stem.
+  - Overlapping **amber `+`** badge with 180° spin entrance and 6-second pulse.
+
+---
+
+## 4. Quick Start & Setup Instructions
 
 ### Prerequisites
-- **Node.js** (v20+ or v25+)
-- **npm** (v10+ or v11+)
-- **Firebase Project** with Google Authentication and Cloud Firestore enabled
+- Node.js 18+ (Node 20+ recommended)
+- Java 17 or 21 (for Android APK Gradle builds)
+- Android SDK configured (`ANDROID_HOME`)
 
-### 1. Environment Variables
-Copy `.env.example` into both `apps/server/.env` and `apps/client/.env`:
-
+### Installation
 ```bash
-# Backend configuration
-cp .env.example apps/server/.env
-
-# Frontend configuration
-cp .env.example apps/client/.env
+git clone https://github.com/vishalkhadatare/rivalry.git
+cd rivalry
+npm install
 ```
 
-#### Backend Settings (`apps/server/.env`):
-```env
-NODE_ENV=development
-API_PORT=5000
-ALLOWED_EMAIL_DOMAIN=hbplus.fit
-CLIENT_ORIGIN=http://localhost:8081,http://localhost:3000,http://localhost:5173
-ADMIN_EMAILS=admin@hbplus.fit
-FIREBASE_SERVICE_ACCOUNT_KEY_PATH=./serviceAccountKey.json
-FIREBASE_PROJECT_ID=hbplus-rivalry-20261122
-```
+### Running Locally
+```bash
+# 1. Start Express Backend API (Port 5000)
+npm run dev:server
 
-#### Frontend Settings (`apps/client/.env`):
-```env
-VITE_API_BASE_URL=http://localhost:5000/api
-VITE_ALLOWED_EMAIL_DOMAIN=hbplus.fit
-VITE_FIREBASE_API_KEY=your_firebase_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
+# 2. Start Vite Web Client (Port 8081)
+npm run dev:client
 ```
-
-### 2. Firebase & Google OAuth Configuration
-1. Open the [Firebase Console](https://console.firebase.google.com/).
-2. Enable **Authentication > Sign-in method > Google**.
-3. Under **Authorized domains**, ensure `localhost` is listed.
-4. Download the Service Account private key JSON from **Project Settings > Service accounts** and place it in `apps/server/serviceAccountKey.json`.
+Open [http://localhost:8081](http://localhost:8081) in your browser.
 
 ---
 
-## 3. Authentication & Strict Domain Restriction Flow
+## 5. Provisioning the First Admin Account
 
+Admin accounts cannot be registered publicly. To provision an administrator, run the secure CLI script:
+
+```bash
+ADMIN_EMAIL="admin@hbplus.fit" ADMIN_PASSWORD="YourSecurePassword123!" node scripts/create-admin.js
 ```
-┌────────────────────────────────────────────────────────┐
-│             Web Browser / Android App                  │
-└───────────────────────────┬────────────────────────────┘
-                            │ Click "Continue with Google"
-                            ▼
-┌────────────────────────────────────────────────────────┐
-│             Firebase Google OAuth 2.0                  │
-│       Authenticates user & retrieves ID token          │
-└───────────────────────────┬────────────────────────────┘
-                            │
-               Is email @hbplus.fit?
-             /                       \
-           NO                         YES
-          /                             \
-         ▼                               ▼
-┌─────────────────────────┐   ┌──────────────────────────────┐
-│  1. Sign out Firebase   │   │  Send Bearer ID Token to     │
-│  2. Clear local session │   │  POST /api/auth/verify       │
-│  3. Stay on Login page  │   └──────────────┬───────────────┘
-│  4. Show exact banner:  │                  │
-│     "Access restricted. │                  ▼
-│      Please login using │   ┌──────────────────────────────┐
-│      your official      │   │  Backend Firebase Admin      │
-│      domain email."     │   │  verifies token signature,   │
-└─────────────────────────┘   │  confirms @hbplus.fit, and   │
-                              │  provisions user in Firestore│
-                              └──────────────┬───────────────┘
-                                             │
-                                             ▼
-                              ┌──────────────────────────────┐
-                              │  Protected Dashboard Screen  │
-                              │  (User Profile Card & Role)  │
-                              └──────────────────────────────┘
-```
-
-### Firestore Security Rules (`firebase/firestore.rules`)
-```rules
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    function isHbPlusDomain() {
-      return isAuthenticated() && request.auth.token.email.matches('.*@hbplus[.]fit$');
-    }
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
-    match /users/{userId} {
-      allow read, write: if isOwner(userId) && isHbPlusDomain();
-    }
-
-    match /{document=**} {
-      allow read, write: if false;
-    }
-  }
-}
-```
+The script:
+1. Validates the email against `@hbplus.fit`.
+2. Creates the user in Firebase Auth.
+3. Sets the custom claim `{ role: 'admin' }`.
+4. Writes the document to `users/{uid}` in Cloud Firestore.
+5. Logs the action to `auditLogs`.
 
 ---
 
-## 4. Commands to Run & Build
+## 6. Building the Android APK
 
-### Run on Localhost (Web & Backend)
+To generate the standalone Android APK locally:
 
-1. **Install dependencies**:
-   ```bash
-   cd apps/server && npm install
-   cd ../client && npm install --legacy-peer-deps
-   cd ../..
-   ```
-
-2. **Start Backend Server (Port 5000)**:
-   ```bash
-   npm run dev:server
-   # or: node apps/server/src/server.js
-   ```
-
-3. **Start Web Client (Port 8081)**:
-   ```bash
-   npm run web
-   # or: cd apps/client && npm run web
-   ```
-   Open **http://localhost:8081** in your browser.
-
-### Run Automated Tests
 ```bash
-# Run all backend & frontend tests (36 automated tests)
+# Windows
+build-apk.bat
+
+# Or via npm
+npm run build:client
+cd apps/client/android && gradlew.bat assembleDebug
+```
+The compiled deliverable is saved at:
+`D:\Rivarly\HBPlus-Access.apk` (~4.6 MB).
+
+---
+
+## 7. Running Unit & Integration Tests
+
+```bash
 npm test
 ```
+Runs:
+- Domain validator unit tests (testing official domains, Gmail rejection, prefix/suffix attacks, Unicode look-alikes).
+- RBAC authorization middleware tests.
+- Design tokens & responsive breakpoint layout tests.
 
-### Run on Android Emulator
-```bash
-cd apps/client
-npx expo run:android
-```
+---
 
-### Build Standalone Android APK
-
-#### Method 1: Cloud APK Build with EAS (Recommended)
-`eas.json` is configured with a `preview` profile targeting a standalone installable APK (`"buildType": "apk"`):
-```bash
-cd apps/client
-npx eas-cli build --platform android --profile preview
-```
-
-#### Method 2: Local Android Studio Build
-1. Generate the native Android project:
-   ```bash
-   cd apps/client
-   npx expo prebuild --platform android
-   ```
-2. Build the APK locally using Gradle:
-   ```bash
-   cd android
-   ./gradlew assembleRelease
-   ```
-   The compiled APK will be output at:
-   `apps/client/android/app/build/outputs/apk/release/app-release.apk`.
+## 8. License & Attributions
+- Icons: Vector SVG icons derived from Lucide & Phosphor. See [ATTRIBUTIONS.md](file:///d:/Rivarly/ATTRIBUTIONS.md).
+- License: MIT.

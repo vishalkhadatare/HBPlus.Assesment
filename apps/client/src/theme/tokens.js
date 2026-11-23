@@ -1,35 +1,36 @@
 /**
- * HBPlus Design System Tokens (2026 Executive Workforce Aesthetic)
- * Mood: Modern Fintech meets People-Ops (Linear / Stripe / Apple Health)
+ * HBPlus Design System Tokens (Midnight, Emerald and Amber)
+ * Mood: Modern Fintech meets Enterprise Security
  */
 
 export const lightTheme = {
-  // Brand Iris & Aqua
-  primary: '#5B5BF0',
-  primaryHover: '#4A3DF0',
-  primaryDeep: '#3B2FD1',
-  primarySoft: '#ECEBFF',
-  primaryBorder: '#D2D0FF',
+  // Brand Emerald & Amber
+  primary: '#00B386',
+  primaryHover: '#009973',
+  primaryDeep: '#00775B',
+  primarySoft: '#E0F8F1',
+  primaryBorder: '#B2EADB',
 
-  accent: '#14C8D9',
-  accentSoft: '#E4FAFC',
-  violet: '#8B5CF6',
-  violetSoft: '#F3E8FF',
+  accent: '#FFB020',
+  accentSoft: '#FFF7E6',
+  accentDeep: '#E09200',
+  violet: '#1D8CF8',
+  violetSoft: '#E8F3FF',
 
   // Surfaces & Backgrounds
-  bg: '#F5F6FB',
+  bg: '#F4F8F7',
   surface: '#FFFFFF',
-  surfaceAlt: '#EEF0F8',
+  surfaceAlt: '#EBF3F0',
   surfaceElevated: '#FFFFFF',
   surfaceGlass: 'rgba(255, 255, 255, 0.88)',
-  border: '#E3E6F0',
-  borderSubtle: '#F0F2F9',
-  borderStrong: '#CBD2E6',
+  border: '#DDE8E5',
+  borderSubtle: '#EDF4F2',
+  borderStrong: '#BCCFC9',
 
   // Typography
-  text: '#0E1330',
-  textMuted: '#5B6385',
-  textSubtle: '#8A91AD',
+  text: '#0A1A17',
+  textMuted: '#51635E',
+  textSubtle: '#7E918C',
   textInverse: '#FFFFFF',
 
   // Semantic
@@ -37,111 +38,117 @@ export const lightTheme = {
   successSoft: '#E3F8EC',
   successText: '#0B7A42',
 
-  warning: '#F5A524',
-  warningSoft: '#FFF3DC',
-  warningText: '#9E6206',
+  warning: '#F79009',
+  warningSoft: '#FEF0C7',
+  warningText: '#B54708',
 
   danger: '#F04438',
-  dangerSoft: '#FDE8E6',
+  dangerSoft: '#FEE4E2',
   dangerText: '#B42318',
 
-  info: '#2E90FA',
+  info: '#1D8CF8',
   infoSoft: '#E1F0FF',
   infoText: '#175CD3',
 
-  // Gradients (CSS / LinearGradient specs)
-  gradientPrimary: ['#6A5CFF', '#4A3DF0', '#2F8BFF'],
-  gradientAurora: ['#8B5CF6', '#5B5BF0', '#14C8D9'],
+  // Gradients
+  gradientBrand: ['#00D9A5', '#00B386', '#0A84FF'],
+  gradientNight: ['#04100E', '#07302A', '#0B5D4B'],
+  gradientGold: ['#FFC857', '#FF9F1C'],
+  gradientPrimary: ['#00D9A5', '#00B386', '#0A84FF'],
+  gradientAurora: ['#00B386', '#1D8CF8', '#FFB020'],
   gradientSuccess: ['#34D399', '#16B364'],
-  gradientWarm: ['#FF8A65', '#F5A524'],
+  gradientWarm: ['#FFC857', '#FF9F1C'],
   gradientGlass: ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.75)'],
 
   // Feature Tints (Soft colored tiles for icons)
   tints: {
-    dashboard: { bg: '#ECEBFF', text: '#5B5BF0', border: '#D2D0FF' },
-    directory: { bg: '#F3E8FF', text: '#8B5CF6', border: '#E9D5FF' },
-    attendance: { bg: '#E3F8EC', text: '#16B364', border: '#B5E8CE' },
-    leave: { bg: '#E4FAFC', text: '#0EA5B8', border: '#B8EFF4' },
-    shifts: { bg: '#E1F0FF', text: '#2E90FA', border: '#B8DBFF' },
-    payroll: { bg: '#F1EAFF', text: '#7C3AED', border: '#DDD6FE' },
-    tasks: { bg: '#E3F8EC', text: '#16B364', border: '#B5E8CE' },
+    dashboard: { bg: '#E0F8F1', text: '#00B386', border: '#B2EADB' },
+    directory: { bg: '#E8F3FF', text: '#1D8CF8', border: '#BBDCFF' },
+    attendance: { bg: '#FFF7E6', text: '#FFB020', border: '#FFE4A8' },
+    leave: { bg: '#E3F8EC', text: '#16B364', border: '#B5E8CE' },
+    shifts: { bg: '#E1F0FF', text: '#1D8CF8', border: '#B8DBFF' },
+    payroll: { bg: '#FFF8E1', text: '#D97706', border: '#FDE68A' },
+    tasks: { bg: '#E0F8F1', text: '#00B386', border: '#B2EADB' },
     performance: { bg: '#FFF3DC', text: '#D97706', border: '#FDE68A' },
-    announcements: { bg: '#FDE8E8', text: '#E11D48', border: '#FECDD3' },
-    documents: { bg: '#EEF0F8', text: '#475569', border: '#CBD5E1' },
+    announcements: { bg: '#FEE4E2', text: '#F04438', border: '#FECDCA' },
+    documents: { bg: '#EBF3F0', text: '#51635E', border: '#DDE8E5' },
     helpdesk: { bg: '#E0F2FE', text: '#0284C7', border: '#BAE6FD' },
-    reports: { bg: '#E0E7FF', text: '#4F46E5', border: '#C7D2FE' },
-    settings: { bg: '#EEF0F8', text: '#5B6385', border: '#CBD5E1' }
+    reports: { bg: '#E8F3FF', text: '#1D8CF8', border: '#BBDCFF' },
+    settings: { bg: '#EBF3F0', text: '#51635E', border: '#DDE8E5' }
   }
 };
 
 export const darkTheme = {
-  // Brand Iris & Aqua (Tuned for dark surfaces)
-  primary: '#7B7BFF',
-  primaryHover: '#8E8EFF',
-  primaryDeep: '#5B5BF0',
-  primarySoft: '#1F2250',
-  primaryBorder: 'rgba(123, 123, 255, 0.35)',
+  // Brand Emerald & Amber (Dark Mode Adjusted)
+  primary: '#2EE6B6',
+  primaryHover: '#00B386',
+  primaryDeep: '#00B386',
+  primarySoft: '#0E2B26',
+  primaryBorder: '#1A4D43',
 
-  accent: '#3DDCEB',
-  accentSoft: 'rgba(61, 220, 235, 0.15)',
-  violet: '#A78BFA',
-  violetSoft: 'rgba(167, 139, 250, 0.15)',
+  accent: '#FFC857',
+  accentSoft: '#33270A',
+  accentDeep: '#FFB020',
+  violet: '#5AB0FF',
+  violetSoft: '#0C2640',
 
   // Surfaces & Backgrounds
-  bg: '#080B16',
-  surface: '#111631',
-  surfaceAlt: '#1A2040',
-  surfaceElevated: '#1A2040',
-  surfaceGlass: 'rgba(17, 22, 49, 0.90)',
-  border: '#262D52',
-  borderSubtle: '#1C2344',
-  borderStrong: '#3A4478',
+  bg: '#06100E',
+  surface: '#0D1B18',
+  surfaceAlt: '#132622',
+  surfaceElevated: '#172E29',
+  surfaceGlass: 'rgba(13, 27, 24, 0.88)',
+  border: '#1E332E',
+  borderSubtle: '#152420',
+  borderStrong: '#2A4740',
 
   // Typography
-  text: '#F2F4FF',
-  textMuted: '#A3ABD0',
-  textSubtle: '#6E769C',
-  textInverse: '#080B16',
+  text: '#ECFBF6',
+  textMuted: '#9FB8B0',
+  textSubtle: '#6A837C',
+  textInverse: '#06100E',
 
   // Semantic
-  success: '#34D399',
-  successSoft: 'rgba(52, 211, 153, 0.15)',
-  successText: '#6EE7B7',
+  success: '#32D583',
+  successSoft: '#083321',
+  successText: '#6CE9A6',
 
-  warning: '#FBBF24',
-  warningSoft: 'rgba(251, 191, 36, 0.15)',
-  warningText: '#FDE68A',
+  warning: '#FEC84B',
+  warningSoft: '#372007',
+  warningText: '#FEDF89',
 
-  danger: '#F87171',
-  dangerSoft: 'rgba(248, 113, 113, 0.15)',
-  dangerText: '#FECACA',
+  danger: '#F97066',
+  dangerSoft: '#3D110F',
+  dangerText: '#FDA29B',
 
-  info: '#60A5FA',
-  infoSoft: 'rgba(96, 165, 250, 0.15)',
-  infoText: '#BFDBFE',
+  info: '#5AB0FF',
+  infoSoft: '#0C2640',
+  infoText: '#84CAFF',
 
   // Gradients
-  gradientPrimary: ['#7B7BFF', '#5B5BF0', '#3B82F6'],
-  gradientAurora: ['#8B5CF6', '#5B5BF0', '#3DDCEB'],
-  gradientSuccess: ['#34D399', '#059669'],
-  gradientWarm: ['#FB923C', '#F59E0B'],
-  gradientGlass: ['rgba(17, 22, 49, 0.95)', 'rgba(17, 22, 49, 0.80)'],
+  gradientBrand: ['#2EE6B6', '#00B386', '#1D8CF8'],
+  gradientNight: ['#020807', '#041814', '#07302A'],
+  gradientGold: ['#FFC857', '#FF9F1C'],
+  gradientPrimary: ['#2EE6B6', '#00B386', '#1D8CF8'],
+  gradientAurora: ['#2EE6B6', '#5AB0FF', '#FFC857'],
+  gradientSuccess: ['#32D583', '#16B364'],
+  gradientWarm: ['#FFC857', '#FF9F1C'],
+  gradientGlass: ['rgba(13, 27, 24, 0.95)', 'rgba(13, 27, 24, 0.75)'],
 
-  // Feature Tints (Dark)
   tints: {
-    dashboard: { bg: 'rgba(123, 123, 255, 0.15)', text: '#A5A5FF', border: 'rgba(123, 123, 255, 0.3)' },
-    directory: { bg: 'rgba(167, 139, 250, 0.15)', text: '#C4B5FD', border: 'rgba(167, 139, 250, 0.3)' },
-    attendance: { bg: 'rgba(52, 211, 153, 0.15)', text: '#6EE7B7', border: 'rgba(52, 211, 153, 0.3)' },
-    leave: { bg: 'rgba(61, 220, 235, 0.15)', text: '#67E8F9', border: 'rgba(61, 220, 235, 0.3)' },
-    shifts: { bg: 'rgba(96, 165, 250, 0.15)', text: '#93C5FD', border: 'rgba(96, 165, 250, 0.3)' },
-    payroll: { bg: 'rgba(167, 139, 250, 0.15)', text: '#DDD6FE', border: 'rgba(167, 139, 250, 0.3)' },
-    tasks: { bg: 'rgba(52, 211, 153, 0.15)', text: '#6EE7B7', border: 'rgba(52, 211, 153, 0.3)' },
-    performance: { bg: 'rgba(251, 191, 36, 0.15)', text: '#FDE68A', border: 'rgba(251, 191, 36, 0.3)' },
-    announcements: { bg: 'rgba(244, 63, 94, 0.15)', text: '#FDA4AF', border: 'rgba(244, 63, 94, 0.3)' },
-    documents: { bg: 'rgba(148, 163, 184, 0.15)', text: '#CBD5E1', border: 'rgba(148, 163, 184, 0.3)' },
-    helpdesk: { bg: 'rgba(56, 189, 248, 0.15)', text: '#7DD3FC', border: 'rgba(56, 189, 248, 0.3)' },
-    reports: { bg: 'rgba(129, 140, 248, 0.15)', text: '#A5B4FC', border: 'rgba(129, 140, 248, 0.3)' },
-    settings: { bg: 'rgba(148, 163, 184, 0.15)', text: '#CBD5E1', border: 'rgba(148, 163, 184, 0.3)' }
+    dashboard: { bg: '#0E2B26', text: '#2EE6B6', border: '#1A4D43' },
+    directory: { bg: '#0C2640', text: '#5AB0FF', border: '#153A60' },
+    attendance: { bg: '#33270A', text: '#FFC857', border: '#4D3B0F' },
+    leave: { bg: '#083321', text: '#32D583', border: '#0F4D32' },
+    shifts: { bg: '#1E332E', text: '#84CAFF', border: '#2A4740' },
+    payroll: { bg: '#33270A', text: '#FFC857', border: '#4D3B0F' },
+    tasks: { bg: '#0E2B26', text: '#2EE6B6', border: '#1A4D43' },
+    performance: { bg: '#372007', text: '#FEDF89', border: '#52300B' },
+    announcements: { bg: '#3D110F', text: '#FDA29B', border: '#5C1A17' },
+    documents: { bg: '#132622', text: '#9FB8B0', border: '#1E332E' },
+    helpdesk: { bg: '#0C2640', text: '#7DD3FC', border: '#153A60' },
+    reports: { bg: '#0C2640', text: '#84CAFF', border: '#153A60' },
+    settings: { bg: '#132622', text: '#9FB8B0', border: '#1E332E' }
   }
 };
 
@@ -151,81 +158,90 @@ export const typography = {
     body: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     mono: "'JetBrains Mono', 'Fira Code', Menlo, monospace"
   },
-  displayXL: { fontSize: 36, lineHeight: 42, fontWeight: '800', letterSpacing: -1.0 },
-  display: { fontSize: 30, lineHeight: 36, fontWeight: '800', letterSpacing: -0.6 },
-  title1: { fontSize: 22, lineHeight: 28, fontWeight: '700', letterSpacing: -0.3 },
-  title2: { fontSize: 18, lineHeight: 24, fontWeight: '700', letterSpacing: -0.2 },
-  headline: { fontSize: 16, lineHeight: 22, fontWeight: '600', letterSpacing: 0 },
-  body: { fontSize: 14, lineHeight: 20, fontWeight: '400', letterSpacing: 0 },
-  bodyStrong: { fontSize: 14, lineHeight: 20, fontWeight: '600', letterSpacing: 0 },
-  caption: { fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 0.1 },
-  overline: { fontSize: 11, lineHeight: 14, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase' }
+  fontFamily: {
+    heading: 'Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    body: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
+  },
+  fontSize: {
+    xs: 11,
+    sm: 13,
+    base: 15,
+    md: 16,
+    lg: 18,
+    xl: 20,
+    '2xl': 24,
+    '3xl': 28,
+    '4xl': 36
+  },
+  fontWeight: {
+    regular: '400',
+    medium: '500',
+    semibold: '600',
+    bold: '700',
+    extrabold: '800'
+  },
+  lineHeight: {
+    tight: 1.2,
+    snug: 1.35,
+    normal: 1.5,
+    relaxed: 1.65
+  }
 };
 
 export const spacing = {
-  xxs: 2,
   xs: 4,
   sm: 8,
   md: 12,
-  base: 16,
-  lg: 20,
+  lg: 16,
   xl: 24,
-  xxl: 32,
-  xxxl: 40,
-  huge: 56
+  '2xl': 32,
+  '3xl': 48,
+  '4xl': 64
 };
 
-export const borderRadius = {
-  chip: 10,
-  sm: 10,
+export const radius = {
+  sm: 8,
+  md: 12,
   input: 14,
-  md: 14,
-  btn: 16,
-  lg: 16,
-  card: 22,
-  xl: 22,
-  hero: 26,
-  xxl: 26,
-  sheet: 30,
+  button: 16,
+  lg: 18,
+  card: 24,
+  sheet: 32,
   full: 9999
 };
 
+export const borderRadius = radius;
+
 export const shadows = {
-  sm: {
-    shadowColor: '#0E1330',
+  subtle: {
+    shadowColor: '#00775B',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     elevation: 2
   },
-  md: {
-    shadowColor: '#0E1330',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
+  card: {
+    shadowColor: '#00775B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
     shadowRadius: 16,
     elevation: 4
   },
-  lg: {
-    shadowColor: '#3C32C8',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.14,
-    shadowRadius: 36,
-    elevation: 8
-  },
-  glow: {
-    shadowColor: '#5B5BF0',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
-    elevation: 6
+  modal: {
+    shadowColor: '#04100E',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 32,
+    elevation: 12
   }
 };
 
 export default {
-  lightTheme,
-  darkTheme,
+  light: lightTheme,
+  dark: darkTheme,
   typography,
   spacing,
-  borderRadius,
+  radius,
   shadows
 };

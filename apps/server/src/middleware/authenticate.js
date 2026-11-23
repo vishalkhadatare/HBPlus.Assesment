@@ -1,14 +1,14 @@
 import { adminAuth } from '../config/firebaseAdmin.js';
-import { isAllowedEmailDomain } from '../utils/domainValidator.js';
+import { isAllowedEmail } from '../utils/domainValidator.js';
 import { errorResponse } from '../utils/apiResponse.js';
 import { UserService } from '../services/userService.js';
 import config from '../config/environment.js';
 
 /**
- * Authentication Middleware
+ * Authentication Middleware (Zero-Trust Domain Enforcement)
  * 
  * Verifies Firebase ID Token, enforces exact company email domain restriction (@hbplus.fit),
- * provisions or fetches user profile from Firestore, and verifies active account status.
+ * deletes outsider accounts from Firebase Auth, and verifies active account status.
  */
 export async function authenticate(req, res, next) {
   try {
@@ -37,11 +37,9 @@ export async function authenticate(req, res, next) {
     let decodedToken;
     try {
       if (config.isTest && idToken.startsWith('mock-token-')) {
-        // Safe mock token decoding strictly restricted to automated test runs
         const parsed = JSON.parse(Buffer.from(idToken.replace('mock-token-', ''), 'base64').toString());
         decodedToken = parsed;
       } else if (adminAuth) {
-        // Check revocation parameter set to true for high-security enforcement
         decodedToken = await adminAuth.verifyIdToken(idToken, true);
       } else {
         throw new Error('Firebase Admin Auth service is uninitialized.');
@@ -79,13 +77,14 @@ export async function authenticate(req, res, next) {
 
     // 3. Strict Server-Side Email Domain Restriction (@hbplus.fit ONLY)
     const normalizedEmail = email.trim().toLowerCase();
-    const isDomainAllowed =
-      normalizedEmail.endsWith('@hbplus.fit') &&
-      isAllowedEmailDomain(normalizedEmail, config.ALLOWED_EMAIL_DOMAIN);
+    const isDomainAllowed = isAllowedEmail(normalizedEmail);
 
-    const isDevOverride = !config.isProduction && req.headers['x-dev-allow-any'] === 'true';
+    if (!isDomainAllowed) {
+      // Purge outsider account immediately from Firebase Auth to prevent collecting outsiders
+      if (adminAuth && decodedToken.uid) {
+        adminAuth.deleteUser(decodedToken.uid).catch(() => {});
+      }
 
-    if (!isDomainAllowed && !isDevOverride) {
       return res.status(403).json(
         errorResponse('Access restricted. Please login using your official domain email.', 'DOMAIN_NOT_ALLOWED')
       );
@@ -117,7 +116,7 @@ export async function authenticate(req, res, next) {
       email: userProfile.email,
       displayName: userProfile.displayName,
       photoURL: userProfile.photoURL,
-      role: userProfile.role || 'User',
+      role: userProfile.role || decodedToken.role || 'user',
       isActive: userProfile.isActive,
       token: decodedToken
     };

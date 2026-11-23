@@ -1,194 +1,154 @@
 import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
-import { onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase.js';
 import {
   signInWithGooglePlatform,
+  signInWithEmailPlatform,
+  sendPasswordResetPlatform,
+  provisionWithBackend,
   verifyWithBackend,
   signOutPlatform,
   checkRedirectResultPlatform
 } from '../services/authService.js';
-import apiClient from '../services/apiClient.js';
-import { formatAuthError, EXACT_RESTRICTION_MESSAGE } from '../utils/errorFormatter.js';
-import { isAllowedEmailDomain } from '../utils/domainValidator.js';
-import config from '../config/environment.js';
+import { isAllowedEmail } from '../utils/domainValidator.js';
+import { ROUTES } from '../navigation/navigationConfig.js';
+
+export const EXACT_RESTRICTION_MESSAGE = 'Access restricted. Please login using your official domain email.';
 
 export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null); // Firebase user
-  const [profile, setProfile] = useState(null); // Backend authorized profile
-  const [role, setRole] = useState(null); // 'Admin' | 'User'
+  const [profile, setProfile] = useState(null); // Firestore profile
+  const [role, setRole] = useState(null); // 'admin' | 'user' | null
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorizing, setIsAuthorizing] = useState(false);
   const [error, setError] = useState(null);
-  const [errorCode, setErrorCode] = useState(null);
+  const [rejectedEmail, setRejectedEmail] = useState('');
+  const [denialReason, setDenialReason] = useState('');
 
-  // Read persisted dev override state (defaults to false in production, checks localStorage on web)
-  const [devAllowAnyGoogle, setDevAllowAnyGoogleState] = useState(() => {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      return window.localStorage.getItem('hbplus_dev_allow_any') === 'true';
+  // Routing State for cross-platform navigation
+  const [currentRoute, setCurrentRoute] = useState(() => {
+    if (typeof window !== 'undefined' && window.location.pathname) {
+      const p = window.location.pathname;
+      if (p === '/login/admin') return ROUTES.LOGIN_ADMIN;
+      if (p === '/login/user') return ROUTES.LOGIN_USER;
+      if (p === '/access-denied') return ROUTES.ACCESS_DENIED;
+      if (p.startsWith('/(admin)') || p.startsWith('/admin')) return ROUTES.ADMIN_DASHBOARD;
+      if (p.startsWith('/(user)') || p.startsWith('/user') || p === '/dashboard') return ROUTES.USER_DASHBOARD;
+      return ROUTES.ROLE_SELECT;
     }
-    return false;
+    return ROUTES.ROLE_SELECT;
   });
 
-  const devAllowAnyGoogleRef = useRef(devAllowAnyGoogle);
-  devAllowAnyGoogleRef.current = devAllowAnyGoogle;
-
-  const setDevAllowAnyGoogle = useCallback((val) => {
-    setDevAllowAnyGoogleState(val);
-    devAllowAnyGoogleRef.current = val;
-    if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.setItem('hbplus_dev_allow_any', val ? 'true' : 'false');
+  const navigate = useCallback((targetRoute) => {
+    setCurrentRoute(targetRoute);
+    if (typeof window !== 'undefined' && window.history) {
+      const webPath = targetRoute === ROUTES.ADMIN_DASHBOARD
+        ? '/admin/dashboard'
+        : targetRoute === ROUTES.USER_DASHBOARD
+        ? '/user/dashboard'
+        : targetRoute;
+      if (window.location.pathname !== webPath) {
+        window.history.pushState({}, '', webPath);
+      }
     }
   }, []);
 
-  const isVerifyingRef = useRef(false);
-
-  /**
-   * Clears all session data in memory.
-   */
   const clearSession = useCallback(() => {
     setUser(null);
     setProfile(null);
     setRole(null);
   }, []);
 
-  /**
-   * Verifies the user's authorization against the strict @hbplus.fit domain.
-   * If domain is not @hbplus.fit (and not in dev override mode), immediately revokes access,
-   * signs out from Firebase, and displays the exact restriction message.
-   */
-  const verifyAuthorization = useCallback(
-    async (firebaseUser, allowOverrideParam = null) => {
-      if (!firebaseUser) {
-        clearSession();
-        setIsLoading(false);
-        setIsAuthorizing(false);
-        return false;
-      }
-
-      const allowOverride =
-        allowOverrideParam !== null ? allowOverrideParam : devAllowAnyGoogleRef.current;
-
-      if (isVerifyingRef.current) {
-        return false;
-      }
-      isVerifyingRef.current = true;
-      setIsAuthorizing(true);
-      setError(null);
-      setErrorCode(null);
-
-      try {
-        const rawEmail = firebaseUser.email || '';
-        const normalizedEmail = rawEmail.trim().toLowerCase();
-
-        // 1. Strict Domain Check: email MUST end with @hbplus.fit (unless dev testing toggle is on)
-        const isOfficialDomain =
-          normalizedEmail.endsWith('@hbplus.fit') &&
-          isAllowedEmailDomain(normalizedEmail, config.ALLOWED_EMAIL_DOMAIN);
-
-        if (!isOfficialDomain && !allowOverride) {
-          // Immediately revoke session, sign out of Firebase, and display exact error banner
-          await signOutPlatform().catch(() => {});
-          clearSession();
-          setErrorCode('DOMAIN_NOT_ALLOWED');
-          setError(EXACT_RESTRICTION_MESSAGE);
-          return false;
-        }
-
-        // 2. Retrieve cryptographic ID token
-        const idToken = await firebaseUser.getIdToken();
-
-        // 3. Verify independently with backend (also stores/updates user in Cloud Firestore)
-        let authorizedProfile;
-        try {
-          const backendRes = await verifyWithBackend(idToken, allowOverride);
-          authorizedProfile = backendRes?.data || backendRes;
-        } catch (backendErr) {
-          console.warn('[AuthContext] Backend verification warning:', backendErr.message);
-          if (allowOverride || isOfficialDomain) {
-            authorizedProfile = {
-              uid: firebaseUser.uid,
-              email: normalizedEmail,
-              displayName: firebaseUser.displayName || normalizedEmail.split('@')[0],
-              photoURL: firebaseUser.photoURL || '',
-              role: normalizedEmail.startsWith('admin') ? 'Admin' : 'User',
-              isActive: true
-            };
-          } else {
-            throw backendErr;
-          }
-        }
-
-        const normalizedRole =
-          (authorizedProfile?.role || 'user').toLowerCase() === 'admin' ? 'Admin' : 'User';
-
-        setUser(firebaseUser);
-        setProfile(authorizedProfile);
-        setRole(normalizedRole);
-        setError(null);
-        setErrorCode(null);
-        return true;
-      } catch (err) {
-        console.error('[AuthContext] Verification failed:', err);
-
-        await signOutPlatform().catch(() => {});
-        clearSession();
-
-        const formattedErr = formatAuthError(err);
-        setError(formattedErr || EXACT_RESTRICTION_MESSAGE);
-        setErrorCode(err.code || 'AUTH_ERROR');
-        return false;
-      } finally {
-        setIsLoading(false);
-        setIsAuthorizing(false);
-        isVerifyingRef.current = false;
-      }
-    },
-    [clearSession]
-  );
-
-  /**
-   * Listen to Firebase Auth state changes for session restoration.
-   */
-  useEffect(() => {
-    let isMounted = true;
-
-    // Check any pending redirect result from Web OAuth redirect flow
-    checkRedirectResultPlatform()
-      .then((res) => {
-        if (isMounted && res?.user) {
-          verifyAuthorization(res.user);
-        }
-      })
-      .catch((e) => console.warn('[AuthContext] Redirect check:', e));
-
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!isMounted) return;
-
-      if (firebaseUser) {
-        await verifyAuthorization(firebaseUser);
-      } else {
-        clearSession();
-        setIsLoading(false);
-        setIsAuthorizing(false);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      unsubscribe();
-    };
-  }, [verifyAuthorization, clearSession]);
-
-  /**
-   * Google Sign-In action
-   */
-  const signInWithGoogle = useCallback(async () => {
-    if (isAuthorizing) return;
-
+  const clearError = useCallback(() => {
     setError(null);
-    setErrorCode(null);
+  }, []);
+
+  /**
+   * Triggers full-screen Access Denied state
+   */
+  const triggerAccessDenied = useCallback((rawEmail = '', reason = EXACT_RESTRICTION_MESSAGE) => {
+    // Mask email for display: e.g. "ex****@gmail.com"
+    let masked = '';
+    if (rawEmail && rawEmail.includes('@')) {
+      const [local, dom] = rawEmail.split('@');
+      masked = local.length > 2
+        ? `${local.slice(0, 2)}${'*'.repeat(Math.max(2, local.length - 2))}@${dom}`
+        : `${local[0]}*@${dom}`;
+    }
+
+    setRejectedEmail(masked || rawEmail);
+    setDenialReason(reason);
+    clearSession();
+    navigate(ROUTES.ACCESS_DENIED);
+  }, [clearSession, navigate]);
+
+  /**
+   * ADMIN LOGIN (Email + Password only. Section 2.3)
+   */
+  const signInAdmin = useCallback(async (email, password) => {
+    setError(null);
+    setIsAuthorizing(true);
+
+    try {
+      const normalizedEmail = (email || '').trim().toLowerCase();
+
+      // 1. Client-side Domain Validation
+      if (!isAllowedEmail(normalizedEmail)) {
+        triggerAccessDenied(normalizedEmail, EXACT_RESTRICTION_MESSAGE);
+        throw new Error(EXACT_RESTRICTION_MESSAGE);
+      }
+
+      if (!password || password.length < 8) {
+        throw new Error('Password must be at least 8 characters long.');
+      }
+
+      // 2. Firebase Authentication
+      const { user: firebaseUser } = await signInWithEmailPlatform(normalizedEmail, password);
+
+      // 3. Force-refresh token and check custom claim
+      const idTokenResult = await firebaseUser.getIdTokenResult(true);
+      const userClaimRole = (idTokenResult.claims.role || '').toLowerCase();
+
+      if (userClaimRole !== 'admin') {
+        // Sign out immediately and show denied message
+        await signOutPlatform().catch(() => {});
+        triggerAccessDenied(normalizedEmail, 'This account does not have administrator access.');
+        throw new Error('This account does not have administrator access.');
+      }
+
+      // 4. Verify independently with backend
+      const backendRes = await verifyWithBackend(idTokenResult.token);
+      const userProfile = backendRes?.data || backendRes;
+
+      setUser(firebaseUser);
+      setProfile(userProfile);
+      setRole('admin');
+      navigate(ROUTES.ADMIN_DASHBOARD);
+      return true;
+    } catch (err) {
+      console.error('[AuthContext] Admin Login Error:', err.message);
+      if (err.message.includes('administrator access') || err.message === EXACT_RESTRICTION_MESSAGE) {
+        throw err;
+      }
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+        throw new Error('Incorrect email or password.');
+      }
+      if (err.code === 'auth/too-many-requests') {
+        throw new Error('Too many attempts. Try again in a few minutes.');
+      }
+      throw new Error(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsAuthorizing(false);
+    }
+  }, [navigate, triggerAccessDenied]);
+
+  /**
+   * USER GOOGLE LOGIN (Continue with Google. Section 2.3)
+   */
+  const signInUserWithGoogle = useCallback(async () => {
+    setError(null);
     setIsAuthorizing(true);
 
     try {
@@ -198,138 +158,247 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      // Explicitly pass current devAllowAnyGoogle state to bypass closure staleness
-      const verified = await verifyAuthorization(authResult.user, devAllowAnyGoogleRef.current);
-      return verified;
-    } catch (err) {
-      console.error('[AuthContext] Google Sign-In error:', err);
-      await signOutPlatform().catch(() => {});
-      clearSession();
+      const { user: firebaseUser, idToken } = authResult;
+      const normalizedEmail = (firebaseUser.email || '').trim().toLowerCase();
 
-      const formatted = formatAuthError(err);
-      setError(formatted || EXACT_RESTRICTION_MESSAGE);
-      setErrorCode(err.code || 'SIGN_IN_ERROR');
-    } finally {
-      setIsAuthorizing(false);
-      isVerifyingRef.current = false;
-    }
-  }, [isAuthorizing, verifyAuthorization, clearSession]);
-
-  /**
-   * Demo / Test Sign-In for testing @hbplus.fit without a Google Workspace account.
-   * Connects to live Firebase Auth & writes directly to Cloud Firestore.
-   */
-  const signInWithDemoAccount = useCallback(async (email = 'employee@hbplus.fit', targetRole = 'User') => {
-    setIsAuthorizing(true);
-    setError(null);
-    setErrorCode(null);
-
-    try {
-      const res = await apiClient.post('/auth/demo-login', {
-        email,
-        role: targetRole,
-        displayName: targetRole === 'Admin' ? 'Test Administrator' : 'Test Employee'
-      });
-
-      const payload = res?.data || res;
-      const customToken = payload?.customToken;
-      const userProfile = payload?.profile || payload?.userProfile || {
-        uid: `demo-${Date.now()}`,
-        email,
-        displayName: targetRole === 'Admin' ? 'Test Administrator' : 'Test Employee',
-        role: targetRole,
-        isActive: true
-      };
-
-      // Authenticate with Firebase Client SDK using the real custom token
-      if (customToken && customToken !== 'mock-custom-token') {
-        try {
-          const cred = await signInWithCustomToken(auth, customToken);
-          setUser(cred.user);
-        } catch (tokenErr) {
-          console.warn('[AuthContext] signInWithCustomToken warning, using demo identity:', tokenErr.message);
-          setUser({
-            uid: userProfile.uid,
-            email: userProfile.email,
-            displayName: userProfile.displayName,
-            photoURL: userProfile.photoURL || ''
-          });
-        }
-      } else {
-        setUser({
-          uid: userProfile.uid,
-          email: userProfile.email,
-          displayName: userProfile.displayName,
-          photoURL: userProfile.photoURL || ''
-        });
+      // 1. Immediate client-side domain check
+      if (!isAllowedEmail(normalizedEmail)) {
+        await signOutPlatform().catch(() => {});
+        triggerAccessDenied(normalizedEmail, EXACT_RESTRICTION_MESSAGE);
+        throw new Error(EXACT_RESTRICTION_MESSAGE);
       }
 
+      // 2. Re-verify on server and provision profile (sets claims, creates/updates users/{uid})
+      let userProfile;
+      try {
+        const provisionRes = await provisionWithBackend(idToken);
+        userProfile = provisionRes?.data || provisionRes;
+      } catch (backendErr) {
+        console.error('[AuthContext] Provision error:', backendErr.message);
+        await signOutPlatform().catch(() => {});
+        triggerAccessDenied(normalizedEmail, EXACT_RESTRICTION_MESSAGE);
+        throw new Error(EXACT_RESTRICTION_MESSAGE);
+      }
+
+      // 3. Force-refresh token to read fresh custom claims
+      const freshTokenResult = await firebaseUser.getIdTokenResult(true);
+
+      setUser(firebaseUser);
       setProfile(userProfile);
-      setRole(targetRole);
-      setError(null);
-      setErrorCode(null);
-      setIsAuthorizing(false);
-      setIsLoading(false);
+      setRole('user');
+      navigate(ROUTES.USER_DASHBOARD);
       return true;
     } catch (err) {
-      console.error('[AuthContext] Demo login failed:', err);
-      // Even if network fails, allow seamless offline demo fallback for testing
-      const fallbackProfile = {
-        uid: `demo-${Date.now()}`,
-        email,
-        displayName: targetRole === 'Admin' ? 'Test Administrator' : 'Test Employee',
-        role: targetRole,
-        isActive: true
-      };
-      setUser(fallbackProfile);
-      setProfile(fallbackProfile);
-      setRole(targetRole);
-      setError(null);
-      setErrorCode(null);
-      return true;
+      console.error('[AuthContext] Google Sign-In Error:', err.message);
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        throw new Error('Sign-in was cancelled.');
+      }
+      if (err.code === 'auth/network-request-failed') {
+        throw new Error('Cannot reach the server. Check your connection.');
+      }
+      throw err;
     } finally {
       setIsAuthorizing(false);
-      setIsLoading(false);
     }
+  }, [navigate, triggerAccessDenied]);
+
+  /**
+   * USER EMAIL LOGIN (Email + Password. Section 2.3)
+   */
+  const signInUserWithPassword = useCallback(async (email, password) => {
+    setError(null);
+    setIsAuthorizing(true);
+
+    try {
+      const normalizedEmail = (email || '').trim().toLowerCase();
+
+      // 1. Client-side Domain Validation
+      if (!isAllowedEmail(normalizedEmail)) {
+        triggerAccessDenied(normalizedEmail, EXACT_RESTRICTION_MESSAGE);
+        throw new Error(EXACT_RESTRICTION_MESSAGE);
+      }
+
+      if (!password || password.length < 8) {
+        throw new Error('Password must be at least 8 characters long.');
+      }
+
+      // 2. Firebase Authentication
+      const { user: firebaseUser } = await signInWithEmailPlatform(normalizedEmail, password);
+
+      // 3. Verify user claim
+      const idTokenResult = await firebaseUser.getIdTokenResult(true);
+      const userClaimRole = (idTokenResult.claims.role || '').toLowerCase();
+
+      if (userClaimRole === 'admin') {
+        // An admin trying User page is directed to the Admin page
+        await signOutPlatform().catch(() => {});
+        throw new Error('This account is an Administrator. Please use the Admin sign in page.');
+      }
+
+      // 4. Provision & verify with backend
+      const provisionRes = await provisionWithBackend(idTokenResult.token);
+      const userProfile = provisionRes?.data || provisionRes;
+
+      setUser(firebaseUser);
+      setProfile(userProfile);
+      setRole('user');
+      navigate(ROUTES.USER_DASHBOARD);
+      return true;
+    } catch (err) {
+      console.error('[AuthContext] User Password Login Error:', err.message);
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+        throw new Error('Incorrect email or password.');
+      }
+      if (err.code === 'auth/too-many-requests') {
+        throw new Error('Too many attempts. Try again in a few minutes.');
+      }
+      throw err;
+    } finally {
+      setIsAuthorizing(false);
+    }
+  }, [navigate, triggerAccessDenied]);
+
+  /**
+   * FORGOT PASSWORD (Domain-checked. Section 2.3)
+   */
+  const sendPasswordReset = useCallback(async (email) => {
+    const normalizedEmail = (email || '').trim().toLowerCase();
+    if (!isAllowedEmail(normalizedEmail)) {
+      throw new Error(EXACT_RESTRICTION_MESSAGE);
+    }
+    await sendPasswordResetPlatform(normalizedEmail);
   }, []);
 
   /**
-   * Sign-Out action
+   * LOGOUT (Section 2.4)
+   * Signs out, clears tokens, replaces navigation stack to role select.
    */
-  const signOut = useCallback(async () => {
-    setIsLoading(true);
+  const signOutAccount = useCallback(async () => {
     try {
       await signOutPlatform();
     } catch (err) {
-      console.warn('[AuthContext] Sign out error:', err);
+      console.warn('[AuthContext] Sign out warning:', err.message);
     } finally {
       clearSession();
-      setError(null);
-      setErrorCode(null);
-      setIsLoading(false);
-      setIsAuthorizing(false);
+      setRejectedEmail('');
+      setDenialReason('');
+      navigate(ROUTES.ROLE_SELECT);
     }
-  }, [clearSession]);
+  }, [clearSession, navigate]);
+
+  /**
+   * Listen to Firebase Auth state on mount for session restoration
+   */
+  useEffect(() => {
+    let isMounted = true;
+
+    // Check pending redirect result from web OAuth
+    checkRedirectResultPlatform()
+      .then(async (res) => {
+        if (isMounted && res?.user) {
+          const email = (res.user.email || '').trim().toLowerCase();
+          if (!isAllowedEmail(email)) {
+            await signOutPlatform().catch(() => {});
+            triggerAccessDenied(email, EXACT_RESTRICTION_MESSAGE);
+            return;
+          }
+          await provisionWithBackend(res.idToken).catch(() => {});
+          const freshResult = await res.user.getIdTokenResult(true);
+          const r = freshResult.claims.role === 'admin' ? 'admin' : 'user';
+          setUser(res.user);
+          setRole(r);
+          navigate(r === 'admin' ? ROUTES.ADMIN_DASHBOARD : ROUTES.USER_DASHBOARD);
+        }
+      })
+      .catch((e) => console.warn('[AuthContext] Redirect check:', e));
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!isMounted) return;
+
+      if (firebaseUser) {
+        const email = (firebaseUser.email || '').trim().toLowerCase();
+        if (!isAllowedEmail(email)) {
+          await signOutPlatform().catch(() => {});
+          triggerAccessDenied(email, EXACT_RESTRICTION_MESSAGE);
+          setIsLoading(false);
+          return;
+        }
+
+        try {
+          const tokenResult = await firebaseUser.getIdTokenResult();
+          const r = tokenResult.claims.role === 'admin' ? 'admin' : 'user';
+          const meRes = await verifyWithBackend(tokenResult.token).catch(() => null);
+
+          setUser(firebaseUser);
+          setProfile(meRes?.data || meRes);
+          setRole(r);
+          setIsLoading(false);
+        } catch {
+          clearSession();
+          setIsLoading(false);
+        }
+      } else {
+        clearSession();
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [clearSession, navigate, triggerAccessDenied]);
+
+  /**
+   * IDLE TIMEOUT (Section 2.4: 30 min for admin, 8 hours for user)
+   */
+  const timeoutRef = useRef(null);
+  const resetIdleTimer = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (!user) return;
+
+    // 30 min (1,800,000 ms) for admin; 8 hours (28,800,000 ms) for user
+    const idleLimitMs = role === 'admin' ? 30 * 60 * 1000 : 8 * 60 * 60 * 1000;
+
+    timeoutRef.current = setTimeout(() => {
+      console.warn(`[AuthContext] Idle timeout reached for role: ${role}`);
+      signOutPlatform().catch(() => {});
+      triggerAccessDenied(user.email || '', 'Your session has expired due to inactivity. Please sign in again.');
+    }, idleLimitMs);
+  }, [user, role, triggerAccessDenied]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+    events.forEach((evt) => window.addEventListener(evt, resetIdleTimer, { passive: true }));
+    resetIdleTimer();
+
+    return () => {
+      events.forEach((evt) => window.removeEventListener(evt, resetIdleTimer));
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [resetIdleTimer]);
 
   const value = {
     user,
     profile,
-    role, // 'Admin' | 'User'
+    role,
+    isAuthorized: !!user,
+    isAdmin: role === 'admin',
     isLoading,
     isAuthorizing,
-    isAuthenticated: Boolean(user),
-    isAuthorized: Boolean(user && profile),
     error,
-    errorCode,
-    devAllowAnyGoogle,
-    setDevAllowAnyGoogle,
-    signInWithGoogle,
-    signInWithDemoAccount,
-    signOut,
-    clearError: () => {
-      setError(null);
-      setErrorCode(null);
-    }
+    rejectedEmail,
+    denialReason,
+    currentRoute,
+    navigate,
+    signInAdmin,
+    signInUserWithGoogle,
+    signInUserWithPassword,
+    sendPasswordReset,
+    signOut: signOutAccount,
+    clearError
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,57 +1,51 @@
-import { isAllowedEmailDomain, normalizeEmail } from '../src/utils/domainValidator.js';
+import { isAllowedEmail, ALLOWED_DOMAIN } from '../src/utils/domainValidator.js';
 
-describe('Domain Validator Unit Tests', () => {
-  const ALLOWED_DOMAIN = 'hbplus.fit';
-
-  test('should allow valid corporate email employee@hbplus.fit', () => {
-    expect(isAllowedEmailDomain('employee@hbplus.fit', ALLOWED_DOMAIN)).toBe(true);
+describe('Strict Domain Validation Unit Tests (Section 2.2 Server)', () => {
+  test('Valid official domain email passes', () => {
+    expect(isAllowedEmail('a@hbplus.fit')).toBe(true);
   });
 
-  test('should allow uppercase corporate email EMPLOYEE@HBPLUS.FIT after normalization', () => {
-    expect(isAllowedEmailDomain('EMPLOYEE@HBPLUS.FIT', ALLOWED_DOMAIN)).toBe(true);
+  test('Case-insensitive validation passes', () => {
+    expect(isAllowedEmail('A@HBPLUS.FIT')).toBe(true);
+    expect(isAllowedEmail('Employee@HBPlus.Fit')).toBe(true);
   });
 
-  test('should allow mixed case corporate email Employee.Name@HbPlus.Fit', () => {
-    expect(isAllowedEmailDomain('Employee.Name@HbPlus.Fit', ALLOWED_DOMAIN)).toBe(true);
+  test('Whitespace trimmed validation passes', () => {
+    expect(isAllowedEmail(' a@hbplus.fit ')).toBe(true);
   });
 
-  test('should reject public gmail address employee@gmail.com', () => {
-    expect(isAllowedEmailDomain('employee@gmail.com', ALLOWED_DOMAIN)).toBe(false);
+  test('Personal Gmail is strictly rejected', () => {
+    expect(isAllowedEmail('a@gmail.com')).toBe(false);
   });
 
-  test('should reject public yahoo address user@yahoo.com', () => {
-    expect(isAllowedEmailDomain('user@yahoo.com', ALLOWED_DOMAIN)).toBe(false);
+  test('Prefix attack domain is rejected', () => {
+    expect(isAllowedEmail('a@evilhbplus.fit')).toBe(false);
   });
 
-  test('should reject subdomain employee@sub.hbplus.fit when only root domain is allowed', () => {
-    expect(isAllowedEmailDomain('employee@sub.hbplus.fit', ALLOWED_DOMAIN)).toBe(false);
+  test('Suffix attack domain is rejected', () => {
+    expect(isAllowedEmail('a@hbplus.fit.evil.com')).toBe(false);
   });
 
-  test('should reject suffix attack employee@hbplus.fit.example.com', () => {
-    expect(isAllowedEmailDomain('employee@hbplus.fit.example.com', ALLOWED_DOMAIN)).toBe(false);
+  test('Subdomain is rejected', () => {
+    expect(isAllowedEmail('a@sub.hbplus.fit')).toBe(false);
   });
 
-  test('should reject prefix/lookalike domain employee@not-hbplus.fit', () => {
-    expect(isAllowedEmailDomain('employee@not-hbplus.fit', ALLOWED_DOMAIN)).toBe(false);
+  test('Multiple @ symbols are rejected', () => {
+    expect(isAllowedEmail('a@@hbplus.fit')).toBe(false);
   });
 
-  test('should reject missing, empty, or whitespace email', () => {
-    expect(isAllowedEmailDomain('', ALLOWED_DOMAIN)).toBe(false);
-    expect(isAllowedEmailDomain('   ', ALLOWED_DOMAIN)).toBe(false);
-    expect(isAllowedEmailDomain(null, ALLOWED_DOMAIN)).toBe(false);
-    expect(isAllowedEmailDomain(undefined, ALLOWED_DOMAIN)).toBe(false);
-    expect(isAllowedEmailDomain(12345, ALLOWED_DOMAIN)).toBe(false);
+  test('Quoted email attack string is rejected', () => {
+    expect(isAllowedEmail('"a@hbplus.fit"@evil.com')).toBe(false);
   });
 
-  test('should reject malformed email formats', () => {
-    expect(isAllowedEmailDomain('invalid-email-no-at', ALLOWED_DOMAIN)).toBe(false);
-    expect(isAllowedEmailDomain('user@', ALLOWED_DOMAIN)).toBe(false);
-    expect(isAllowedEmailDomain('@hbplus.fit', ALLOWED_DOMAIN)).toBe(false);
-    expect(isAllowedEmailDomain('user@@hbplus.fit', ALLOWED_DOMAIN)).toBe(false);
+  test('Empty, null, non-string, or no @ emails are rejected', () => {
+    expect(isAllowedEmail('')).toBe(false);
+    expect(isAllowedEmail(null)).toBe(false);
+    expect(isAllowedEmail('hbplus.fit')).toBe(false);
+    expect(isAllowedEmail('@hbplus.fit')).toBe(false);
   });
 
-  test('normalizeEmail should lowercase and trim safely', () => {
-    expect(normalizeEmail('  User@HBPLUS.FIT  ')).toBe('user@hbplus.fit');
-    expect(normalizeEmail(null)).toBeNull();
+  test('Unicode look-alike domain spoofing is strictly rejected', () => {
+    expect(isAllowedEmail('user@hbplus.f\u0456t')).toBe(false);
   });
 });

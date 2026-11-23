@@ -46,23 +46,8 @@ export function DiagnosticsPanel({ currentUser = null }) {
             {isRunning ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <Text style={styles.runButtonText}>Run Test Suite</Text>
+              <Text style={styles.runButtonText}>Run Diagnostics</Text>
             )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.runButton, { backgroundColor: '#5B5BF0' }]}
-            onPress={() =>
-              handleRun({
-                uid: 'gmail-evaluator-test',
-                email: 'evaluator@gmail.com',
-                getIdToken: async () => 'evaluator-mock-token'
-              })
-            }
-            disabled={isRunning}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.runButtonText}>Test with Gmail</Text>
           </TouchableOpacity>
         </View>
       </View>

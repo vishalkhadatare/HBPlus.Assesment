@@ -1,40 +1,59 @@
-import { isAllowedEmailDomain, extractEmailDomain } from '../src/utils/domainValidator.js';
-import { formatAuthError, EXACT_RESTRICTION_MESSAGE } from '../src/utils/errorFormatter.js';
+import { isAllowedEmail, ALLOWED_DOMAIN } from '../src/utils/domainValidator.js';
 
-describe('Client Domain Validator & Error Formatter Tests', () => {
-  const ALLOWED_DOMAIN = 'hbplus.fit';
-
-  test('isAllowedEmailDomain approves corporate domain employee@hbplus.fit', () => {
-    expect(isAllowedEmailDomain('employee@hbplus.fit', ALLOWED_DOMAIN)).toBe(true);
+describe('Strict Domain Validation Unit Tests (Section 2.2)', () => {
+  test('Valid official domain email passes', () => {
+    expect(isAllowedEmail('a@hbplus.fit')).toBe(true);
   });
 
-  test('isAllowedEmailDomain normalizes case and approves EMPLOYEE@HBPLUS.FIT', () => {
-    expect(isAllowedEmailDomain('EMPLOYEE@HBPLUS.FIT', ALLOWED_DOMAIN)).toBe(true);
+  test('Case-insensitive validation passes', () => {
+    expect(isAllowedEmail('A@HBPLUS.FIT')).toBe(true);
+    expect(isAllowedEmail('Employee@HBPlus.Fit')).toBe(true);
   });
 
-  test('isAllowedEmailDomain rejects external provider employee@gmail.com', () => {
-    expect(isAllowedEmailDomain('employee@gmail.com', ALLOWED_DOMAIN)).toBe(false);
+  test('Whitespace trimmed validation passes', () => {
+    expect(isAllowedEmail(' a@hbplus.fit ')).toBe(true);
+    expect(isAllowedEmail('\ta@hbplus.fit\n')).toBe(true);
   });
 
-  test('isAllowedEmailDomain rejects suffix spoofing employee@hbplus.fit.example.com', () => {
-    expect(isAllowedEmailDomain('employee@hbplus.fit.example.com', ALLOWED_DOMAIN)).toBe(false);
+  test('Personal Gmail is strictly rejected', () => {
+    expect(isAllowedEmail('a@gmail.com')).toBe(false);
+    expect(isAllowedEmail('user.test@gmail.com')).toBe(false);
   });
 
-  test('isAllowedEmailDomain rejects malformed email formats', () => {
-    expect(isAllowedEmailDomain('invalid-email', ALLOWED_DOMAIN)).toBe(false);
-    expect(isAllowedEmailDomain('', ALLOWED_DOMAIN)).toBe(false);
-    expect(isAllowedEmailDomain(null, ALLOWED_DOMAIN)).toBe(false);
+  test('Prefix attack domain is rejected', () => {
+    expect(isAllowedEmail('a@evilhbplus.fit')).toBe(false);
   });
 
-  test('extractEmailDomain extracts normalized domain', () => {
-    expect(extractEmailDomain('user@hbplus.fit')).toBe('hbplus.fit');
-    expect(extractEmailDomain('Admin@HBPLUS.FIT')).toBe('hbplus.fit');
-    expect(extractEmailDomain('invalid')).toBe('');
+  test('Suffix attack domain is rejected', () => {
+    expect(isAllowedEmail('a@hbplus.fit.evil.com')).toBe(false);
   });
 
-  test('formatAuthError outputs EXACT required message on DOMAIN_NOT_ALLOWED', () => {
-    const error = { code: 'DOMAIN_NOT_ALLOWED', message: 'Rejected' };
-    expect(formatAuthError(error)).toBe(EXACT_RESTRICTION_MESSAGE);
-    expect(formatAuthError(error)).toBe('Access restricted. Please login using your official domain email.');
+  test('Subdomain is rejected', () => {
+    expect(isAllowedEmail('a@sub.hbplus.fit')).toBe(false);
+  });
+
+  test('Multiple @ symbols are rejected', () => {
+    expect(isAllowedEmail('a@@hbplus.fit')).toBe(false);
+    expect(isAllowedEmail('a@b@hbplus.fit')).toBe(false);
+  });
+
+  test('Quoted email attack string is rejected', () => {
+    expect(isAllowedEmail('"a@hbplus.fit"@evil.com')).toBe(false);
+  });
+
+  test('Empty, null, non-string, or no @ emails are rejected', () => {
+    expect(isAllowedEmail('')).toBe(false);
+    expect(isAllowedEmail('   ')).toBe(false);
+    expect(isAllowedEmail(null)).toBe(false);
+    expect(isAllowedEmail(undefined)).toBe(false);
+    expect(isAllowedEmail(12345)).toBe(false);
+    expect(isAllowedEmail('hbplus.fit')).toBe(false);
+    expect(isAllowedEmail('@hbplus.fit')).toBe(false);
+  });
+
+  test('Unicode look-alike domain spoofing is strictly rejected', () => {
+    // Cyrillic 'а' (U+0430) instead of Latin 'a'
+    expect(isAllowedEmail('user@hbplus.f\u0456t')).toBe(false);
+    expect(isAllowedEmail('user@hbplus.\u0430it')).toBe(false);
   });
 });

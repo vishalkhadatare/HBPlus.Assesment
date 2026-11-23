@@ -2,112 +2,98 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAuthenticated() {
+    function signedIn() {
       return request.auth != null;
     }
 
-    function isHbPlusDomain() {
-      return isAuthenticated() && 
-        request.auth.token.email.matches('.*@hbplus[.]fit$');
-    }
-
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+    function inDomain() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.matches('.*@hbplus[.]fit$');
     }
 
     function isAdmin() {
-      return isAuthenticated() && (
+      return inDomain() && (
+        request.auth.token.role == 'admin' ||
         request.auth.token.role == 'Admin' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin'
       );
     }
 
-    // Diagnostics Collection: For connection verification and live testing
+    function isOwner(uid) {
+      return inDomain() && request.auth.uid == uid;
+    }
+
+    // Users Collection: Users view own profile; Admins list & manage all
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if false; // only Cloud Functions / Server provision users
+      allow update: if isAdmin()
+                    || (isOwner(uid) && !('role' in request.resource.data.diff(resource.data).affectedKeys()));
+      allow delete: if isAdmin();
+    }
+
+    // Immutable Audit Logs: Admins read; Server alone writes
+    match /auditLogs/{id} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // Diagnostics Collection: For sandbox connectivity verification
     match /diagnostics/{docId} {
       allow read, write: if true;
     }
 
-    // Users Collection: Users manage their profile; Admins manage all; all authenticated users can view directory
-    match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && (isOwner(userId) || isAdmin());
-    }
-
     // Attendance & Check-in
     match /attendance/{attendanceId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow write: if isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdmin());
+      allow read: if (signedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow write: if (signedIn() && request.resource.data.userId == request.auth.uid) || isAdmin();
     }
 
     // Leave Requests & Balances
     match /leaveRequests/{leaveId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && isAdmin();
+      allow read: if (signedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
     }
 
     match /leaveBalances/{userId} {
-      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
-      allow write: if isAuthenticated() && isAdmin();
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isAdmin();
     }
 
-    // Company Resources (Holidays, Announcements, Shifts, Policies)
-    match /holidays/{holidayId} {
-      allow read: if isAuthenticated();
+    // Company Resources (Shifts, Announcements, Tasks, Documents)
+    match /shifts/{shiftId} {
+      allow read: if inDomain();
       allow write: if isAdmin();
     }
 
     match /announcements/{announcementId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-
-    match /shifts/{shiftId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-
-    // Tasks & Projects
-    match /projects/{projectId} {
-      allow read: if isAuthenticated();
+      allow read: if inDomain();
       allow write: if isAdmin();
     }
 
     match /tasks/{taskId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow read, write: if inDomain();
     }
 
-    // Payslips & Documents
     match /payslips/{payslipId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow read: if (signedIn() && resource.data.userId == request.auth.uid) || isAdmin();
       allow write: if isAdmin();
     }
 
     match /documents/{docId} {
-      allow read: if isAuthenticated();
+      allow read: if inDomain();
       allow write: if isAdmin();
     }
 
-    // Helpdesk Tickets
     match /tickets/{ticketId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow write: if isAuthenticated();
+      allow read: if (signedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow write: if inDomain();
     }
 
-    // Notifications
-    match /notifications/{notificationId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow write: if isAuthenticated();
-    }
-
-    // Audit Logs
-    match /auditLogs/{logId} {
-      allow read: if isAdmin();
-      allow create: if isAuthenticated();
-    }
-
-    // Default deny for anything unspecified
+    // Deny all by default
     match /{document=**} {
       allow read, write: if false;
     }

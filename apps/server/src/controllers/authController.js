@@ -1,7 +1,7 @@
 import { AuthService } from '../services/authService.js';
 import { UserService } from '../services/userService.js';
-import { adminAuth } from '../config/firebaseAdmin.js';
-import config from '../config/environment.js';
+import { adminAuth, adminDb } from '../config/firebaseAdmin.js';
+import { isAllowedEmail } from '../utils/domainValidator.js';
 import { successResponse, errorResponse } from '../utils/apiResponse.js';
 
 export class AuthController {
@@ -36,72 +36,111 @@ export class AuthController {
   }
 
   /**
-   * POST /api/auth/demo-login
-   * Development-only helper: Mints a valid Firebase custom token for a test @hbplus.fit account
-   * and saves/updates the record into live Cloud Firestore.
+   * POST /api/auth/provision
+   * Server-side user provisioning after Google / email login.
+   * Re-verifies domain on server. If domain is invalid, deletes the intruder account immediately!
    */
-  static async demoLogin(req, res, next) {
+  static async provision(req, res, next) {
     try {
-      if (config.isProduction) {
+      const { user } = req;
+      const email = (user.email || '').trim().toLowerCase();
+
+      // 1. Strict server-side domain verification
+      if (!isAllowedEmail(email)) {
+        if (adminAuth && user.uid) {
+          console.warn(`[Security Alert] Deleting unauthorized outsider account: ${email} (${user.uid})`);
+          await adminAuth.deleteUser(user.uid).catch((err) =>
+            console.error('[Security] Failed to delete unauthorized user:', err.message)
+          );
+        }
+
         return res.status(403).json(
-          errorResponse('Demo login is disabled in production.', 'FORBIDDEN')
+          errorResponse('Access restricted. Please login using your official domain email.', 'DOMAIN_NOT_ALLOWED')
         );
       }
 
-      const requestedEmail = (req.body.email || 'employee@hbplus.fit').trim().toLowerCase();
-      const isAdmin = config.ADMIN_EMAILS.includes(requestedEmail) || req.body.role === 'Admin';
-      const role = isAdmin ? 'Admin' : 'User';
-      const displayName = req.body.displayName || (isAdmin ? 'Demo Administrator' : 'Demo Employee');
-
-      // 1. Get or create Firebase Auth user
-      let firebaseUser;
-      if (adminAuth) {
-        try {
-          firebaseUser = await adminAuth.getUserByEmail(requestedEmail);
-        } catch (err) {
-          if (err.code === 'auth/user-not-found') {
-            firebaseUser = await adminAuth.createUser({
-              email: requestedEmail,
-              emailVerified: true,
-              displayName
-            });
-          } else {
-            throw err;
-          }
-        }
-      } else {
-        firebaseUser = {
-          uid: 'demo-' + requestedEmail.replace(/[^a-z0-9]/g, '-'),
-          email: requestedEmail,
-          displayName
-        };
+      // 2. Ensure verified status
+      if (user.token && user.token.email_verified === false) {
+        return res.status(403).json(
+          errorResponse('Email address is not verified.', 'EMAIL_NOT_VERIFIED')
+        );
       }
 
-      // 2. Mint real custom token
-      let customToken = 'mock-custom-token';
+      // 3. User Google sign-in can NEVER produce role: 'admin'
+      // Only keep existing role if user is already an admin
+      const existingProfile = await UserService.getUserProfile(user.uid);
+      const role = existingProfile?.role === 'admin' ? 'admin' : 'user';
+
+      // Set custom claim if not already set
       if (adminAuth) {
-        customToken = await adminAuth.createCustomToken(firebaseUser.uid, { role });
+        await adminAuth.setCustomUserClaims(user.uid, { role });
       }
 
-      // 3. Provision / update directly in Cloud Firestore
+      // Provision or update user document in Cloud Firestore
       const userProfile = await UserService.provisionOrUpdateUser({
-        uid: firebaseUser.uid,
-        email: requestedEmail,
-        name: displayName,
-        picture: ''
+        ...user.token,
+        role
       });
 
       return res.status(200).json(
-        successResponse('Demo login successful', {
-          customToken,
-          profile: userProfile,
-          firebaseUser: {
-            uid: firebaseUser.uid,
-            email: requestedEmail,
-            displayName: userProfile.displayName,
-            role: userProfile.role
-          }
-        })
+        successResponse('User provisioned successfully', userProfile)
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/auth/set-role
+   * Admin-only role management (promote, demote, disable, enable)
+   * Writes immutable entry to auditLogs
+   */
+  static async setUserRole(req, res, next) {
+    try {
+      const { targetUid, role, isActive } = req.body;
+      if (!targetUid) {
+        return res.status(400).json(errorResponse('targetUid is required.', 'MISSING_PARAM'));
+      }
+
+      const normalizedRole = role ? role.toLowerCase() : undefined;
+      if (normalizedRole && !['admin', 'user'].includes(normalizedRole)) {
+        return res.status(400).json(errorResponse('Invalid role. Must be admin or user.', 'INVALID_ROLE'));
+      }
+
+      // 1. Update Custom Claims in Firebase Auth
+      if (adminAuth) {
+        const claims = {};
+        if (normalizedRole) claims.role = normalizedRole;
+        await adminAuth.setCustomUserClaims(targetUid, claims);
+        if (typeof isActive === 'boolean') {
+          await adminAuth.updateUser(targetUid, { disabled: !isActive });
+        }
+      }
+
+      // 2. Update Firestore Document
+      const now = new Date().toISOString();
+      const updateData = { updatedAt: now };
+      if (normalizedRole) updateData.role = normalizedRole;
+      if (typeof isActive === 'boolean') updateData.isActive = isActive;
+
+      if (adminDb) {
+        await adminDb.collection('users').doc(targetUid).update(updateData);
+
+        // 3. Write immutable audit log
+        const auditRef = adminDb.collection('auditLogs').doc();
+        await auditRef.set({
+          id: auditRef.id,
+          action: 'SET_USER_ROLE',
+          performedByUid: req.user.uid,
+          performedByEmail: req.user.email,
+          targetUid,
+          updatedFields: updateData,
+          timestamp: now
+        });
+      }
+
+      return res.status(200).json(
+        successResponse('User role updated successfully', { targetUid, role: normalizedRole, isActive })
       );
     } catch (error) {
       next(error);

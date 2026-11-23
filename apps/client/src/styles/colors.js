@@ -1,53 +1,33 @@
-/**
- * Design Tokens: Modern Fitness-Tech Color Palette
- * High contrast, minimal, with Vibrant Emerald/Mint accent and Deep Slate typography.
- */
+import { lightTheme } from '../theme/tokens.js';
 
 export const colors = {
-  // Backgrounds & Surfaces
-  background: '#F8FAFC',       // Soft off-white / slate
-  surface: '#FFFFFF',          // Crisp elevated white card
-  surfaceSubtle: '#F1F5F9',    // Light slate container
-  surfaceMuted: '#E2E8F0',
+  primary: lightTheme.primary,
+  primaryLight: lightTheme.primarySoft,
+  primaryDark: lightTheme.primaryDeep,
+  accent: lightTheme.accent,
+  violet: lightTheme.violet,
 
-  // Primary Accent: Vibrant Emerald & Deep Mint
-  primary: '#10B981',          // Vibrant Emerald
-  primaryHover: '#059669',     // Deep Mint
-  primaryActive: '#047857',
-  primarySubtle: '#ECFDF5',    // Soft Mint Tint
-  primaryBorder: '#A7F3D0',
+  background: lightTheme.bg,
+  surface: lightTheme.surface,
+  surfaceLight: lightTheme.surfaceAlt,
 
-  // Deep Slate / Charcoal Typography & High Contrast Surfaces
-  textPrimary: '#0F172A',      // Slate 900
-  textSecondary: '#334155',    // Slate 700
-  textMuted: '#64748B',        // Slate 500
-  textInverse: '#FFFFFF',
-  slateDark: '#1E293B',        // Slate 800
+  textPrimary: lightTheme.text,
+  textSecondary: lightTheme.textMuted,
+  textDisabled: lightTheme.textSubtle,
+  textOnPrimary: lightTheme.textInverse,
 
-  // Status & Feedback
-  success: '#059669',
-  successSubtle: '#ECFDF5',
-  successBorder: '#A7F3D0',
+  border: lightTheme.border,
+  borderLight: lightTheme.borderSubtle,
+  divider: lightTheme.border,
 
-  warning: '#D97706',
-  warningSubtle: '#FFFBEB',
-  warningBorder: '#FDE68A',
-
-  // Error States: Soft rose background with crimson text
-  danger: '#DC2626',
-  dangerSubtle: '#FEF2F2',
-  dangerBorder: '#FECACA',
-
-  // Borders & Dividers
-  border: '#E2E8F0',
-  borderDark: '#CBD5E1',
-  borderFocus: '#10B981',
-
-  // Role Badges
-  badgeAdminBg: '#FEF3C7',
-  badgeAdminText: '#92400E',
-  badgeUserBg: '#ECFDF5',
-  badgeUserText: '#065F46'
+  success: lightTheme.success,
+  successBg: lightTheme.successSoft,
+  warning: lightTheme.warning,
+  warningBg: lightTheme.warningSoft,
+  error: lightTheme.danger,
+  errorBg: lightTheme.dangerSoft,
+  info: lightTheme.info,
+  infoBg: lightTheme.infoSoft
 };
 
 export default colors;

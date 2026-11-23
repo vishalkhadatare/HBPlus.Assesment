@@ -1,16 +1,17 @@
 import { lightTheme, darkTheme, typography, borderRadius } from '../src/theme/tokens.js';
 
 describe('Design Tokens & Responsive Architecture Tests', () => {
-  test('Theme tokens contain required Iris Indigo, Aqua, and Semantic tokens', () => {
-    expect(lightTheme.primary).toBe('#5B5BF0');
-    expect(lightTheme.accent).toBe('#14C8D9');
-    expect(lightTheme.bg).toBe('#F5F6FB');
+  test('Theme tokens contain required Emerald, Amber, and Semantic tokens', () => {
+    expect(lightTheme.primary).toBe('#00B386');
+    expect(lightTheme.accent).toBe('#FFB020');
+    expect(lightTheme.bg).toBe('#F4F8F7');
     expect(lightTheme.surface).toBe('#FFFFFF');
-    expect(lightTheme.text).toBe('#0E1330');
+    expect(lightTheme.text).toBe('#0A1A17');
 
-    expect(darkTheme.bg).toBe('#080B16');
-    expect(darkTheme.surface).toBe('#111631');
-    expect(darkTheme.text).toBe('#F2F4FF');
+    expect(darkTheme.primary).toBe('#2EE6B6');
+    expect(darkTheme.bg).toBe('#06100E');
+    expect(darkTheme.surface).toBe('#0D1B18');
+    expect(darkTheme.text).toBe('#ECFBF6');
   });
 
   test('Feature tints are defined for all 13 modules', () => {

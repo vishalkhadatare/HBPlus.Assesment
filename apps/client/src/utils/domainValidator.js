@@ -1,43 +1,46 @@
 /**
- * Client-Side Domain Validation Utility
- * Enforces strict, normalized check against the authorized @hbplus.fit company domain.
+ * Domain validation utility (Single Source of Truth)
+ * Enforces strict, normalized, exact-match validation against an allowed email domain.
  */
 
-export function isAllowedEmailDomain(email, configuredDomain = 'hbplus.fit') {
-  if (!email || typeof email !== 'string') {
-    return false;
-  }
+export const ALLOWED_DOMAIN = 'hbplus.fit';
 
-  const trimmed = email.trim().toLowerCase();
-  if (!trimmed) {
-    return false;
-  }
+/**
+ * Pure function: Validates whether an email belongs to the configured allowed domain.
+ * 
+ * Rules:
+ * - Reject missing, non-string, or empty email
+ * - Exactly one '@', with at least 1 character before it
+ * - Reject non-ASCII / Unicode look-alike spoofing characters
+ * - Reject quotes, subdomains, evil suffixes or prefixes
+ * - EXACT equality match on domain portion (case-insensitive, trimmed)
+ * 
+ * @param {string} email - The email address to validate.
+ * @param {string} [domain=ALLOWED_DOMAIN] - The target domain.
+ * @returns {boolean} True if email is strictly allowed.
+ */
+export function isAllowedEmail(email, domain = ALLOWED_DOMAIN) {
+  if (!email || typeof email !== 'string') return false;
 
-  // Strict check that the email ends with @<configuredDomain>
-  const targetDomain = (configuredDomain || 'hbplus.fit').trim().toLowerCase();
-  const expectedSuffix = `@${targetDomain}`;
+  const e = email.trim().toLowerCase();
+  if (!e) return false;
 
-  if (!trimmed.endsWith(expectedSuffix)) {
-    return false;
-  }
+  // Reject non-ASCII characters (blocks Cyrillic, Greek, or Unicode look-alike domain attacks)
+  if (/[^\x20-\x7E]/.test(e)) return false;
 
-  // Disallow lookalikes like user@not-hbplus.fit or user@hbplus.fit.example.com
-  const atParts = trimmed.split('@');
-  if (atParts.length !== 2) {
-    return false;
-  }
+  // Reject quotes in local part or domain attacks e.g. "a@hbplus.fit"@evil.com
+  if (e.includes('"')) return false;
 
-  const [, domainPart] = atParts;
-  return domainPart === targetDomain;
+  const at = e.lastIndexOf('@');
+  // Must have exactly one '@' and something before it (at >= 1)
+  if (at < 1 || at !== e.indexOf('@')) return false;
+
+  // Exactly match the domain portion
+  const targetDomain = (domain || ALLOWED_DOMAIN).toLowerCase().trim();
+  return e.slice(at + 1) === targetDomain;
 }
 
-export function extractEmailDomain(email) {
-  if (!email || typeof email !== 'string') return '';
-  const parts = email.trim().toLowerCase().split('@');
-  return parts.length === 2 ? parts[1] : '';
-}
+// Backwards compatibility alias
+export const isAllowedEmailDomain = isAllowedEmail;
 
-export default {
-  isAllowedEmailDomain,
-  extractEmailDomain
-};
+export default isAllowedEmail;

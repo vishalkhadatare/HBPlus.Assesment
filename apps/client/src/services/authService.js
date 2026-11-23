@@ -3,7 +3,7 @@ import * as webAuth from './authService.web.js';
 import apiClient from './apiClient.js';
 
 /**
- * Cross-Platform Authentication Service (Google OAuth)
+ * Cross-Platform Authentication Service (Google OAuth + Email/Password)
  */
 
 export async function signInWithGooglePlatform() {
@@ -22,24 +22,49 @@ export async function checkRedirectResultPlatform() {
   return null;
 }
 
+export async function signInWithEmailPlatform(email, password) {
+  return await webAuth.signInWithEmail(email, password);
+}
+
+export async function sendPasswordResetPlatform(email) {
+  return await webAuth.sendPasswordReset(email);
+}
+
+/**
+ * Calls backend to provision verified user and set claims.
+ */
+export async function provisionWithBackend(token) {
+  const response = await apiClient.post(
+    '/auth/provision',
+    {},
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      skipAuth: true
+    }
+  );
+  return response.data;
+}
+
 /**
  * Verifies the user's ID token with the Node.js/Express backend.
  */
-export async function verifyWithBackend(token, allowOverride = false) {
-  const headers = {
-    Authorization: `Bearer ${token}`
-  };
-  if (allowOverride) {
-    headers['x-dev-allow-any'] = 'true';
-  }
+export async function verifyWithBackend(token) {
   const response = await apiClient.post(
     '/auth/verify',
     {},
     {
-      headers,
+      headers: { Authorization: `Bearer ${token}` },
       skipAuth: true
     }
   );
+  return response.data;
+}
+
+/**
+ * Promotes, demotes, or updates a user role (Admin only).
+ */
+export async function setUserRoleWithBackend(targetUid, role, isActive) {
+  const response = await apiClient.post('/auth/set-role', { targetUid, role, isActive });
   return response.data;
 }
 
@@ -61,8 +86,8 @@ export async function signOutPlatform() {
     try {
       const nativeAuth = await import('./authService.native.js');
       await nativeAuth.signOut();
-    } catch (e) {
-      // Fallback
+    } catch {
+      await webAuth.signOut();
     }
   }
 }
@@ -70,7 +95,11 @@ export async function signOutPlatform() {
 export default {
   signInWithGooglePlatform,
   checkRedirectResultPlatform,
+  signInWithEmailPlatform,
+  sendPasswordResetPlatform,
+  provisionWithBackend,
   verifyWithBackend,
+  setUserRoleWithBackend,
   fetchCurrentProfile,
   signOutPlatform
 };

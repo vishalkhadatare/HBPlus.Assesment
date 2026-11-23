@@ -67,25 +67,24 @@ export async function runFirebaseDiagnostics(currentUser = null) {
 
   // 3. AUTH CHECK
   let idToken = null;
-  const uid = user?.uid || 'guest-diagnostic-test';
+  const uid = user?.uid || 'connectivity-test';
   try {
     if (user) {
       idToken = await withTimeout(user.getIdToken(true), 6000, 'Token refresh');
       const email = user.email || '';
       const isDomainOk = email.toLowerCase().endsWith('@hbplus.fit');
-      const isGmail = email.toLowerCase().endsWith('@gmail.com');
       results.push({
         id: 'auth',
         name: 'Auth Check',
         status: 'PASS',
-        message: `UID: ${user.uid.slice(0, 8)}... | Email: ${email} (${isDomainOk ? '@hbplus.fit verified' : isGmail ? 'Gmail Mode Active' : 'External Domain'}) | Token valid`
+        message: `UID: ${user.uid.slice(0, 8)}... | Email: ${email} (${isDomainOk ? '@hbplus.fit verified' : 'External Domain'}) | Token valid`
       });
     } else {
       results.push({
         id: 'auth',
         name: 'Auth Check',
         status: 'PASS',
-        message: 'Sandbox Pre-Auth Ready: Firebase Auth loaded. Ready for Google / Gmail / Demo login.'
+        message: 'Pre-Auth Diagnostics: Firebase Auth loaded. Ready for @hbplus.fit sign-in.'
       });
     }
   } catch (err) {
@@ -104,7 +103,7 @@ export async function runFirebaseDiagnostics(currentUser = null) {
     await withTimeout(
       setDoc(diagRef, {
         uid,
-        email: user?.email || 'guest-evaluator@gmail.com',
+        email: user?.email || 'diagnostic-check@hbplus.fit',
         platform: Platform.OS,
         timestamp: new Date().toISOString(),
         serverTs: serverTimestamp(),

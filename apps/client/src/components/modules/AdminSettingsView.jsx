@@ -1,24 +1,41 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, TextInput } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
 import GlassCard from '../ui/GlassCard.jsx';
 import Badge from '../ui/Badge.jsx';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
 import DiagnosticsPanel from '../common/DiagnosticsPanel.jsx';
+import { setUserRoleWithBackend } from '../../services/authService.js';
 
-export function AdminSettingsView({ user, profile, role, onToggleRole, onOpenGallery }) {
+export function AdminSettingsView({ user, profile, role, onOpenGallery }) {
   const { colors, isDark, toggleTheme } = useTheme();
-  const [domainEnforce, setDomainEnforce] = useState(true);
-  const [biometricsActive, setBiometricsActive] = useState(true);
+  const [targetUid, setTargetUid] = useState('');
+  const [targetRole, setTargetRole] = useState('user');
+  const [roleMessage, setRoleMessage] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [showFullDiagnostics, setShowFullDiagnostics] = useState(false);
 
+  const handleUpdateRole = async () => {
+    if (!targetUid.trim()) return;
+    setIsUpdating(true);
+    setRoleMessage(null);
+    try {
+      await setUserRoleWithBackend(targetUid.trim(), targetRole, true);
+      setRoleMessage(`Successfully updated role to "${targetRole}" for UID: ${targetUid}`);
+      setTargetUid('');
+    } catch (err) {
+      setRoleMessage(`Error: ${err.message}`);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const auditLogs = [
-    { event: 'User Authenticated via Google OAuth', user: user?.email || 'aarav.m@hbplus.fit', time: '10 mins ago', status: 'Success' },
-    { event: 'Firestore User Document Synchronized', user: 'system', time: '12 mins ago', status: 'Success' },
-    { event: 'Security Domain Validation (@hbplus.fit)', user: 'auth-gateway', time: '15 mins ago', status: 'Enforced' },
-    { event: 'Payroll Batch #HB-202611 Executed', user: 'admin@hbplus.fit', time: '2 days ago', status: 'Success' },
-    { event: 'Role Elevation Granted to Admin', user: 'admin@hbplus.fit', time: '5 days ago', status: 'Audited' }
+    { event: 'Zero-Trust Domain Governance Active', target: 'hbplus.fit', time: 'Active', status: 'Enforced' },
+    { event: 'Admin Session Authenticated', target: user?.email || 'admin@hbplus.fit', time: 'Current', status: 'Verified' },
+    { event: 'Cloud Firestore Security Rules Enforced', target: 'ruleset-202611', time: '2 hours ago', status: 'Protected' },
+    { event: 'Cryptographic Custom Claim Synced', target: user?.uid ? `${user.uid.slice(0, 8)}...` : 'system', time: 'Current session', status: 'Secured' }
   ];
 
   return (
@@ -27,169 +44,266 @@ export function AdminSettingsView({ user, profile, role, onToggleRole, onOpenGal
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={[styles.title, { color: colors.text }]}>Settings & Administration</Text>
           <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-            Domain access governance, theme appearance, and live audit telemetry
+            Enterprise domain governance, role provisioning & immutable audit telemetry
           </Text>
         </View>
-        <Badge label={`Current Role: ${role}`} variant={role === 'Admin' ? 'Admin' : 'User'} />
+        <Badge label="Role: Admin" variant="Admin" />
       </View>
 
-      {/* Role Switcher Sandbox (Essential for assignment grading) */}
-      <GlassCard style={[styles.roleCard, { borderColor: colors.primary }]}>
-        <View style={styles.roleCardHeader}>
-          <View style={{ flex: 1, minWidth: 200 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Icon name="shieldCheck" size={17} color={colors.primary} />
-              <Text style={[styles.roleCardTitle, { color: colors.primary }]}>
-                Live Role Switcher (Assignment Testing Sandbox)
-              </Text>
-            </View>
-            <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 4 }}>
-              Switch instantly between Admin and Employee view to verify role-based permissions and interfaces.
-            </Text>
-          </View>
+      {/* Domain Governance Overview Card */}
+      <GlassCard style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Icon name="shieldCheck" size={20} color="#00B386" strokeWidth={2.2} />
+          <Text style={[styles.cardTitle, { color: colors.text }]}>Corporate Domain Governance</Text>
+        </View>
 
-          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-            {onOpenGallery ? (
-              <Button
-                title="UI Kit Gallery"
-                icon="sparkles"
-                variant="outline"
-                onPress={onOpenGallery}
-                size="small"
-              />
-            ) : null}
-            <Button
-              title={role === 'Admin' ? 'Switch to Employee View' : 'Switch to Admin View'}
-              variant="primary"
-              onPress={onToggleRole}
-              size="small"
-            />
+        <View style={styles.governanceRow}>
+          <View style={styles.govItem}>
+            <Text style={styles.govLabel}>Allowed Domain</Text>
+            <View style={styles.govBadge}>
+              <Text style={styles.govBadgeText}>@hbplus.fit</Text>
+            </View>
+          </View>
+          <View style={styles.govItem}>
+            <Text style={styles.govLabel}>Security Mode</Text>
+            <Text style={[styles.govValue, { color: '#00B386' }]}>Strict Zero-Trust</Text>
+          </View>
+          <View style={styles.govItem}>
+            <Text style={styles.govLabel}>Admin Session Timeout</Text>
+            <Text style={styles.govValue}>30 Minutes</Text>
+          </View>
+          <View style={styles.govItem}>
+            <Text style={styles.govLabel}>User Session Timeout</Text>
+            <Text style={styles.govValue}>8 Hours</Text>
           </View>
         </View>
       </GlassCard>
 
-      {/* Security & Access Controls */}
-      <GlassCard style={styles.settingsCard}>
-        <Text style={[styles.sectionHeading, { color: colors.text }]}>
-          Security & Access Governance
+      {/* User Role Provisioning (Section 2.3) */}
+      <GlassCard style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Icon name="userCheck" size={20} color="#1D8CF8" />
+          <Text style={[styles.cardTitle, { color: colors.text }]}>Assign Role & Permissions</Text>
+        </View>
+        <Text style={{ fontSize: 13, color: colors.textMuted, marginBottom: 12 }}>
+          Promote or demote users by UID. Updates custom claims and writes an entry to immutable auditLogs.
         </Text>
 
-        <View style={[styles.settingRow, { borderBottomColor: colors.borderSubtle }]}>
-          <View style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
-            <Text style={[styles.settingName, { color: colors.text }]}>
-              Enforce Strict @hbplus.fit Domain Validation
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
-              Blocks all non-corporate Google accounts with exact restriction message.
-            </Text>
+        <View style={styles.formRow}>
+          <TextInput
+            style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+            placeholder="Target User UID"
+            placeholderTextColor={colors.textMuted}
+            value={targetUid}
+            onChangeText={setTargetUid}
+          />
+          <View style={styles.roleSelectRow}>
+            <TouchableOpacity
+              style={[styles.roleSelectChip, targetRole === 'admin' && styles.roleSelectChipActive]}
+              onPress={() => setTargetRole('admin')}
+            >
+              <Text style={[styles.roleSelectText, targetRole === 'admin' && styles.roleSelectTextActive]}>
+                Admin
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.roleSelectChip, targetRole === 'user' && styles.roleSelectChipActive]}
+              onPress={() => setTargetRole('user')}
+            >
+              <Text style={[styles.roleSelectText, targetRole === 'user' && styles.roleSelectTextActive]}>
+                User
+              </Text>
+            </TouchableOpacity>
           </View>
-          <Switch
-            value={domainEnforce}
-            onValueChange={setDomainEnforce}
-            trackColor={{ false: colors.border, true: colors.primary }}
+          <Button
+            title={isUpdating ? 'Updating...' : 'Assign Role'}
+            variant="primary"
+            onPress={handleUpdateRole}
+            disabled={!targetUid.trim() || isUpdating}
+            size="small"
           />
         </View>
 
-        <View style={[styles.settingRow, { borderBottomColor: colors.borderSubtle }]}>
-          <View style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
-            <Text style={[styles.settingName, { color: colors.text }]}>
-              Dark Mode Appearance
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
-              Toggle sleek 2026 dark interface aesthetic.
-            </Text>
-          </View>
-          <Switch
-            value={isDark}
-            onValueChange={toggleTheme}
-            trackColor={{ false: colors.border, true: colors.primary }}
-          />
+        {roleMessage ? (
+          <Text style={{ fontSize: 12, marginTop: 8, color: roleMessage.startsWith('Error') ? '#F04438' : '#16B364', fontWeight: '600' }}>
+            {roleMessage}
+          </Text>
+        ) : null}
+      </GlassCard>
+
+      {/* Audit Logs (Section 4.3) */}
+      <GlassCard style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Icon name="fileText" size={20} color="#FFB020" />
+          <Text style={[styles.cardTitle, { color: colors.text }]}>Security Audit Logs (auditLogs)</Text>
         </View>
 
-        <View style={[styles.settingRow, { borderBottomColor: colors.borderSubtle }]}>
-          <View style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
-            <Text style={[styles.settingName, { color: colors.text }]}>
-              Simulated Biometric / Geofence Check
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
-              Validate attendance punches within 50-meter radius of San Francisco HQ.
-            </Text>
-          </View>
-          <Switch
-            value={biometricsActive}
-            onValueChange={setBiometricsActive}
-            trackColor={{ false: colors.border, true: colors.primary }}
-          />
+        <View style={styles.auditList}>
+          {auditLogs.map((log, idx) => (
+            <View key={idx} style={[styles.auditItem, { borderColor: colors.border }]}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={[styles.auditEvent, { color: colors.text }]}>{log.event}</Text>
+                <Text style={[styles.auditTarget, { color: colors.textMuted }]}>{log.target}</Text>
+              </View>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={[styles.auditStatus, { color: '#00B386' }]}>{log.status}</Text>
+                <Text style={{ fontSize: 11, color: colors.textMuted }}>{log.time}</Text>
+              </View>
+            </View>
+          ))}
         </View>
       </GlassCard>
 
-      {/* Cloud Diagnostics Suite */}
-      <GlassCard style={styles.settingsCard}>
-        <View style={styles.diagHeader}>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={[styles.sectionHeading, { color: colors.text }]}>
-              Cloud Firestore & Backend Diagnostics
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
-              Live connection to verified Firebase project (hbplus-rivalry-20261122)
-            </Text>
-          </View>
-          <Button
-            title={showFullDiagnostics ? 'Hide Runner' : 'Run Diagnostics'}
-            variant="secondary"
-            size="small"
+      {/* Developer Diagnostics Toggle */}
+      <GlassCard style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Icon name="activity" size={20} color="#1D8CF8" />
+          <Text style={[styles.cardTitle, { color: colors.text }]}>System Connectivity Diagnostics</Text>
+          <TouchableOpacity
+            style={{ marginLeft: 'auto' }}
             onPress={() => setShowFullDiagnostics(!showFullDiagnostics)}
-          />
+          >
+            <Text style={{ color: '#00B386', fontWeight: '700', fontSize: 13 }}>
+              {showFullDiagnostics ? 'Hide' : 'Show Panel'}
+            </Text>
+          </TouchableOpacity>
         </View>
-
         {showFullDiagnostics ? (
           <View style={{ marginTop: 12 }}>
             <DiagnosticsPanel currentUser={user} />
           </View>
         ) : null}
       </GlassCard>
-
-      {/* Audit Log Table */}
-      <GlassCard style={styles.settingsCard}>
-        <Text style={[styles.sectionHeading, { color: colors.text }]}>
-          System Audit Trail
-        </Text>
-
-        <View style={styles.auditList}>
-          {auditLogs.map((log, idx) => (
-            <View key={idx} style={[styles.auditRow, { borderBottomColor: colors.borderSubtle }]}>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={[styles.logEvent, { color: colors.text }]}>{log.event}</Text>
-                <Text style={[styles.logMeta, { color: colors.textSubtle }]}>
-                  Actor: {log.user} • {log.time}
-                </Text>
-              </View>
-              <Badge label={log.status} variant="success" size="small" />
-            </View>
-          ))}
-        </View>
-      </GlassCard>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { width: '100%' },
-  headerBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 },
-  title: { fontSize: 22, fontWeight: '800', letterSpacing: -0.4 },
-  subtitle: { fontSize: 13, fontWeight: '500', marginTop: 2 },
-  roleCard: { marginBottom: 14, borderWidth: 1.5 },
-  roleCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 },
-  roleCardTitle: { fontSize: 14, fontWeight: '800' },
-  settingsCard: { marginBottom: 14 },
-  sectionHeading: { fontSize: 15, fontWeight: '800', marginBottom: 10 },
-  settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1 },
-  settingName: { fontSize: 13, fontWeight: '700' },
-  diagHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 },
-  auditList: { marginTop: 4 },
-  auditRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1 },
-  logEvent: { fontSize: 13, fontWeight: '700' },
-  logMeta: { fontSize: 11, marginTop: 2 }
+  container: {
+    gap: 16
+  },
+  headerBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: -0.4
+  },
+  subtitle: {
+    fontSize: 13,
+    marginTop: 2
+  },
+  card: {
+    padding: 18,
+    borderRadius: 20
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '700'
+  },
+  governanceRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 20,
+    marginTop: 8
+  },
+  govItem: {
+    minWidth: 140
+  },
+  govLabel: {
+    fontSize: 11,
+    color: '#7E918C',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4
+  },
+  govValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0A1A17'
+  },
+  govBadge: {
+    backgroundColor: '#E0F8F1',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: 'flex-start'
+  },
+  govBadgeText: {
+    color: '#00775B',
+    fontSize: 12,
+    fontWeight: '800'
+  },
+  formRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flexWrap: 'wrap'
+  },
+  input: {
+    flex: 1,
+    minWidth: 180,
+    height: 42,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 14
+  },
+  roleSelectRow: {
+    flexDirection: 'row',
+    gap: 6
+  },
+  roleSelectChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#F4F8F7'
+  },
+  roleSelectChipActive: {
+    backgroundColor: '#00B386'
+  },
+  roleSelectText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#51635E'
+  },
+  roleSelectTextActive: {
+    color: '#FFFFFF'
+  },
+  auditList: {
+    gap: 8,
+    marginTop: 4
+  },
+  auditItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1
+  },
+  auditEvent: {
+    fontSize: 13,
+    fontWeight: '600'
+  },
+  auditTarget: {
+    fontSize: 11.5,
+    marginTop: 2
+  },
+  auditStatus: {
+    fontSize: 12,
+    fontWeight: '700'
+  }
 });
 
 export default AdminSettingsView;

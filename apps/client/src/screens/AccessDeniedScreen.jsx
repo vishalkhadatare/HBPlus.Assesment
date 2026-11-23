@@ -1,154 +1,243 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import colors from '../styles/colors.js';
-import typography from '../styles/typography.js';
-import { spacing, borderRadius, shadows } from '../styles/spacing.js';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+  useWindowDimensions
+} from 'react-native';
 import { useAuth } from '../hooks/useAuth.js';
-import AppLayout from '../components/layout/AppLayout.jsx';
+import Icon from '../components/ui/Icon.jsx';
+import { ROUTES } from '../navigation/navigationConfig.js';
 
-export function AccessDeniedScreen({ onNavigateLogin }) {
-  const { signInWithGoogle, isAuthorizing } = useAuth();
+export function AccessDeniedScreen() {
+  const { rejectedEmail, denialReason, navigate } = useAuth();
+  const { width } = useWindowDimensions();
+  const isWide = width >= 900;
+
+  const defaultMessage = 'Access restricted. Please login using your official domain email.';
+  const displayMessage = denialReason || defaultMessage;
 
   return (
-    <AppLayout showHeader={false}>
-      <View style={styles.centerContainer}>
+    <View style={styles.root}>
+      {/* Aurora Ambient Background */}
+      <View style={styles.gradientBg} pointerEvents="none" />
+
+      <View style={[styles.mainWrapper, isWide && styles.mainWrapperWide]}>
         <View style={styles.card}>
-          {/* Security Shield Lock */}
-          <View style={styles.lockBadge}>
-            <Text style={styles.lockIcon}>🔒</Text>
+          {/* Red Shield with Soft Pulsing Ring */}
+          <View style={styles.shieldWrapper}>
+            <View style={styles.shieldRing} />
+            <View style={styles.shieldCenter}>
+              <Icon name="shieldAlert" size={36} color="#F04438" strokeWidth={2.2} />
+            </View>
           </View>
 
-          <Text style={styles.title}>Access Denied</Text>
+          {/* Title and Exact Message */}
+          <View style={styles.messageBlock}>
+            <Text style={styles.title}>Login denied</Text>
+            <Text style={styles.messageText}>{displayMessage}</Text>
+          </View>
 
-          {/* EXACT REQUIRED RESTRICTION MESSAGE */}
-          <View style={styles.messageBanner}>
-            <Text style={styles.exactMessage}>
-              Access restricted. Please login using your official domain email.
+          {/* Masked Rejected Email Box */}
+          {rejectedEmail ? (
+            <View style={styles.rejectedEmailBox}>
+              <Text style={styles.rejectedEmailLabel}>Rejected Identity</Text>
+              <Text style={styles.rejectedEmailValue}>{rejectedEmail}</Text>
+            </View>
+          ) : null}
+
+          {/* Security Notice Note */}
+          <View style={styles.noteBox}>
+            <Icon name="info" size={16} color="#7E918C" />
+            <Text style={styles.noteText}>
+              Security Policy: Only authenticated Google Workspace or employee accounts ending with{' '}
+              <Text style={{ fontWeight: '700', color: '#00B386' }}>@hbplus.fit</Text> are permitted access to corporate resources.
             </Text>
           </View>
 
-          <Text style={styles.details}>
-            This application is exclusively reserved for members of the authorized corporate domain (@hbplus.fit).
-            Personal email addresses (such as Gmail, Yahoo, or other domains) cannot be authorized.
-          </Text>
-
-          {/* Action Buttons */}
-          <View style={styles.actions}>
+          {/* Actions */}
+          <View style={styles.actionGroup}>
             <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={signInWithGoogle}
-              disabled={isAuthorizing}
-              activeOpacity={0.85}
-              accessibilityRole="button"
+              style={styles.primaryBtn}
+              onPress={() => navigate(ROUTES.LOGIN_USER)}
+              activeOpacity={0.88}
             >
-              <Text style={styles.primaryButtonText}>
-                {isAuthorizing ? 'Opening Google...' : 'Sign In with Official Account'}
-              </Text>
+              <Icon name="refreshCw" size={16} color="#FFFFFF" />
+              <Text style={styles.primaryBtnText}>Try another account</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.secondaryButton}
-              onPress={onNavigateLogin}
-              activeOpacity={0.8}
-              accessibilityRole="button"
+              style={styles.secondaryBtn}
+              onPress={() => navigate(ROUTES.ROLE_SELECT)}
+              activeOpacity={0.88}
             >
-              <Text style={styles.secondaryButtonText}>Return to Portal Login</Text>
+              <Text style={styles.secondaryBtnText}>Back to start</Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
-    </AppLayout>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  centerContainer: {
+  root: {
+    flex: 1,
+    backgroundColor: '#04100E',
+    overflow: 'hidden'
+  },
+  gradientBg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    ...(Platform.OS === 'web'
+      ? {
+          background: 'linear-gradient(150deg, #04100E 0%, #07302A 50%, #0B5D4B 100%)'
+        }
+      : {
+          backgroundColor: '#07302A'
+        })
+  },
+  mainWrapper: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: spacing.xxl
+    padding: 20
+  },
+  mainWrapperWide: {
+    maxWidth: 520,
+    alignSelf: 'center',
+    width: '100%'
   },
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
-    padding: spacing.xl,
     width: '100%',
-    maxWidth: 460,
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 28,
+    padding: 28,
     alignItems: 'center',
-    ...shadows.md
+    gap: 18,
+    boxShadow: '0 24px 56px rgba(4, 16, 14, 0.45)',
+    elevation: 8
   },
-  lockBadge: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
+  shieldWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md
+    position: 'relative',
+    width: 96,
+    height: 96,
+    marginBottom: 4
   },
-  lockIcon: {
-    fontSize: 28
+  shieldRing: {
+    position: 'absolute',
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: '#FEE4E2',
+    opacity: 0.7
+  },
+  shieldCenter: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#FECDCA',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  messageBlock: {
+    alignItems: 'center',
+    gap: 8
   },
   title: {
-    fontSize: typography.sizes.xxl,
-    fontWeight: typography.weights.bold,
-    color: '#991B1B',
-    marginBottom: spacing.sm
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#0A1A17',
+    letterSpacing: -0.6
   },
-  messageBanner: {
-    backgroundColor: '#FEF2F2',
-    borderLeftWidth: 4,
-    borderLeftColor: '#DC2626',
-    padding: spacing.md,
-    borderRadius: borderRadius.sm,
-    marginVertical: spacing.md,
-    width: '100%'
-  },
-  exactMessage: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: '#991B1B',
+  messageText: {
+    fontSize: 15,
+    color: '#B42318',
     textAlign: 'center',
-    lineHeight: 20
+    fontWeight: '600',
+    lineHeight: 22,
+    paddingHorizontal: 8
   },
-  details: {
-    fontSize: typography.sizes.xs,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 18,
-    marginBottom: spacing.lg
-  },
-  actions: {
-    width: '100%'
-  },
-  primaryButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 12,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-    marginBottom: spacing.sm
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold
-  },
-  secondaryButton: {
-    backgroundColor: colors.surfaceSubtle,
+  rejectedEmailBox: {
+    backgroundColor: '#F4F8F7',
     borderWidth: 1,
-    borderColor: colors.borderDark,
-    paddingVertical: 12,
-    borderRadius: borderRadius.md,
-    alignItems: 'center'
+    borderColor: '#DDE8E5',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    width: '100%'
   },
-  secondaryButtonText: {
-    color: colors.textSecondary,
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.medium
+  rejectedEmailLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#7E918C',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2
+  },
+  rejectedEmailValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0A1A17'
+  },
+  noteBox: {
+    flexDirection: 'row',
+    gap: 10,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    width: '100%'
+  },
+  noteText: {
+    fontSize: 12.5,
+    color: '#51635E',
+    lineHeight: 18,
+    flex: 1
+  },
+  actionGroup: {
+    width: '100%',
+    gap: 10,
+    marginTop: 6
+  },
+  primaryBtn: {
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: '#00B386',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    boxShadow: '0 8px 20px rgba(0, 179, 134, 0.3)',
+    elevation: 3
+  },
+  primaryBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700'
+  },
+  secondaryBtn: {
+    height: 50,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#DDE8E5',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  secondaryBtnText: {
+    color: '#51635E',
+    fontSize: 14,
+    fontWeight: '700'
   }
 });
 

@@ -10,7 +10,7 @@ export function ProgressRing({
   size = 76,
   strokeWidth = 8,
   progress = 75,
-  color = '#5B5BF0',
+  color = '#00B386',
   trackColor,
   centerContent
 }) {
@@ -136,7 +136,7 @@ export function AttendanceTrendChart({ data = [94, 98, 97, 95, 99, 86, 92] }) {
  */
 export function DepartmentDistributionChart({
   departments = [
-    { name: 'Engineering', count: 42, color: '#5B5BF0', percent: 45 },
+    { name: 'Engineering', count: 42, color: '#00B386', percent: 45 },
     { name: 'Product & Design', count: 18, color: '#14C8D9', percent: 20 },
     { name: 'Operations & Fitness', count: 20, color: '#8B5CF6', percent: 22 },
     { name: 'People & Admin', count: 12, color: '#F5A524', percent: 13 }

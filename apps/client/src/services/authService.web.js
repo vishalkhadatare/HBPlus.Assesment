@@ -3,13 +3,16 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut as firebaseSignOut
 } from 'firebase/auth';
 import { auth } from '../config/firebase.js';
 
 const googleProvider = new GoogleAuthProvider();
-// Prompt user to select account (enables easy account switching)
+// Note: hd is only a UI hint to pre-filter Google account chooser, NEVER trusted for security
 googleProvider.setCustomParameters({
+  hd: 'hbplus.fit',
   prompt: 'select_account'
 });
 
@@ -52,6 +55,22 @@ export async function checkRedirectResult() {
 }
 
 /**
+ * Email/Password authentication.
+ */
+export async function signInWithEmail(email, password) {
+  const result = await signInWithEmailAndPassword(auth, email, password);
+  const idToken = await result.user.getIdToken();
+  return { user: result.user, idToken };
+}
+
+/**
+ * Sends a password reset email via Firebase Auth.
+ */
+export async function sendPasswordReset(email) {
+  await sendPasswordResetEmail(auth, email);
+}
+
+/**
  * Signs out the current Firebase user.
  */
 export async function signOut() {
@@ -61,5 +80,7 @@ export async function signOut() {
 export default {
   signInWithGoogle,
   checkRedirectResult,
+  signInWithEmail,
+  sendPasswordReset,
   signOut
 };

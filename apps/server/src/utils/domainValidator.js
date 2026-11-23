@@ -1,69 +1,46 @@
 /**
- * Reusable domain validation utility.
+ * Domain validation utility (Single Source of Truth)
  * Enforces strict, normalized, exact-match validation against an allowed email domain.
  */
 
+export const ALLOWED_DOMAIN = process.env.ALLOWED_EMAIL_DOMAIN || 'hbplus.fit';
+
 /**
- * Validates whether an email belongs to the configured allowed domain.
+ * Pure function: Validates whether an email belongs to the configured allowed domain.
  * 
  * Rules:
  * - Reject missing, non-string, or empty email
- * - Reject malformed email formats
- * - Normalize email and domain (lowercase, trimmed)
- * - Extract domain after the last '@'
- * - Exact equality check against allowed domain (no substring or suffix tricks)
+ * - Exactly one '@', with at least 1 character before it
+ * - Reject non-ASCII / Unicode look-alike spoofing characters
+ * - Reject quotes, subdomains, evil suffixes or prefixes
+ * - EXACT equality match on domain portion (case-insensitive, trimmed)
  * 
  * @param {string} email - The email address to validate.
- * @param {string} [configuredDomain] - The allowed domain (defaults to process.env.ALLOWED_EMAIL_DOMAIN or 'hbplus.fit').
- * @returns {boolean} True if email is valid and matches the allowed domain exactly.
+ * @param {string} [domain=ALLOWED_DOMAIN] - The target domain.
+ * @returns {boolean} True if email is strictly allowed.
  */
-export function isAllowedEmailDomain(email, configuredDomain) {
-  if (!email || typeof email !== 'string') {
-    return false;
-  }
+export function isAllowedEmail(email, domain = ALLOWED_DOMAIN) {
+  if (!email || typeof email !== 'string') return false;
 
-  const trimmedEmail = email.trim().toLowerCase();
-  if (!trimmedEmail) {
-    return false;
-  }
+  const e = email.trim().toLowerCase();
+  if (!e) return false;
 
-  // Basic RFC 5322 compliant regex check for well-formed email addresses
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
-  if (!emailRegex.test(trimmedEmail)) {
-    return false;
-  }
+  // Reject non-ASCII characters (blocks Cyrillic, Greek, or Unicode look-alike domain attacks)
+  if (/[^\x20-\x7E]/.test(e)) return false;
 
-  const atParts = trimmedEmail.split('@');
-  if (atParts.length !== 2) {
-    return false;
-  }
+  // Reject quotes in local part or domain attacks e.g. "a@hbplus.fit"@evil.com
+  if (e.includes('"')) return false;
 
-  const [localPart, domainPart] = atParts;
-  if (!localPart || !domainPart) {
-    return false;
-  }
+  const at = e.lastIndexOf('@');
+  // Must have exactly one '@' and something before it (at >= 1)
+  if (at < 1 || at !== e.indexOf('@')) return false;
 
-  // Resolve target allowed domain
-  const rawTargetDomain = configuredDomain || process.env.ALLOWED_EMAIL_DOMAIN || 'hbplus.fit';
-  if (!rawTargetDomain || typeof rawTargetDomain !== 'string') {
-    return false;
-  }
-
-  const targetDomain = rawTargetDomain.trim().toLowerCase();
-  if (!targetDomain) {
-    return false;
-  }
-
-  // Exact domain equality match
-  return domainPart === targetDomain;
+  // Exactly match the domain portion
+  const targetDomain = (domain || ALLOWED_DOMAIN).toLowerCase().trim();
+  return e.slice(at + 1) === targetDomain;
 }
 
-/**
- * Normalizes an email string safely.
- * @param {string} email 
- * @returns {string|null}
- */
-export function normalizeEmail(email) {
-  if (!email || typeof email !== 'string') return null;
-  return email.trim().toLowerCase();
-}
+// Backwards compatibility alias
+export const isAllowedEmailDomain = isAllowedEmail;
+
+export default isAllowedEmail;
