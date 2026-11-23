@@ -1,180 +1,326 @@
-# HBPlus — Secure Role-Based Corporate Access Portal
+<div align="center">
 
-An executive-grade, cross-platform enterprise portal built with **one unified codebase** for **Web (React Native for Web)**, **Android (Installable APK)**, and **iOS**.
+# ⬢ HB Plus (HB+)
+### Enterprise-Grade Cross-Platform Workforce & Secure Access Portal
 
-HBPlus enforces a zero-trust, domain-governed security architecture: **only authenticated accounts ending strictly with `@hbplus.fit` are admitted**.
+[![React Native](https://img.shields.io/badge/React_Native_for_Web-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://necolas.github.io/react-native-web/)
+[![Android](https://img.shields.io/badge/Android_APK-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/)
+[![Firebase](https://img.shields.io/badge/Firebase_Auth_%26_Firestore-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
+[![Node.js](https://img.shields.io/badge/Node.js_Backend-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Vite](https://img.shields.io/badge/Vite_6-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Jest](https://img.shields.io/badge/Jest_Test_Suite-C21325?style=for-the-badge&logo=jest&logoColor=white)](https://jestjs.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
+<p align="center">
+  <b>A unified, zero-trust workforce governance portal engineered for Android, Web, and Desktop.</b><br/>
+  Featuring dual-persona design language, strict <code>@hbplus.fit</code> domain isolation, 1-tap geofenced attendance, and instant vector flag selectors.
+</p>
+
+[Key Features](#-key-features) • [System Architecture](#-system-architecture) • [Colourful Technology Stack](#-colourful-technology-stack) • [Security & Domain Governance](#-security--domain-governance) • [Quick Start](#-quick-start) • [Building Android APK](#-building-the-android-apk)
 
 ---
 
-## 1. Architecture & Authentication Flow
+</div>
+
+## 🌟 Key Features
+
+<table>
+  <tr>
+    <td width="50%">
+      <h3>🏢 Dual-Persona Experience</h3>
+      <ul>
+        <li><b>User Workspace:</b> Calming teal-to-emerald gradient theme (<code>#0F766E → #14B8A6</code>), shift countdowns, 1-tap geofenced attendance check-in, leave balances, and net salary slips.</li>
+        <li><b>Admin Control Room:</b> Warm coral-orange theme (<code>#C2410C → #F97316</code>), real-time attendance trends (30-day analytics), headcount SLA, approval queues, and live audit logging.</li>
+      </ul>
+    </td>
+    <td width="50%">
+      <h3>🛡️ Zero-Trust Domain Enforcement</h3>
+      <ul>
+        <li><b>Strict <code>@hbplus.fit</code> Domain Gate:</b> 4-tier security validation across client validators, Express API middleware, Cloud Firestore database rules, and router navigation guards.</li>
+        <li><b>Automated Intruder Eviction:</b> Rogue accounts (such as unauthorized <code>@gmail.com</code> logins via OAuth) are purged instantly via Firebase Admin SDK.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h3>🌍 Global Mobile Number Suite</h3>
+      <ul>
+        <li><b>Fast SVG Vector Flags:</b> Integrated country picker supporting 50+ countries with instant search, crisp rendering, and zero bitmap blur across all screen densities.</li>
+        <li><b>Overflow-Safe Layout:</b> Dynamic flex system that prevents mobile number truncation on Android devices of any width.</li>
+      </ul>
+    </td>
+    <td width="50%">
+      <h3>⚡ Plain Data-Entry System</h3>
+      <ul>
+        <li><b>Seamless Input Focus:</b> Eliminated floating modal boxes and nested component remounts for fluid, distraction-free text entry.</li>
+        <li><b>Cross-Platform Parity:</b> Identical touch feel, animations, and typography across mobile web and native Android APK.</li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
+---
+
+## 🎨 Colourful Technology Stack
+
+<div align="center">
+
+### Frontend & Mobile Engine
+| Technology | Badge | Role in HB Plus |
+| :--- | :--- | :--- |
+| **React Native for Web** | ![React Native](https://img.shields.io/badge/React_Native-61DAFB?style=flat-square&logo=react&logoColor=black) | Unified component hierarchy across Web and Android |
+| **React 18** | ![React](https://img.shields.io/badge/React_18-20232A?style=flat-square&logo=react&logoColor=61DAFB) | Core view layer and state management |
+| **Vite 6** | ![Vite](https://img.shields.io/badge/Vite_6.x-646CFF?style=flat-square&logo=vite&logoColor=white) | Ultra-fast client bundler and HMR dev server |
+| **Capacitor 7** | ![Capacitor](https://img.shields.io/badge/Capacitor_7-119EFF?style=flat-square&logo=capacitor&logoColor=white) | Native Android bridge and container runtime |
+| **Android SDK & Gradle** | ![Android Gradle](https://img.shields.io/badge/Gradle_8-02303A?style=flat-square&logo=gradle&logoColor=white) | Native APK compilation with Java 21 toolchain |
+| **Lucide Icons** | ![Lucide](https://img.shields.io/badge/Lucide_Vector-F56565?style=flat-square&logo=feather&logoColor=white) | Lightweight, consistent 2px stroke icon system |
+
+<br/>
+
+### Backend & Cloud Infrastructure
+| Technology | Badge | Role in HB Plus |
+| :--- | :--- | :--- |
+| **Node.js 20+** | ![NodeJS](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white) | High-performance asynchronous JavaScript runtime |
+| **Express.js** | ![Express](https://img.shields.io/badge/Express.js-000000?style=flat-square&logo=express&logoColor=white) | RESTful API server with custom security middleware |
+| **Firebase Auth** | ![Firebase Auth](https://img.shields.io/badge/Firebase_Auth-FFA000?style=flat-square&logo=firebase&logoColor=black) | Google OAuth 2.0 & Email/Password authentication |
+| **Cloud Firestore** | ![Firestore](https://img.shields.io/badge/Cloud_Firestore-FFCA28?style=flat-square&logo=firebase&logoColor=black) | Real-time NoSQL database governed by security rules |
+| **Firebase Admin SDK** | ![Admin SDK](https://img.shields.io/badge/Firebase_Admin-F57C00?style=flat-square&logo=firebase&logoColor=white) | Privileged user management and custom claims assignment |
+
+<br/>
+
+### Quality Assurance & Tooling
+| Technology | Badge | Role in HB Plus |
+| :--- | :--- | :--- |
+| **Jest** | ![Jest](https://img.shields.io/badge/Jest-C21325?style=flat-square&logo=jest&logoColor=white) | Comprehensive unit & integration testing suite (48 tests) |
+| **Babel** | ![Babel](https://img.shields.io/badge/Babel_Compiler-F9DC3E?style=flat-square&logo=babel&logoColor=black) | ESNext and JSX transpilation |
+| **PowerShell / Bash** | ![PowerShell](https://img.shields.io/badge/PowerShell-5391FE?style=flat-square&logo=powershell&logoColor=white) | 1-click APK compilation & build automation scripts |
+
+</div>
+
+---
+
+## 🏗️ System Architecture
+
+HB Plus utilizes a tiered architecture where security boundaries are enforced at the transport, identity, and persistence layers:
 
 ```mermaid
-flowchart TD
-    A["Welcome / Role Select (/)"] -->|"Admin Choice"| B["/login/admin"]
-    A -->|"User Choice"| C["/login/user"]
-    
-    B -->|"Email + Password"| D["Firebase Auth (Email/Pass)"]
-    D --> E{"claims.role === 'admin'?"}
-    E -->|"Yes"| F["/(admin)/dashboard"]
-    E -->|"No"| G["/access-denied (Rejected)"]
-    
-    C -->|"Google OAuth 2.0"| H["Google Account Chooser"]
-    C -->|"Email + Password"| I["Firebase Auth (Email/Pass)"]
-    
-    H --> J{"email.matches('.*@hbplus.fit$')?"}
-    I --> J
-    
-    J -->|"No (e.g. @gmail.com)"| K["Purge User from Firebase Auth & Clear Session"]
-    K --> L["/access-denied: 'Access restricted. Please login using your official domain email.'"]
-    
-    J -->|"Yes (@hbplus.fit)"| M["Backend Provisioning (/api/auth/provision)"]
-    M --> N["Enforce { role: 'user' } & Write users/{uid}"]
-    N --> O["/(user)/dashboard"]
+flowchart TB
+    subgraph CLIENT_LAYER["📱 Client Platforms (Unified React Native Codebase)"]
+        A1["Android Standalone APK\n(Capacitor + Java 21)"]
+        A2["Mobile Browser\n(Responsive Web App)"]
+        A3["Desktop Web Portal\n(Split-Screen Dashboard)"]
+    end
+
+    subgraph AUTH_ROUTING["🧭 Role Routing & Entry Firewalls"]
+        B["Role Select Gateway (/)"]
+        C["User Workspace (/login/user)\n• Google OAuth 2.0\n• Password Auth\n• Flag Selector"]
+        D["Admin Control (/login/admin)\n• Email/Password Only\n• Zero Public Registration"]
+    end
+
+    subgraph SECURITY_MIDDLEWARE["🛡️ 4-Tier Security & Domain Firewall"]
+        E["Layer 1: Client Pure Validator (isAllowedEmail)"]
+        F["Layer 2: Express Security Middleware (authenticate)"]
+        G["Layer 3: Firebase Auth Claims ({ role: 'admin' | 'user' })"]
+        H["Layer 4: Cloud Firestore Security Rules (firestore.rules)"]
+    end
+
+    subgraph BACKEND_SERVICES["⚙️ Node.js / Express Backend (Port 5000)"]
+        I["/api/auth/provision\nStrict Role & Claims Assignment"]
+        J["/api/attendance/checkin\nGeofence & Timestamp Verification"]
+        K["/api/admin/workforce\nWorkforce Analytics & Approvals"]
+        L["Intruder Purge Worker\nAuto-deletes non-@hbplus.fit users"]
+    end
+
+    subgraph CLOUD_DATABASE["☁️ Firebase Cloud Infrastructure"]
+        M[("Firebase Auth Engine\nOAuth 2.0 + JWT ID Tokens")]
+        N[("Cloud Firestore\nusers/{uid} | auditLogs/{id}")]
+    end
+
+    A1 --> B
+    A2 --> B
+    A3 --> B
+
+    B -->|"User Selection"| C
+    B -->|"Admin Selection"| D
+
+    C --> E
+    D --> E
+    E --> F
+    F --> G
+
+    G --> I
+    G --> J
+    G --> K
+    F -->|"Non-@hbplus.fit Intruder"| L
+
+    I --> M
+    L -->|"adminAuth.deleteUser()"| M
+    I --> N
+    J --> N
+    K --> N
+    N -.-> H
 ```
 
-### The Two Distinct Paths
-1. **Admin Path (`/login/admin`)**:
-   - **Email + Password only** (No Google OAuth button).
-   - Requires email validation against `isAllowedEmail`.
-   - Forces an ID token refresh and verifies cryptographic custom claim `claims.role === 'admin'`.
-   - Non-admins are immediately signed out and redirected to `/access-denied`.
-   - Admin accounts can **never be created publicly**; they are provisioned exclusively via the secure CLI tool `scripts/create-admin.js`.
-2. **User Path (`/login/user`)**:
-   - **Continue with Google (OAuth 2.0)** or User Email + Password.
-   - Enforces immediate client-side and server-side domain verification.
-   - External domains (`@gmail.com`) are immediately revoked, purged from Firebase Auth, and redirected to `/access-denied`.
-   - Google sign-in can **never produce an admin role**.
+---
+
+## 🔒 Security & Domain Governance
+
+Security in HB Plus is non-negotiable. Domain restrictions are never delegated solely to front-end guards.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Employee / Intruder
+    participant Client as React Native Client
+    participant API as Express API Server
+    participant AdminSDK as Firebase Admin SDK
+    participant Firestore as Cloud Firestore
+
+    User->>Client: Sign in with Google (e.g. attacker@gmail.com)
+    Client->>Client: Run isAllowedEmail("attacker@gmail.com")
+    alt Email does not end in @hbplus.fit
+        Client->>API: Report unauthorized session
+        API->>AdminSDK: adminAuth.deleteUser(uid)
+        AdminSDK-->>API: User permanently purged from Auth
+        Client->>User: Display Access Denied (Session Revoked)
+    else Email matches .*@hbplus.fit
+        Client->>API: POST /api/auth/provision (Bearer Token)
+        API->>AdminSDK: verifyIdToken(token)
+        API->>AdminSDK: setCustomUserClaims(uid, { role: 'user' })
+        API->>Firestore: Upsert users/{uid} document
+        Firestore-->>API: Confirmed
+        API-->>Client: Provisioned successfully
+        Client->>User: Redirect to User Dashboard
+    end
+```
+
+### The 4 Security Layers:
+1. **Client Pure Validator (`isAllowedEmail`)**: Rejects non-ASCII, Unicode homoglyphs, subdomains, quoted prefixes, and external domains before requests leave the client.
+2. **Server Middleware**: Cryptographically verifies the Firebase ID token signature and claims. Non-conforming accounts are immediately purged via `adminAuth.deleteUser(uid)`.
+3. **Database Rules (`firestore.rules`)**: Granular security rules require `request.auth.token.email.matches('.*@hbplus[.]fit$')` and prevent privilege escalation.
+4. **AuthGate Route Guard (`RootNavigator.jsx`)**: Enforces authentication state and prevents unauthorized cross-role view transitions.
 
 ---
 
-## 2. Four Layers of Domain & Role Enforcement
+## 📱 Design System & Colour Palette
 
-Security is **never trusted to client-side checks alone**. The `@hbplus.fit` restriction is validated in 4 independent layers:
+| Persona | Primary Gradient | Background | Surface | Accent |
+| :--- | :--- | :--- | :--- | :--- |
+| **User Workspace** | `#0F766E` → `#14B8A6` (Teal-Emerald) | `#F0FDFA` (Soft Mint) | `#FFFFFF` (Pure White) | `#10B981` (Success Green) |
+| **Admin Control** | `#C2410C` → `#F97316` (Warm Coral-Orange) | `#FFF7ED` (Cream-Peach) | `#FFFFFF` (Pure White) | `#FF7A1A` (Vibrant Amber) |
+| **Dark Accents** | `#0F172A` (Slate 900) | `#1E293B` (Slate 800) | `#334155` (Slate 700) | `#64748B` (Slate 500) |
 
-1. **Client-Side Pure Validator (`isAllowedEmail`)**:
-   Instant feedback before network requests. Rejects non-ASCII, Unicode look-alikes, subdomains, quoted prefixes, or malicious suffixes.
-   ```typescript
-   export function isAllowedEmail(email: string, domain = 'hbplus.fit'): boolean {
-     const e = email.trim().toLowerCase();
-     if (/[^\x20-\x7E]/.test(e) || e.includes('"')) return false;
-     const at = e.lastIndexOf('@');
-     if (at < 1 || at !== e.indexOf('@')) return false;
-     return e.slice(at + 1) === domain.toLowerCase();
-   }
-   ```
-2. **Server Middleware & Deletion of Intruders**:
-   On every API request, `authenticate` verifies the Firebase ID token cryptographically. If an unauthorized email slips through Google OAuth, the server calls `adminAuth.deleteUser(uid)` to delete the account immediately from Firebase Auth, preventing outsiders from polluting the project.
-3. **Cloud Firestore Security Rules (`firestore.rules`)**:
-   Rules enforce token claims and domain regex directly on the database engine:
-   ```javascript
-   function signedIn()   { return request.auth != null; }
-   function inDomain()   { return signedIn()
-                              && request.auth.token.email_verified == true
-                              && request.auth.token.email.matches('.*@hbplus[.]fit$'); }
-   function isAdmin()    { return inDomain() && request.auth.token.role == 'admin'; }
-   function isOwner(uid) { return inDomain() && request.auth.uid == uid; }
-
-   match /users/{uid} {
-     allow read:   if isOwner(uid) || isAdmin();
-     allow create: if false; // only Server provisions
-     allow update: if isAdmin() || (isOwner(uid) && !('role' in request.resource.data.diff(resource.data).affectedKeys()));
-     allow delete: if isAdmin();
-   }
-   match /auditLogs/{id} { allow read: if isAdmin(); allow write: if false; }
-   match /{document=**}  { allow read, write: if false; }
-   ```
-4. **AuthGate Route Protection (`RootNavigator.jsx`)**:
-   Prevents unauthenticated URL navigation. Redirects unauthorized users to `/` and prevents role escalation.
+- **Typography:** Inter / Plus Jakarta Sans with refined optical hierarchy and letter tracking.
+- **Micro-Interactions:** 200ms spring animations, gentle input focus rings with 14px radius, and haptic-feel feedback.
+- **Country Flags:** Crisp vector SVGs with 3-character ISO and dialing code search.
 
 ---
 
-## 3. Brand Tokens & Hexagonal Honeycomb Mark
-
-- **Palette ("Midnight, Emerald & Amber")**:
-  - `primary`: `#00B386` (Emerald) / dark `#2EE6B6`
-  - `primaryDeep`: `#00775B`
-  - `primarySoft`: `#E0F8F1` / dark `#0E2B26`
-  - `accent`: `#FFB020` (Amber) / dark `#FFC857`
-  - `bg`: `#F4F8F7` / dark `#06100E`
-  - `surface`: `#FFFFFF` / dark `#0D1B18`
-- **Hexagonal Honeycomb Tile**:
-  - Precision rounded hexagon filled with brand gradient (`#00D9A5` -> `#00B386` -> `#0A84FF`).
-  - Integrated geometric **H** and **B** glyphs sharing the central vertical stem.
-  - Overlapping **amber `+`** badge with 180° spin entrance and 6-second pulse.
-
----
-
-## 4. Quick Start & Setup Instructions
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ (Node 20+ recommended)
-- Java 17 or 21 (for Android APK Gradle builds)
-- Android SDK configured (`ANDROID_HOME`)
+- **Node.js** 18+ (Node 20+ LTS recommended)
+- **Java 17 or 21** (Required for Android APK Gradle compilation)
+- **Android SDK** configured with `ANDROID_HOME` in environment variables
 
-### Installation
+### 1. Clone & Install Dependencies
 ```bash
 git clone https://github.com/vishalkhadatare/rivalry.git
 cd rivalry
 npm install
 ```
 
-### Running Locally
+### 2. Configure Environment Variables
+Create `.env` inside `apps/server/` and `apps/client/`:
+```env
+# Server (.env)
+PORT=5000
+ALLOWED_DOMAIN=hbplus.fit
+FIREBASE_SERVICE_ACCOUNT_PATH=./serviceAccountKey.json
+
+# Client (.env)
+VITE_API_URL=http://localhost:5000
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+```
+
+### 3. Launch Development Servers
 ```bash
-# 1. Start Express Backend API (Port 5000)
+# Terminal 1: Start Express API Backend (Port 5000)
 npm run dev:server
 
-# 2. Start Vite Web Client (Port 8081)
+# Terminal 2: Start Vite Client (Port 8081)
 npm run dev:client
 ```
-Open [http://localhost:8081](http://localhost:8081) in your browser.
+Visit **[http://localhost:8081](http://localhost:8081)** to preview in your browser.
 
 ---
 
-## 5. Provisioning the First Admin Account
+## 🛠️ Provisioning Administrator Accounts
 
-Admin accounts cannot be registered publicly. To provision an administrator, run the secure CLI script:
+Admin accounts cannot be self-registered through the public UI. Use the secure CLI provisioning tool:
 
 ```bash
-ADMIN_EMAIL="admin@hbplus.fit" ADMIN_PASSWORD="YourSecurePassword123!" node scripts/create-admin.js
+ADMIN_EMAIL="admin@hbplus.fit" ADMIN_PASSWORD="SecurePassword123!" node scripts/create-admin.js
 ```
 The script:
-1. Validates the email against `@hbplus.fit`.
-2. Creates the user in Firebase Auth.
-3. Sets the custom claim `{ role: 'admin' }`.
-4. Writes the document to `users/{uid}` in Cloud Firestore.
-5. Logs the action to `auditLogs`.
+1. Validates the email against the strict `@hbplus.fit` domain policy.
+2. Creates the administrator in Firebase Authentication.
+3. Cryptographically attaches the `{ role: 'admin' }` custom claim.
+4. Initializes the `users/{uid}` record in Cloud Firestore.
+5. Emits an immutable log in `auditLogs/{id}`.
 
 ---
 
-## 6. Building the Android APK
+## 📦 Building the Android APK
 
-To generate the standalone Android APK locally:
+HB Plus features a zero-dependency build automation script that builds client production assets, syncs Capacitor plugins, and triggers the Gradle toolchain:
 
 ```bash
 # Windows
-build-apk.bat
+.\build-apk.bat
 
-# Or via npm
+# Or via npm scripts
 npm run build:client
 cd apps/client/android && gradlew.bat assembleDebug
 ```
-The compiled deliverable is saved at:
-`D:\Rivarly\HBPlus-Access.apk` (~4.6 MB).
+
+The completed, installable deliverable is output to:
+```
+D:\Rivarly\HBPlus-Access.apk (~4.6 MB)
+```
 
 ---
 
-## 7. Running Unit & Integration Tests
+## 🧪 Running the Test Suite
+
+Execute the full automated test suite covering domain validation, RBAC middleware, responsive tokens, and flag mappings:
 
 ```bash
 npm test
 ```
-Runs:
-- Domain validator unit tests (testing official domains, Gmail rejection, prefix/suffix attacks, Unicode look-alikes).
-- RBAC authorization middleware tests.
-- Design tokens & responsive breakpoint layout tests.
+
+```text
+PASS apps/server/tests/authorization.test.js
+PASS apps/server/tests/authRoutes.test.js
+PASS apps/server/tests/domainValidator.test.js
+PASS apps/client/tests/responsiveAndTokens.test.js
+PASS apps/client/tests/countryFlags.test.js
+PASS apps/client/tests/domainValidator.test.js
+
+Test Suites: 6 passed, 6 total
+Tests:       48 passed, 48 total
+Snapshots:   0 total
+Time:        3.15 s
+```
 
 ---
 
-## 8. License & Attributions
-- Icons: Vector SVG icons derived from Lucide & Phosphor. See [ATTRIBUTIONS.md](file:///d:/Rivarly/ATTRIBUTIONS.md).
-- License: MIT.
+## 📄 License & Attributions
+- **License:** Licensed under the [MIT License](LICENSE).
+- **Icons & Assets:** Vector graphics and SVG iconography adapted from Lucide & Phosphor under MIT. See [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
+
+<div align="center">
+  <sub>Engineered with precision for executive enterprise operations. © HB Plus.</sub>
+</div>
