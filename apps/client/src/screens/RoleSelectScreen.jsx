@@ -59,7 +59,7 @@ export function RoleSelectScreen() {
             accessibilityLabel="Admin"
           >
             <View style={styles.adminIconTile}>
-              <Icon name="shieldCheck" size={26} color="#00B386" strokeWidth={2.2} />
+              <Icon name="shieldCheck" size={26} color="#EA580C" strokeWidth={2.2} />
             </View>
 
             <View style={styles.cardContent}>
@@ -67,7 +67,7 @@ export function RoleSelectScreen() {
             </View>
 
             <View style={styles.trailingArrow}>
-              <Icon name="chevronRight" size={20} color="#00B386" strokeWidth={2.4} />
+              <Icon name="chevronRight" size={20} color="#EA580C" strokeWidth={2.4} />
             </View>
           </TouchableOpacity>
 
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: CARD_RADIUS,
-    backgroundColor: 'rgba(0, 179, 134, 0.12)',
+    backgroundColor: 'rgba(234, 88, 12, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16

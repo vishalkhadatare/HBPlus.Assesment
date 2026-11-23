@@ -125,7 +125,7 @@ function AdminShellContent({ onSignOut }) {
                 <View style={styles.brandTitleCol}>
                   <Text style={styles.sidebarBrandTitle}>HBPlus</Text>
                   <View style={styles.sidebarRoleBadge}>
-                    <Icon name="shieldCheck" size={11} color="#6EE7B7" />
+                    <Icon name="shieldCheck" size={11} color="#FB923C" />
                     <Text style={styles.sidebarRoleBadgeText}>Admin Control</Text>
                   </View>
                 </View>
@@ -157,7 +157,7 @@ function AdminShellContent({ onSignOut }) {
                         <Icon
                           name={item.icon}
                           size={18}
-                          color={isActive ? '#6EE7B7' : '#A7C4BE'}
+                          color={isActive ? '#FFFFFF' : '#C4A48C'}
                           strokeWidth={isActive ? 2.4 : 1.8}
                         />
                         {!isSidebarCollapsed ? (
@@ -250,7 +250,7 @@ function AdminShellContent({ onSignOut }) {
 
               {/* Admin Badge */}
               <View style={styles.adminRolePill}>
-                <Icon name="shieldCheck" size={14} color="#00B386" strokeWidth={2.4} />
+                <Icon name="shieldCheck" size={14} color="#FFFFFF" strokeWidth={2.4} />
                 <Text style={styles.adminRolePillText}>Admin</Text>
               </View>
 
@@ -404,7 +404,7 @@ function AdminShellContent({ onSignOut }) {
                             style={[
                               styles.roleBadgeCell,
                               item.role === 'Admin'
-                                ? { backgroundColor: '#00775B' }
+                                ? { backgroundColor: '#EA580C' }
                                 : { backgroundColor: '#E2E8F0' }
                             ]}
                           >
@@ -452,7 +452,7 @@ function AdminShellContent({ onSignOut }) {
                             activeOpacity={0.7}
                             accessibilityLabel="Edit Role"
                           >
-                            <Icon name="shieldCheck" size={13} color="#00775B" />
+                            <Icon name="shieldCheck" size={13} color="#EA580C" />
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -473,7 +473,7 @@ function AdminShellContent({ onSignOut }) {
 
                     {approvalsList.length === 0 ? (
                       <View style={styles.emptyState}>
-                        <Icon name="checkCircle" size={28} color="#00B386" />
+                        <Icon name="checkCircle" size={28} color="#EA580C" />
                         <Text style={styles.emptyStateText}>All pending approvals cleared!</Text>
                       </View>
                     ) : (
@@ -695,7 +695,7 @@ export function AdminShell({ onSignOut }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#E9F1F1',
+    backgroundColor: '#FAF6F2',
     position: 'relative'
   },
   identityStrip: {
@@ -748,7 +748,7 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   sidebarSectionHeading: {
-    color: '#6E948C',
+    color: '#A88A72',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -771,11 +771,11 @@ const styles = StyleSheet.create({
     gap: 12
   },
   sidebarNavItemActive: {
-    backgroundColor: 'rgba(0, 179, 134, 0.2)'
+    backgroundColor: '#EA580C'
   },
   sidebarNavLabel: {
     flex: 1,
-    color: '#A7C4BE',
+    color: '#D4B8A3',
     fontSize: 13,
     fontWeight: '600'
   },
@@ -784,7 +784,7 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
   navBadge: {
-    backgroundColor: '#00B386',
+    backgroundColor: '#EA580C',
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 8
@@ -835,20 +835,20 @@ const styles = StyleSheet.create({
   },
   topBar: {
     height: 60,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     ...(Platform.OS === 'web' ? { backdropFilter: 'blur(10px)' } : {}),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#DCE9EB',
+    borderBottomColor: '#EDE4DA',
     zIndex: 10
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E3ECEE',
+    backgroundColor: '#F3EAE1',
     borderRadius: CARD_RADIUS,
     paddingHorizontal: 12,
     height: 38,
@@ -882,7 +882,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: '#FFF7ED',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: CARD_RADIUS
@@ -891,12 +891,12 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#00B386'
+    backgroundColor: '#EA580C'
   },
   statusDotText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#00775B'
+    color: '#EA580C'
   },
   iconCircleBtn: {
     width: 36,
@@ -914,13 +914,13 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#00B386'
+    backgroundColor: '#EA580C'
   },
   adminRolePill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#00775B',
+    backgroundColor: '#EA580C',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: CARD_RADIUS
@@ -1059,10 +1059,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: CARD_RADIUS,
-    backgroundColor: '#E3ECEE'
+    backgroundColor: '#F3EAE1'
   },
   filterPillActive: {
-    backgroundColor: '#00775B'
+    backgroundColor: '#EA580C'
   },
   filterPillText: {
     fontSize: 11,
@@ -1080,7 +1080,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#DCE9EB'
+    borderBottomColor: '#EDE4DA'
   },
   tableTh: {
     fontSize: 11,
@@ -1178,7 +1178,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: CARD_RADIUS,
-    backgroundColor: '#00B386',
+    backgroundColor: '#EA580C',
     alignItems: 'center',
     justifyContent: 'center'
   },
@@ -1198,7 +1198,7 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#00775B'
+    color: '#EA580C'
   },
   auditCard: {
     flex: 1,
@@ -1257,7 +1257,7 @@ const styles = StyleSheet.create({
     height: 64,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#DCE9EB',
+    borderTopColor: '#EDE4DA',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
@@ -1278,7 +1278,7 @@ const styles = StyleSheet.create({
     color: '#64748B'
   },
   phoneBottomLabelActive: {
-    color: '#00B386',
+    color: '#EA580C',
     fontWeight: '700'
   },
   phoneBadgeDot: {

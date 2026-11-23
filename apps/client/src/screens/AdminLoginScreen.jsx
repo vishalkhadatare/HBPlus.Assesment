@@ -128,7 +128,7 @@ function AdminLoginInner() {
             <View style={styles.desktopBrandBox}>
               <HBLogo size={68} />
               <View style={styles.roleTitleRow}>
-                <Icon name="shieldCheck" size={26} color="#00B386" strokeWidth={2.4} />
+                <Icon name="shieldCheck" size={26} color="#FF7A1A" strokeWidth={2.4} />
                 <Text style={styles.desktopTitleText}>Admin</Text>
               </View>
               <View style={styles.controlPill}>
@@ -207,7 +207,7 @@ function AdminLoginInner() {
             <View style={styles.phoneBrandBox}>
               <HBLogo size={46} />
               <View style={styles.phoneTitleRow}>
-                <Icon name="shieldCheck" size={22} color="#00B386" strokeWidth={2.4} />
+                <Icon name="shieldCheck" size={22} color="#FB923C" strokeWidth={2.4} />
                 <Text style={styles.phoneTitleText}>Admin</Text>
               </View>
             </View>
@@ -281,7 +281,7 @@ export function AdminLoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E9F1F1',
+    backgroundColor: '#FAF6F2',
     position: 'relative'
   },
   identityStrip: {
@@ -300,9 +300,9 @@ const styles = StyleSheet.create({
   },
   desktopLeftPanel: {
     width: '42%',
-    backgroundColor: '#00775B',
+    backgroundColor: '#1A1412',
     ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(155deg, #0B2B27 0%, #00775B 50%, #0E3B5C 100%)' }
+      ? { backgroundImage: 'linear-gradient(155deg, #1A1412 0%, #2A170F 50%, #EA580C 100%)' }
       : {}),
     alignItems: 'center',
     justifyContent: 'center',
@@ -341,17 +341,17 @@ const styles = StyleSheet.create({
   desktopTitleText: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#ECFBF6',
+    color: '#FDF4EC',
     letterSpacing: -0.4
   },
   controlPill: {
-    backgroundColor: 'rgba(0, 179, 134, 0.2)',
+    backgroundColor: 'rgba(234, 88, 12, 0.25)',
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: CARD_RADIUS
   },
   controlPillText: {
-    color: '#6EE7B7',
+    color: '#FB923C',
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -359,9 +359,9 @@ const styles = StyleSheet.create({
   },
   desktopRightArea: {
     width: '58%',
-    backgroundColor: '#E9F1F1',
+    backgroundColor: '#FAF6F2',
     ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(180deg, #E9F1F1 0%, #DCE9EB 100%)' }
+      ? { backgroundImage: 'linear-gradient(180deg, #FAF6F2 0%, #F3ECE4 100%)' }
       : {}),
     justifyContent: 'center',
     alignItems: 'flex-start',
@@ -380,16 +380,16 @@ const styles = StyleSheet.create({
   // Phone Layout
   phoneContainer: {
     flex: 1,
-    backgroundColor: '#E9F1F1',
+    backgroundColor: '#FAF6F2',
     ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(180deg, #E9F1F1 0%, #DCE9EB 100%)' }
+      ? { backgroundImage: 'linear-gradient(180deg, #FAF6F2 0%, #F3ECE4 100%)' }
       : {})
   },
   phoneHeaderBand: {
     height: '28%',
-    backgroundColor: '#00775B',
+    backgroundColor: '#EA580C',
     ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(155deg, #0B2B27 0%, #00775B 55%, #0E3B5C 100%)' }
+      ? { backgroundImage: 'linear-gradient(155deg, #1A1412 0%, #EA580C 100%)' }
       : {}),
     borderBottomLeftRadius: CARD_RADIUS,
     borderBottomRightRadius: CARD_RADIUS,
