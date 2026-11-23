@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import colors from '../styles/colors.js';
 import typography from '../styles/typography.js';
 import { spacing, borderRadius, shadows } from '../styles/spacing.js';
@@ -20,24 +20,30 @@ export function LoginScreen() {
     setDevAllowAnyGoogle
   } = useAuth();
 
+  const [devToolsOpen, setDevToolsOpen] = useState(false);
+
   return (
     <AppLayout showHeader={false}>
       <View style={styles.centerWrapper}>
         <View style={styles.card}>
-          {/* Minimal Fitness-Tech Brand Logo */}
-          <View style={styles.logoContainer}>
+          {/* Fitness-Tech Brand Logo & Status Indicator */}
+          <View style={styles.logoSection}>
             <View style={styles.logoBadge}>
               <Text style={styles.logoText}>HB+</Text>
             </View>
+            <View style={styles.statusPill}>
+              <View style={styles.statusDot} />
+              <Text style={styles.statusPillText}>SECURE PORTAL</Text>
+            </View>
           </View>
 
-          {/* Clean Titles */}
+          {/* Typography */}
           <Text style={styles.title}>HBPlus Access</Text>
           <Text style={styles.subtitle}>
             Sign in with your @hbplus.fit Google account
           </Text>
 
-          {/* Clean Alert Banner for Domain Restriction & Errors */}
+          {/* Sleek Alert Banner for Domain Restriction & Errors */}
           {error ? (
             <ErrorMessage
               message={error}
@@ -47,7 +53,7 @@ export function LoginScreen() {
             />
           ) : null}
 
-          {/* Google Sign-In Action */}
+          {/* Google OAuth Action */}
           <View style={styles.actionContainer}>
             <GoogleSignInButton
               onPress={signInWithGoogle}
@@ -56,53 +62,70 @@ export function LoginScreen() {
             />
           </View>
 
-          {/* Subtle Domain Requirement Note */}
-          <View style={styles.domainRequirementBox}>
-            <Text style={styles.domainRequirementText}>
-              Restricted portal. Only authenticated <Text style={styles.domainHighlight}>@hbplus.fit</Text> accounts will be granted access.
+          {/* Domain Enforcement Notice */}
+          <View style={styles.securityNotice}>
+            <Text style={styles.securityIcon}>🔒</Text>
+            <Text style={styles.securityText}>
+              Restricted portal. Only authenticated{' '}
+              <Text style={styles.domainHighlight}>@hbplus.fit</Text> accounts are granted access.
             </Text>
           </View>
 
-          {/* Live Testing & Firestore Verification Panel */}
-          <View style={styles.devBox}>
-            <Text style={styles.devTitle}>🛠️ Live Firestore Testing Tools</Text>
-            <Text style={styles.devSubtitle}>
-              Test live Firestore storage & dashboard access without an @hbplus.fit Google inbox:
-            </Text>
-
-            <View style={styles.devButtonsCol}>
-              <TouchableOpacity
-                style={styles.devButton}
-                onPress={() => signInWithDemoAccount('employee@hbplus.fit', 'User')}
-                disabled={isAuthorizing}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.devButtonText}>⚡ 1-Click Test Employee (@hbplus.fit)</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.devButton, styles.devButtonAdmin]}
-                onPress={() => signInWithDemoAccount('admin@hbplus.fit', 'Admin')}
-                disabled={isAuthorizing}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.devButtonText, styles.devButtonTextAdmin]}>⚡ 1-Click Test Admin (@hbplus.fit)</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Optional Personal Google Account Bypass for live testing */}
+          {/* Modern Developer / Live Testing Sandbox (Collapsible) */}
+          <View style={styles.devSection}>
             <TouchableOpacity
-              style={styles.toggleRow}
-              onPress={() => setDevAllowAnyGoogle(!devAllowAnyGoogle)}
-              activeOpacity={0.8}
+              style={styles.devToggle}
+              onPress={() => setDevToolsOpen(!devToolsOpen)}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Toggle Developer Sandbox"
             >
-              <View style={[styles.checkbox, devAllowAnyGoogle && styles.checkboxActive]}>
-                {devAllowAnyGoogle ? <Text style={styles.checkmark}>✓</Text> : null}
-              </View>
-              <Text style={styles.toggleLabel}>
-                Allow personal Google login for this test session
+              <Text style={styles.devToggleText}>
+                {devToolsOpen ? '▾ Hide Testing Tools' : '⚡ Developer Testing Tools ▾'}
               </Text>
             </TouchableOpacity>
+
+            {devToolsOpen ? (
+              <View style={styles.devBox}>
+                <Text style={styles.devSubtitle}>
+                  Test Firestore storage & dashboard access without an active @hbplus.fit inbox:
+                </Text>
+
+                <View style={styles.devButtonsRow}>
+                  <TouchableOpacity
+                    style={[styles.devButton, styles.devButtonUser]}
+                    onPress={() => signInWithDemoAccount('employee@hbplus.fit', 'User')}
+                    disabled={isAuthorizing}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.devButtonTextUser}>👤 Employee Demo</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.devButton, styles.devButtonAdmin]}
+                    onPress={() => signInWithDemoAccount('admin@hbplus.fit', 'Admin')}
+                    disabled={isAuthorizing}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.devButtonTextAdmin}>🛡️ Admin Demo</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Personal Google Bypass Toggle for live OAuth testing */}
+                <TouchableOpacity
+                  style={styles.toggleRow}
+                  onPress={() => setDevAllowAnyGoogle(!devAllowAnyGoogle)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.checkbox, devAllowAnyGoogle && styles.checkboxActive]}>
+                    {devAllowAnyGoogle ? <Text style={styles.checkmark}>✓</Text> : null}
+                  </View>
+                  <Text style={styles.toggleLabel}>
+                    Allow personal Google email for this test session
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
           </View>
         </View>
       </View>
@@ -119,27 +142,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md
   },
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
-    padding: spacing.xl,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    paddingVertical: 36,
+    paddingHorizontal: 32,
     width: '100%',
-    maxWidth: 440,
+    maxWidth: 420,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
-    ...shadows.md
+    ...shadows.card
   },
-  logoContainer: {
-    marginBottom: spacing.md
+  logoSection: {
+    alignItems: 'center',
+    marginBottom: 16
   },
   logoBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: borderRadius.lg,
+    width: 62,
+    height: 62,
+    borderRadius: 18,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm
+    ...shadows.glow
   },
   logoText: {
     color: '#FFFFFF',
@@ -147,104 +172,153 @@ const styles = StyleSheet.create({
     fontSize: 24,
     letterSpacing: -0.5
   },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: borderRadius.full,
+    marginTop: 10
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#059669',
+    marginRight: 6
+  },
+  statusPillText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#065F46',
+    letterSpacing: 0.8
+  },
   title: {
-    fontSize: typography.sizes.xxl,
-    fontWeight: typography.weights.bold,
-    color: colors.textPrimary,
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#0F172A',
     textAlign: 'center',
+    letterSpacing: -0.5,
     marginBottom: 6
   },
   subtitle: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
+    fontSize: 14,
+    color: '#64748B',
     textAlign: 'center',
-    marginBottom: spacing.lg
+    lineHeight: 20,
+    marginBottom: 20
   },
   actionContainer: {
     width: '100%',
-    marginVertical: spacing.sm
+    marginVertical: 4
   },
-  domainRequirementBox: {
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
+  securityNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: '#F1F5F9',
     width: '100%'
   },
-  domainRequirementText: {
-    fontSize: typography.sizes.xs,
-    color: colors.textMuted,
+  securityIcon: {
+    fontSize: 12,
+    marginRight: 6
+  },
+  securityText: {
+    fontSize: 12,
+    color: '#64748B',
     textAlign: 'center',
-    lineHeight: 18
+    lineHeight: 16,
+    flex: 1
   },
   domainHighlight: {
-    fontWeight: typography.weights.bold,
-    color: colors.primaryHover
+    fontWeight: '700',
+    color: '#059669'
   },
-  // Testing panel styles
-  devBox: {
-    marginTop: spacing.lg,
-    padding: spacing.md,
-    backgroundColor: colors.surfaceSubtle,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    width: '100%'
-  },
-  devTitle: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.textPrimary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4
-  },
-  devSubtitle: {
-    fontSize: typography.sizes.xs,
-    color: colors.textSecondary,
-    lineHeight: 16,
-    marginBottom: spacing.md
-  },
-  devButtonsCol: {
-    gap: 8,
-    marginBottom: spacing.sm
-  },
-  devButton: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: colors.primaryBorder,
-    paddingVertical: 9,
-    paddingHorizontal: 12,
-    borderRadius: borderRadius.md,
+  devSection: {
+    marginTop: 18,
+    width: '100%',
     alignItems: 'center'
   },
-  devButtonText: {
-    color: colors.primaryHover,
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold
+  devToggle: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: borderRadius.full,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0'
+  },
+  devToggleText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#64748B'
+  },
+  devBox: {
+    marginTop: 12,
+    padding: 14,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    width: '100%'
+  },
+  devSubtitle: {
+    fontSize: 11,
+    color: '#64748B',
+    lineHeight: 15,
+    marginBottom: 10
+  },
+  devButtonsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 10
+  },
+  devButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1
+  },
+  devButtonUser: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#A7F3D0'
+  },
+  devButtonTextUser: {
+    color: '#065F46',
+    fontSize: 11,
+    fontWeight: '600'
   },
   devButtonAdmin: {
-    borderColor: '#FDE68A',
-    backgroundColor: '#FFFBEB'
+    backgroundColor: '#FFFFFF',
+    borderColor: '#FDE68A'
   },
   devButtonTextAdmin: {
-    color: '#92400E'
+    color: '#92400E',
+    fontSize: 11,
+    fontWeight: '600'
   },
   toggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: spacing.sm
+    marginTop: 4
   },
   checkbox: {
-    width: 18,
-    height: 18,
+    width: 16,
+    height: 16,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: '#CBD5E1',
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.sm
+    marginRight: 8
   },
   checkboxActive: {
     backgroundColor: colors.primary,
@@ -252,13 +326,13 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 'bold',
-    lineHeight: 14
+    lineHeight: 12
   },
   toggleLabel: {
     fontSize: 11,
-    color: colors.textSecondary,
+    color: '#64748B',
     flex: 1
   }
 });

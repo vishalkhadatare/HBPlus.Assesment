@@ -54,17 +54,16 @@ const styles = StyleSheet.create({
     padding: spacing.md
   },
   footer: {
-    paddingVertical: spacing.md,
+    paddingVertical: 20,
     paddingHorizontal: spacing.md,
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.surface
+    backgroundColor: 'transparent'
   },
   footerText: {
-    fontSize: typography.sizes.xs,
-    color: colors.textMuted,
-    textAlign: 'center'
+    fontSize: 12,
+    color: '#94A3B8',
+    textAlign: 'center',
+    fontWeight: '500'
   }
 });
 

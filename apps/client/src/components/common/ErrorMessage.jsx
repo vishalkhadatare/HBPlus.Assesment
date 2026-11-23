@@ -2,11 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import colors from '../../styles/colors.js';
 import typography from '../../styles/typography.js';
-import { spacing, borderRadius } from '../../styles/spacing.js';
+import { spacing, borderRadius, shadows } from '../../styles/spacing.js';
 
 /**
- * Reusable Accessible Error Message Banner
- * Styled with soft rose background and crimson text.
+ * Modern High-Contrast Error / Restriction Banner
+ * Features a soft rose surface, crisp crimson typography, lock emblem, and elegant inline dismiss.
  */
 export function ErrorMessage({
   message,
@@ -17,24 +17,23 @@ export function ErrorMessage({
 
   return (
     <View style={styles.container}>
-      <View style={styles.contentRow}>
-        <View style={styles.iconContainer}>
-          <Text style={styles.iconText}>🔒</Text>
-        </View>
-        <View style={styles.textContainer}>
-          <Text style={styles.errorMessage}>{message}</Text>
-        </View>
+      <View style={styles.iconWrapper}>
+        <Text style={styles.icon}>🔒</Text>
+      </View>
+
+      <View style={styles.textWrapper}>
+        <Text style={styles.errorMessage}>{message}</Text>
       </View>
 
       {onRetry ? (
         <TouchableOpacity
-          style={styles.retryButton}
+          style={styles.closeButton}
           onPress={onRetry}
-          activeOpacity={0.8}
+          activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel={retryLabel}
         >
-          <Text style={styles.retryText}>{retryLabel}</Text>
+          <Text style={styles.closeIcon}>✕</Text>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -44,44 +43,52 @@ export function ErrorMessage({
 const styles = StyleSheet.create({
   container: {
     marginVertical: spacing.md,
-    padding: spacing.md,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     backgroundColor: '#FEF2F2',
     borderColor: '#FECACA',
-    width: '100%'
-  },
-  contentRow: {
+    width: '100%',
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+    ...shadows.sm
   },
-  iconContainer: {
-    marginRight: spacing.sm
+  iconWrapper: {
+    width: 28,
+    height: 28,
+    borderRadius: borderRadius.full,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10
   },
-  iconText: {
-    fontSize: 16
+  icon: {
+    fontSize: 14
   },
-  textContainer: {
-    flex: 1
+  textWrapper: {
+    flex: 1,
+    paddingRight: 6
   },
   errorMessage: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.medium,
+    fontSize: 13,
+    fontWeight: typography.weights.semibold,
+    color: '#991B1B',
+    lineHeight: 18
+  },
+  closeButton: {
+    width: 24,
+    height: 24,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)'
+  },
+  closeIcon: {
+    fontSize: 12,
+    fontWeight: '700',
     color: '#DC2626',
-    lineHeight: 20
-  },
-  retryButton: {
-    marginTop: spacing.sm,
-    alignSelf: 'flex-start',
-    backgroundColor: '#DC2626',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: borderRadius.sm
-  },
-  retryText: {
-    color: '#FFFFFF',
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold
+    lineHeight: 14
   }
 });
 

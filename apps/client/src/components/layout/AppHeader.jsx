@@ -18,7 +18,10 @@ export function AppHeader() {
           </View>
           <View>
             <Text style={styles.brandTitle}>HBPlus Access</Text>
-            <Text style={styles.brandSubtitle}>Secure Corporate Portal</Text>
+            <View style={styles.badgeRow}>
+              <View style={styles.dot} />
+              <Text style={styles.brandSubtitle}>Secure Corporate Portal</Text>
+            </View>
           </View>
         </View>
 
@@ -41,16 +44,16 @@ export function AppHeader() {
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    paddingVertical: spacing.md,
+    borderBottomColor: '#E2E8F0',
+    paddingVertical: 14,
     paddingHorizontal: spacing.lg,
     ...shadows.sm,
     zIndex: 10
   },
   innerContainer: {
-    maxWidth: 1000,
+    maxWidth: 960,
     width: '100%',
     marginHorizontal: 'auto',
     flexDirection: 'row',
@@ -62,13 +65,14 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   logoBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: borderRadius.md,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.sm
+    marginRight: 12,
+    ...shadows.glow
   },
   logoText: {
     color: '#FFFFFF',
@@ -77,27 +81,41 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5
   },
   brandTitle: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    color: colors.textPrimary,
-    lineHeight: 18
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F172A',
+    lineHeight: 18,
+    letterSpacing: -0.3
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2
+  },
+  dot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#10B981',
+    marginRight: 5
   },
   brandSubtitle: {
-    fontSize: typography.sizes.xs,
-    color: colors.textMuted
+    fontSize: 11,
+    color: '#64748B',
+    fontWeight: '500'
   },
   signOutButton: {
     paddingVertical: 7,
-    paddingHorizontal: 14,
-    borderRadius: borderRadius.md,
+    paddingHorizontal: 16,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.borderDark,
-    backgroundColor: colors.surfaceSubtle
+    borderColor: '#E2E8F0',
+    backgroundColor: '#F8FAFC'
   },
   signOutText: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold,
-    color: colors.textSecondary
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#475569'
   }
 });
 
