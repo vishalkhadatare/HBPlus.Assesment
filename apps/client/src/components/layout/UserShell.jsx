@@ -1184,8 +1184,9 @@ const styles = StyleSheet.create({
   },
   mobileTopArea: {
     paddingHorizontal: 18,
-    paddingVertical: 14,
-    gap: 10
+    paddingTop: Platform.OS === 'web' ? 'max(46px, env(safe-area-inset-top, 46px))' : 46,
+    paddingBottom: 14,
+    gap: 12
   },
   mobileAvatarCircle: {
     width: 36,
@@ -1280,7 +1281,7 @@ const styles = StyleSheet.create({
   },
   scrollInnerMobile: {
     padding: 16,
-    paddingBottom: 96
+    paddingBottom: 120
   },
 
   /* Hero shift card */

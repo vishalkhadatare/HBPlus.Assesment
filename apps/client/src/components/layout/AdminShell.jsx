@@ -2716,12 +2716,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'web' ? 'max(42px, env(safe-area-inset-top, 42px))' : 42,
-    paddingBottom: 10,
+    paddingTop: Platform.OS === 'web' ? 'max(46px, env(safe-area-inset-top, 46px))' : 46,
+    paddingBottom: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
-    minHeight: Platform.OS === 'web' ? 'calc(60px + max(42px, env(safe-area-inset-top, 42px)))' : 100,
+    minHeight: Platform.OS === 'web' ? 'calc(60px + max(46px, env(safe-area-inset-top, 46px)))' : 106,
     zIndex: 20,
     ...(Platform.OS === 'web'
       ? { boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }
