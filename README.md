@@ -101,101 +101,161 @@
 
 ## 🏗️ System Architecture
 
-HB Plus utilizes a tiered architecture where security boundaries are enforced at the transport, identity, and persistence layers:
+HB Plus utilizes a tiered architecture where security boundaries are strictly enforced across transport, identity, and persistence layers:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              HB PLUS SYSTEM ARCHITECTURE                               │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│  📱 CLIENT PLATFORMS (Unified React Native Codebase)                                   │
+│  ├── Android Standalone APK (Capacitor 7 + Java 21)                                    │
+│  ├── Mobile Web App (Responsive Web Touch Engine)                                      │
+│  └── Desktop Web Portal (Split-Screen Executive Interface)                             │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│  🧭 ACCESS GATEWAY & ROLE ROUTING                                                      │
+│  ├── Role Selection (/) ──────────────────────────────────────┐                         │
+│  │   ├── User Workspace (/login/user) ────────────────────────┼─► 4-Tier Security Gate │
+│  │   └── Admin Control (/login/admin) ────────────────────────┘                        │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│  🛡️ 4-TIER SECURITY & DOMAIN FIREWALL                                                 │
+│  ├── Tier 1: Client-Side Pure Validator (isAllowedEmail)                               │
+│  ├── Tier 2: Express Security Middleware (ID Token & Domain Signature Check)            │
+│  ├── Tier 3: Cryptographic Role Claims ({ role: 'admin' | 'user' })                    │
+│  └── Tier 4: Cloud Firestore Security Rules (Direct DB Engine Guard)                   │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│  ⚙️ NODE.JS / EXPRESS BACKEND (Port 5000)                                              │
+│  ├── /api/auth/provision       ──► Validates Domain & Assigns Cryptographic Claims     │
+│  ├── /api/attendance/checkin   ──► Geofence Radius & Live Timestamp Audit              │
+│  ├── /api/admin/workforce      ──► Workforce Analytics, Trends & Approvals             │
+│  └── Intruder Eviction Worker  ──► Auto-purges unauthorized accounts via Admin SDK     │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│  ☁️ CLOUD INFRASTRUCTURE & PERSISTENCE                                                 │
+│  ├── Firebase Auth Engine (OAuth 2.0 & JWT ID Tokens)                                  │
+│  └── Cloud Firestore (users/{uid} | auditLogs/{id})                                    │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Interactive Flow Diagram
 
 ```mermaid
-flowchart TB
-    subgraph CLIENT_LAYER["📱 Client Platforms (Unified React Native Codebase)"]
-        A1["Android Standalone APK\n(Capacitor + Java 21)"]
-        A2["Mobile Browser\n(Responsive Web App)"]
-        A3["Desktop Web Portal\n(Split-Screen Dashboard)"]
+flowchart TD
+    subgraph Clients [Client Applications]
+        A1[Android Standalone APK]
+        A2[Mobile Web App]
+        A3[Desktop Web Portal]
     end
 
-    subgraph AUTH_ROUTING["🧭 Role Routing & Entry Firewalls"]
-        B["Role Select Gateway (/)"]
-        C["User Workspace (/login/user)\n• Google OAuth 2.0\n• Password Auth\n• Flag Selector"]
-        D["Admin Control (/login/admin)\n• Email/Password Only\n• Zero Public Registration"]
+    subgraph Entry [Entry Gateways]
+        B[Role Selection Portal]
+        C[User Workspace Login]
+        D[Admin Control Login]
     end
 
-    subgraph SECURITY_MIDDLEWARE["🛡️ 4-Tier Security & Domain Firewall"]
-        E["Layer 1: Client Pure Validator (isAllowedEmail)"]
-        F["Layer 2: Express Security Middleware (authenticate)"]
-        G["Layer 3: Firebase Auth Claims ({ role: 'admin' | 'user' })"]
-        H["Layer 4: Cloud Firestore Security Rules (firestore.rules)"]
+    subgraph SecurityTier [4-Tier Security Pipeline]
+        E[1. Client-Side Domain Validator]
+        F[2. Express Security Middleware]
+        G[3. Cryptographic Role Claims]
+        H[4. Cloud Firestore Security Rules]
     end
 
-    subgraph BACKEND_SERVICES["⚙️ Node.js / Express Backend (Port 5000)"]
-        I["/api/auth/provision\nStrict Role & Claims Assignment"]
-        J["/api/attendance/checkin\nGeofence & Timestamp Verification"]
-        K["/api/admin/workforce\nWorkforce Analytics & Approvals"]
-        L["Intruder Purge Worker\nAuto-deletes non-@hbplus.fit users"]
+    subgraph BackendAPI [Express API Backend]
+        I[Auth Provisioning Service]
+        J[Geofence Attendance Engine]
+        K[Workforce Governance API]
+        L[Intruder Eviction Worker]
     end
 
-    subgraph CLOUD_DATABASE["☁️ Firebase Cloud Infrastructure"]
-        M[("Firebase Auth Engine\nOAuth 2.0 + JWT ID Tokens")]
-        N[("Cloud Firestore\nusers/{uid} | auditLogs/{id}")]
+    subgraph CloudInfra [Firebase Cloud Services]
+        M[(Firebase Authentication)]
+        N[(Cloud Firestore Database)]
     end
 
     A1 --> B
     A2 --> B
     A3 --> B
-
-    B -->|"User Selection"| C
-    B -->|"Admin Selection"| D
-
+    B --> C
+    B --> D
     C --> E
     D --> E
     E --> F
     F --> G
-
     G --> I
     G --> J
     G --> K
-    F -->|"Non-@hbplus.fit Intruder"| L
-
+    F --> L
     I --> M
-    L -->|"adminAuth.deleteUser()"| M
+    L --> M
     I --> N
     J --> N
     K --> N
-    N -.-> H
+    N --> H
 ```
 
 ---
 
 ## 🔒 Security & Domain Governance
 
-Security in HB Plus is non-negotiable. Domain restrictions are never delegated solely to front-end guards.
+Security in HB Plus is non-negotiable. Domain restrictions are never delegated solely to client-side checks.
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                     ZERO-TRUST DOMAIN ENFORCEMENT PIPELINE                             │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                        │
+│   [ Employee or Intruder ]                                                             │
+│              │                                                                         │
+│              ▼                                                                         │
+│   [ Step 1: Client Entry ] ──► Enter credentials / Google OAuth                        │
+│              │                                                                         │
+│              ▼                                                                         │
+│   [ Step 2: Domain Check ] ──► isAllowedEmail(email, "hbplus.fit")                     │
+│              │                                                                         │
+│              ├───────────────────────────────────┐                                     │
+│              │ (FAILED: e.g. @gmail.com)         │ (PASSED: @hbplus.fit)               │
+│              ▼                                   ▼                                     │
+│   [ Intruder Detected! ]              [ POST /api/auth/provision ]                     │
+│              │                                   │                                     │
+│              ▼                                   ▼                                     │
+│   [ adminAuth.deleteUser(uid) ]       [ Cryptographic Role Claim ]                     │
+│   Account permanently destroyed       Custom claim { role: 'user' } set                │
+│              │                                   │                                     │
+│              ▼                                   ▼                                     │
+│   [ Access Denied View ]              [ Access Granted: User Dashboard ]               │
+│                                                                                        │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Authentication Sequence Flow
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as Employee / Intruder
-    participant Client as React Native Client
+    actor Employee as Employee or Intruder
+    participant Client as React Native App
     participant API as Express API Server
     participant AdminSDK as Firebase Admin SDK
     participant Firestore as Cloud Firestore
 
-    User->>Client: Sign in with Google (e.g. attacker@gmail.com)
-    Client->>Client: Run isAllowedEmail("attacker@gmail.com")
-    alt Email does not end in @hbplus.fit
+    Employee->>Client: Sign in with Google or Email
+    Client->>Client: Validate email domain
+    alt Email is from external domain
         Client->>API: Report unauthorized session
         API->>AdminSDK: adminAuth.deleteUser(uid)
-        AdminSDK-->>API: User permanently purged from Auth
-        Client->>User: Display Access Denied (Session Revoked)
-    else Email matches .*@hbplus.fit
-        Client->>API: POST /api/auth/provision (Bearer Token)
+        AdminSDK-->>API: User permanently purged
+        Client->>Employee: Display Access Denied
+    else Email belongs to company domain
+        Client->>API: POST /api/auth/provision
         API->>AdminSDK: verifyIdToken(token)
-        API->>AdminSDK: setCustomUserClaims(uid, { role: 'user' })
-        API->>Firestore: Upsert users/{uid} document
+        API->>AdminSDK: setCustomUserClaims(role=user)
+        API->>Firestore: Upsert user document
         Firestore-->>API: Confirmed
         API-->>Client: Provisioned successfully
-        Client->>User: Redirect to User Dashboard
+        Client->>Employee: Redirect to User Dashboard
     end
 ```
 
 ### The 4 Security Layers:
-1. **Client Pure Validator (`isAllowedEmail`)**: Rejects non-ASCII, Unicode homoglyphs, subdomains, quoted prefixes, and external domains before requests leave the client.
+1. **Client Pure Validator (`isAllowedEmail`)**: Rejects non-ASCII characters, Unicode homoglyphs, subdomains, quoted prefixes, and external domains before requests leave the client.
 2. **Server Middleware**: Cryptographically verifies the Firebase ID token signature and claims. Non-conforming accounts are immediately purged via `adminAuth.deleteUser(uid)`.
 3. **Database Rules (`firestore.rules`)**: Granular security rules require `request.auth.token.email.matches('.*@hbplus[.]fit$')` and prevent privilege escalation.
 4. **AuthGate Route Guard (`RootNavigator.jsx`)**: Enforces authentication state and prevents unauthorized cross-role view transitions.
