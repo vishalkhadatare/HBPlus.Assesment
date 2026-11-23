@@ -14,9 +14,8 @@ import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase.js';
 
 const googleProvider = new GoogleAuthProvider();
-// Note: hd is only a UI hint to pre-filter Google account chooser, NEVER trusted for security
+// Prompt to select from all logged-in Google accounts on the device/browser
 googleProvider.setCustomParameters({
-  hd: 'hbplus.fit',
   prompt: 'select_account'
 });
 

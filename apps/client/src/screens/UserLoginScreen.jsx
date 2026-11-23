@@ -117,7 +117,11 @@ function UserLoginInner() {
     try {
       await signInUserWithGoogle();
     } catch (err) {
-      setError(err.message || 'Google authentication failed.');
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Sign-in was cancelled.');
+      } else {
+        setError(err.message || 'Google authentication failed.');
+      }
       triggerShake();
     } finally {
       setLoadingGoogle(false);
