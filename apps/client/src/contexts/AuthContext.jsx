@@ -44,13 +44,17 @@ export function AuthProvider({ children }) {
   const navigate = useCallback((targetRoute) => {
     setCurrentRoute(targetRoute);
     if (typeof window !== 'undefined' && window.history) {
-      const webPath = targetRoute === ROUTES.ADMIN_DASHBOARD
-        ? '/admin/dashboard'
-        : targetRoute === ROUTES.USER_DASHBOARD
-        ? '/user/dashboard'
-        : targetRoute;
-      if (window.location.pathname !== webPath) {
-        window.history.pushState({}, '', webPath);
+      try {
+        const webPath = targetRoute === ROUTES.ADMIN_DASHBOARD
+          ? '/admin/dashboard'
+          : targetRoute === ROUTES.USER_DASHBOARD
+          ? '/user/dashboard'
+          : targetRoute;
+        if (window.location.pathname !== webPath) {
+          window.history.pushState({}, '', webPath);
+        }
+      } catch (err) {
+        // Suppress pushState restrictions in native Capacitor/WebView
       }
     }
   }, []);

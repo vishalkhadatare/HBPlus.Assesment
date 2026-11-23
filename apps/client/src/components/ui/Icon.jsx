@@ -44,6 +44,7 @@ export function Icon({
     chevronDown: LucideIcons.ChevronDown,
     chevronLeft: LucideIcons.ChevronLeft,
     arrowRight: LucideIcons.ArrowRight,
+    arrowLeft: LucideIcons.ArrowLeft,
     arrowUp: LucideIcons.ArrowUp,
     arrowDown: LucideIcons.ArrowDown,
     moon: LucideIcons.Moon,
@@ -66,6 +67,7 @@ export function Icon({
     sparkles: LucideIcons.Sparkles,
     zap: LucideIcons.Zap,
     user: LucideIcons.User,
+    userCircle: LucideIcons.UserCircle,
     externalLink: LucideIcons.ExternalLink
   };
 

@@ -14,24 +14,21 @@ import { ROUTES } from '../navigation/navigationConfig.js';
 export function AccessDeniedScreen() {
   const { rejectedEmail, denialReason, navigate } = useAuth();
   const { width } = useWindowDimensions();
-  const isWide = width >= 900;
+  const isWide = width >= 768;
 
   const defaultMessage = 'Access restricted. Please login using your official domain email.';
   const displayMessage = denialReason || defaultMessage;
 
   return (
     <View style={styles.root}>
-      {/* Aurora Ambient Background */}
+      {/* Background Soft Gradient */}
       <View style={styles.gradientBg} pointerEvents="none" />
 
       <View style={[styles.mainWrapper, isWide && styles.mainWrapperWide]}>
         <View style={styles.card}>
-          {/* Red Shield with Soft Pulsing Ring */}
-          <View style={styles.shieldWrapper}>
-            <View style={styles.shieldRing} />
-            <View style={styles.shieldCenter}>
-              <Icon name="shieldAlert" size={36} color="#F04438" strokeWidth={2.2} />
-            </View>
+          {/* Red Shield Circle */}
+          <View style={styles.iconCircle}>
+            <Icon name="shieldCheck" size={32} color="#EF4444" strokeWidth={2.2} />
           </View>
 
           {/* Title and Exact Message */}
@@ -40,40 +37,29 @@ export function AccessDeniedScreen() {
             <Text style={styles.messageText}>{displayMessage}</Text>
           </View>
 
-          {/* Masked Rejected Email Box */}
+          {/* Masked Rejected Email Box if available */}
           {rejectedEmail ? (
             <View style={styles.rejectedEmailBox}>
-              <Text style={styles.rejectedEmailLabel}>Rejected Identity</Text>
               <Text style={styles.rejectedEmailValue}>{rejectedEmail}</Text>
             </View>
           ) : null}
 
-          {/* Security Notice Note */}
-          <View style={styles.noteBox}>
-            <Icon name="info" size={16} color="#7E918C" />
-            <Text style={styles.noteText}>
-              Security Policy: Only authenticated Google Workspace or employee accounts ending with{' '}
-              <Text style={{ fontWeight: '700', color: '#00B386' }}>@hbplus.fit</Text> are permitted access to corporate resources.
-            </Text>
-          </View>
-
-          {/* Actions */}
+          {/* Action Buttons */}
           <View style={styles.actionGroup}>
             <TouchableOpacity
               style={styles.primaryBtn}
               onPress={() => navigate(ROUTES.LOGIN_USER)}
-              activeOpacity={0.88}
+              activeOpacity={0.85}
             >
-              <Icon name="refreshCw" size={16} color="#FFFFFF" />
               <Text style={styles.primaryBtnText}>Try another account</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.secondaryBtn}
               onPress={() => navigate(ROUTES.ROLE_SELECT)}
-              activeOpacity={0.88}
+              activeOpacity={0.85}
             >
-              <Text style={styles.secondaryBtnText}>Back to start</Text>
+              <Text style={styles.secondaryBtnText}>Back</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -85,8 +71,11 @@ export function AccessDeniedScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#04100E',
-    overflow: 'hidden'
+    backgroundColor: '#F7FBFA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    position: 'relative'
   },
   gradientBg: {
     position: 'absolute',
@@ -94,56 +83,42 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    backgroundColor: '#F7FBFA',
     ...(Platform.OS === 'web'
-      ? {
-          background: 'linear-gradient(150deg, #04100E 0%, #07302A 50%, #0B5D4B 100%)'
-        }
-      : {
-          backgroundColor: '#07302A'
-        })
+      ? { backgroundImage: 'linear-gradient(180deg, #F7FBFA 0%, #E4F5EF 100%)' }
+      : {})
   },
   mainWrapper: {
-    flex: 1,
-    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 380,
     alignItems: 'center',
-    padding: 20
+    zIndex: 10
   },
   mainWrapperWide: {
-    maxWidth: 520,
-    alignSelf: 'center',
-    width: '100%'
+    maxWidth: 400
   },
   card: {
     width: '100%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 28,
+    borderRadius: 20,
     padding: 28,
     alignItems: 'center',
-    gap: 18,
-    boxShadow: '0 24px 56px rgba(4, 16, 14, 0.45)',
-    elevation: 8
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
+    gap: 20
   },
-  shieldWrapper: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    width: 96,
-    height: 96,
-    marginBottom: 4
-  },
-  shieldRing: {
-    position: 'absolute',
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: '#FEE4E2',
-    opacity: 0.7
-  },
-  shieldCenter: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: '#FECDCA',
+  iconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
     alignItems: 'center',
     justifyContent: 'center'
   },
@@ -152,92 +127,65 @@ const styles = StyleSheet.create({
     gap: 8
   },
   title: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#0A1A17',
-    letterSpacing: -0.6
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#0F172A',
+    textAlign: 'center'
   },
   messageText: {
-    fontSize: 15,
-    color: '#B42318',
+    fontSize: 14,
+    color: '#64748B',
     textAlign: 'center',
-    fontWeight: '600',
-    lineHeight: 22,
-    paddingHorizontal: 8
+    lineHeight: 20
   },
   rejectedEmailBox: {
-    backgroundColor: '#F4F8F7',
-    borderWidth: 1,
-    borderColor: '#DDE8E5',
-    borderRadius: 14,
-    paddingVertical: 10,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
     paddingHorizontal: 16,
-    alignItems: 'center',
-    width: '100%'
-  },
-  rejectedEmailLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#7E918C',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 2
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0'
   },
   rejectedEmailValue: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#0A1A17'
-  },
-  noteBox: {
-    flexDirection: 'row',
-    gap: 10,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    width: '100%'
-  },
-  noteText: {
-    fontSize: 12.5,
-    color: '#51635E',
-    lineHeight: 18,
-    flex: 1
+    color: '#334155',
+    fontWeight: '600'
   },
   actionGroup: {
     width: '100%',
     gap: 10,
-    marginTop: 6
+    marginTop: 4
   },
   primaryBtn: {
-    height: 52,
-    borderRadius: 16,
+    width: '100%',
+    height: 48,
+    borderRadius: 12,
     backgroundColor: '#00B386',
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    boxShadow: '0 8px 20px rgba(0, 179, 134, 0.3)',
-    elevation: 3
+    shadowColor: '#00B386',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 2
   },
   primaryBtnText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '700'
+    fontWeight: '600'
   },
   secondaryBtn: {
-    height: 50,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#DDE8E5',
-    backgroundColor: '#FFFFFF',
+    width: '100%',
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center'
   },
   secondaryBtnText: {
-    color: '#51635E',
+    color: '#475569',
     fontSize: 14,
-    fontWeight: '700'
+    fontWeight: '600'
   }
 });
 
