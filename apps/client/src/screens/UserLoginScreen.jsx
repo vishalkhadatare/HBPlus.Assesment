@@ -212,7 +212,7 @@ function UserLoginInner() {
         password
       });
       setSuccessMessage(
-        `Account created for ${result.email}. Check your employee inbox to verify the email before signing in.`
+        `Account created successfully for ${result.email}! Welcome to HBPlus.`
       );
       setFullName('');
       setEmailLocal('');

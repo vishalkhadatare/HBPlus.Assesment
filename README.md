@@ -4,7 +4,7 @@
 ### Cross-Platform Role-Based Access & Workforce Management
 
 [![Live Web App](https://img.shields.io/badge/Live_Web_App-HBPlus_on_Netlify-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://vectorvault99.netlify.app/)
-[![Download Android APK](https://img.shields.io/badge/Download_APK-HBPlus--Access.apk-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/vishalkhadatare/rivalry/raw/main/HBPlus-Access.apk)
+[![Download Android APK](https://img.shields.io/badge/Download_APK-HBPlus--Access.apk-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/vishalkhadatare/HBPlus.Assesment/raw/main/HBPlus-Access.apk)
 [![React Native](https://img.shields.io/badge/React_Native_for_Web-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://necolas.github.io/react-native-web/)
 [![Firebase](https://img.shields.io/badge/Firebase_Auth_%26_Firestore-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
@@ -16,7 +16,7 @@
 
 | 🌐 Live Web Application | 📱 Standalone Android APK | 💻 GitHub Repository |
 | :---: | :---: | :---: |
-| **[HBPlus on Netlify](https://vectorvault99.netlify.app/)** | **[Download HBPlus-Access.apk](https://github.com/vishalkhadatare/rivalry/raw/main/HBPlus-Access.apk)** | **[vishalkhadatare/rivalry](https://github.com/vishalkhadatare/rivalry)** |
+| **[HBPlus on Netlify](https://vectorvault99.netlify.app/)** | **[Download HBPlus-Access.apk](https://github.com/vishalkhadatare/HBPlus.Assesment/raw/main/HBPlus-Access.apk)** | **[vishalkhadatare/HBPlus.Assesment](https://github.com/vishalkhadatare/HBPlus.Assesment)** |
 
 ---
 
@@ -241,8 +241,8 @@ sequenceDiagram
 
 ### 1. Clone & Install
 ```bash
-git clone https://github.com/vishalkhadatare/rivalry.git
-cd rivalry
+git clone https://github.com/vishalkhadatare/HBPlus.Assesment.git
+cd HBPlus.Assesment
 npm install
 ```
 

@@ -20,6 +20,12 @@ router.post('/verify', authLimiter, authenticate, AuthController.verify);
 router.post('/provision', authLimiter, authenticate, AuthController.provision);
 
 /**
+ * POST /api/auth/reset-password
+ * Triggers official password reset workflow for @hbplus.fit domain accounts.
+ */
+router.post('/reset-password', authLimiter, AuthController.requestPasswordReset);
+
+/**
  * POST /api/auth/set-role
  * Admin-only: promotes, demotes, or disables users and records audit logs.
  */

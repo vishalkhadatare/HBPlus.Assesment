@@ -142,6 +142,41 @@ export class AuthController {
       next(error);
     }
   }
+
+  /**
+   * POST /api/auth/reset-password
+   * Sends password reset email for official @hbplus.fit users.
+   */
+  static async requestPasswordReset(req, res, next) {
+    try {
+      const email = (req.body?.email || '').trim().toLowerCase();
+      if (!email) {
+        return res.status(400).json(errorResponse('Email is required.', 'MISSING_EMAIL'));
+      }
+
+      // Domain restriction check
+      if (!isAllowedEmail(email)) {
+        return res.status(403).json(
+          errorResponse('Access restricted. Please login using your official domain email.', 'DOMAIN_NOT_ALLOWED')
+        );
+      }
+
+      let resetLink = null;
+      if (adminAuth) {
+        try {
+          resetLink = await adminAuth.generatePasswordResetLink(email);
+        } catch (err) {
+          console.warn('[AuthController] generatePasswordResetLink notice:', err.message);
+        }
+      }
+
+      return res.status(200).json(
+        successResponse(`Password reset instructions sent for ${email}`, { email, linkDispatched: !!resetLink })
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default AuthController;

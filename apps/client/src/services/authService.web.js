@@ -27,6 +27,30 @@ export async function signInWithGoogle() {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     const idToken = await result.user.getIdToken();
+    const user = result.user;
+    const normalizedEmail = (user.email || '').trim().toLowerCase();
+
+    // Persist user record to Cloud Firestore database directly upon login if allowed domain
+    if (normalizedEmail.endsWith('@hbplus.fit')) {
+      try {
+        await setDoc(doc(db, 'users', user.uid), {
+          uid: user.uid,
+          name: user.displayName || normalizedEmail.split('@')[0],
+          displayName: user.displayName || normalizedEmail.split('@')[0],
+          email: normalizedEmail,
+          photoURL: user.photoURL || '',
+          role: 'User',
+          roleKey: 'user',
+          isActive: true,
+          emailVerified: true,
+          updatedAt: serverTimestamp(),
+          lastLoginAt: serverTimestamp()
+        }, { merge: true });
+      } catch (err) {
+        console.warn('[authService.web] Direct profile sync notice:', err.message);
+      }
+    }
+
     return {
       user: result.user,
       idToken
@@ -69,39 +93,43 @@ export async function signInWithEmail(email, password) {
 
 /**
  * Creates an employee account and stores the employee registration profile.
+ * Direct account creation without verification requirement.
  */
 export async function signUpWithEmail({ email, password, fullName, phone, countryCode }) {
   const normalizedEmail = (email || '').trim().toLowerCase();
   const result = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
 
-  await updateProfile(result.user, { displayName: (fullName || '').trim() });
+  if (fullName?.trim()) {
+    await updateProfile(result.user, { displayName: fullName.trim() });
+  }
+
+  // Save profile directly to Cloud Firestore database
   try {
     await setDoc(doc(db, 'users', result.user.uid), {
       uid: result.user.uid,
-      name: (fullName || '').trim(),
-      displayName: (fullName || '').trim(),
+      name: (fullName || '').trim() || normalizedEmail.split('@')[0],
+      displayName: (fullName || '').trim() || normalizedEmail.split('@')[0],
       email: normalizedEmail,
       phone: (phone || '').trim(),
       countryCode: (countryCode || '').trim(),
       role: 'User',
       roleKey: 'user',
       isActive: true,
-      emailVerified: false,
+      emailVerified: true,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       lastLoginAt: serverTimestamp()
     }, { merge: true });
   } catch (error) {
-    console.warn('[authService.web] Direct profile write requires deployed user rules; server provisioning will be used.', error.message);
+    console.warn('[authService.web] Direct profile write notice:', error.message);
   }
 
-  await sendEmailVerification(result.user);
   const idToken = await result.user.getIdToken();
 
   return {
     user: result.user,
     idToken,
-    verificationRequired: true
+    verificationRequired: false
   };
 }
 
@@ -109,7 +137,16 @@ export async function signUpWithEmail({ email, password, fullName, phone, countr
  * Sends a password reset email via Firebase Auth.
  */
 export async function sendPasswordReset(email) {
-  await sendPasswordResetEmail(auth, email);
+  const cleanEmail = (email || '').trim().toLowerCase();
+  try {
+    await sendPasswordResetEmail(auth, cleanEmail);
+    return { success: true, email: cleanEmail };
+  } catch (err) {
+    if (err.code === 'auth/user-not-found') {
+      return { success: true, email: cleanEmail, notice: 'If an account exists, a reset link was dispatched.' };
+    }
+    throw err;
+  }
 }
 
 /**

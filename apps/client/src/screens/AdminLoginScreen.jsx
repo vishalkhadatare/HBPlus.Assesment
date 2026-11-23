@@ -19,7 +19,7 @@ import { ROUTES } from '../navigation/navigationConfig.js';
 import adminIllustration from '../assets/illustrations/admin-secure-login.svg';
 
 function AdminLoginInner() {
-  const { signInAdmin, navigate } = useAuth();
+  const { signInAdmin, sendPasswordReset, navigate } = useAuth();
   const theme = useRoleTheme();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 900;
@@ -28,6 +28,7 @@ function AdminLoginInner() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const slideAnim = useRef(new Animated.Value(24)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -60,6 +61,7 @@ function AdminLoginInner() {
   const handleAdminSignIn = async () => {
     if (loading) return;
     setError(null);
+    setSuccessMessage('');
 
     const cleanEmail = (email || '').trim().toLowerCase();
     if (!cleanEmail) {
@@ -84,12 +86,40 @@ function AdminLoginInner() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setError('Enter your administrator email first.');
+      triggerShake();
+      return;
+    }
+    setError(null);
+    setSuccessMessage('');
+    setLoading(true);
+    try {
+      await sendPasswordReset(cleanEmail);
+      setSuccessMessage(`Password reset link sent to ${cleanEmail}`);
+    } catch (err) {
+      setError(err.message || 'Could not send the reset email.');
+      triggerShake();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderFormFields = () => (
     <View style={styles.formFieldsContainer}>
       {error ? (
         <View style={styles.errorBox}>
           <Icon name="alertTriangle" size={16} color="#DC2626" />
           <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : null}
+
+      {successMessage ? (
+        <View style={styles.successBox}>
+          <Icon name="checkCircle" size={16} color="#0B7A42" />
+          <Text style={styles.successText}>{successMessage}</Text>
         </View>
       ) : null}
 
@@ -116,6 +146,15 @@ function AdminLoginInner() {
         editable={!loading}
         onSubmitEditing={handleAdminSignIn}
       />
+
+      <TouchableOpacity
+        style={styles.forgotButton}
+        onPress={handleForgotPassword}
+        activeOpacity={0.7}
+        disabled={loading}
+      >
+        <Text style={styles.forgotText}>Forgot password?</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity
         style={[styles.primaryBtn, loading && styles.primaryBtnDisabled]}
@@ -529,6 +568,39 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     fontSize: 13,
     fontWeight: '500'
+  },
+
+  /* ── Success Banner ── */
+  successBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#A7F3D0'
+  },
+  successText: {
+    flex: 1,
+    color: '#065F46',
+    fontSize: 13,
+    fontWeight: '500'
+  },
+
+  /* ── Forgot password ── */
+  forgotButton: {
+    alignSelf: 'flex-end',
+    minHeight: 28,
+    justifyContent: 'center',
+    marginTop: -4,
+    paddingHorizontal: 4
+  },
+  forgotText: {
+    color: '#EA580C',
+    fontSize: 13,
+    fontWeight: '700'
   }
 });
 

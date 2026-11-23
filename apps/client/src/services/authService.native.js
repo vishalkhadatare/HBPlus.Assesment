@@ -73,8 +73,7 @@ export async function signUpWithEmailPassword(email, password, fullName) {
   if (fullName?.trim()) {
     await updateProfile(result.user, { displayName: fullName.trim() });
   }
-  await sendEmailVerification(result.user);
-  return { user: result.user, idToken: null, verificationRequired: true };
+  return { user: result.user, idToken: null, verificationRequired: false };
 }
 
 export async function signInWithEmailPassword(email, password) {
