@@ -18,6 +18,7 @@ import SquaredCard from '../components/ui/SquaredCard.jsx';
 import SquaredInput from '../components/ui/SquaredInput.jsx';
 import SquaredButton from '../components/ui/SquaredButton.jsx';
 import { ROUTES } from '../navigation/navigationConfig.js';
+import adminIllustration from '../assets/illustrations/admin-secure-login.svg';
 
 function AdminLoginInner() {
   const { signInAdmin, navigate } = useAuth();
@@ -137,7 +138,7 @@ function AdminLoginInner() {
               </View>
               {Platform.OS === 'web' ? (
                 <img
-                  src="/src/assets/illustrations/admin-secure-login.svg"
+                  src={adminIllustration}
                   alt="Secure administrator workspace illustration"
                   style={{
                     width: 'min(82%, 420px)',
@@ -221,21 +222,21 @@ function AdminLoginInner() {
             <View style={styles.phoneBrandBox}>
               {Platform.OS === 'web' ? (
                 <img
-                  src="/src/assets/illustrations/admin-secure-login.svg"
-                  alt=""
+                  src={adminIllustration}
+                  alt="Admin Control"
                   style={{
-                    width: 200,
-                    height: 92,
+                    width: 180,
+                    height: 84,
                     objectFit: 'contain',
-                    marginTop: -4,
-                    marginBottom: -4,
+                    marginTop: 0,
+                    marginBottom: 2,
                     display: 'block'
                   }}
                 />
               ) : null}
               <View style={styles.phoneTitleRow}>
-                <Icon name="shieldCheck" size={22} color="#FB923C" strokeWidth={2.4} />
-                <Text style={styles.phoneTitleText}>Admin</Text>
+                <Icon name="shieldCheck" size={22} color="#FFFFFF" strokeWidth={2.4} />
+                <Text style={styles.phoneTitleText}>Admin Control</Text>
               </View>
             </View>
           </View>
@@ -415,7 +416,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC'
   },
   phoneHeaderBand: {
-    height: '30%',
+    minHeight: 180,
+    paddingTop: Platform.OS === 'web' ? 'max(44px, env(safe-area-inset-top, 44px))' : 44,
+    paddingBottom: 24,
     backgroundColor: '#EA580C',
     ...(Platform.OS === 'web'
       ? { backgroundImage: 'linear-gradient(135deg, #FF7A1A 0%, #EA580C 100%)' }
@@ -428,14 +431,14 @@ const styles = StyleSheet.create({
   },
   phoneBackBtn: {
     position: 'absolute',
-    top: 24,
-    left: 20,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    top: Platform.OS === 'web' ? 'max(40px, env(safe-area-inset-top, 40px))' : 40,
+    left: 18,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.22)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 20

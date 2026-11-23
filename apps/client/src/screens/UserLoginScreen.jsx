@@ -22,6 +22,7 @@ import SquaredButton from '../components/ui/SquaredButton.jsx';
 import CountryFlag from '../components/ui/CountryFlag.jsx';
 import { ALL_COUNTRIES, DEFAULT_COUNTRY } from '../constants/countries.js';
 import { ROUTES } from '../navigation/navigationConfig.js';
+import userIllustration from '../assets/illustrations/user-workspace.svg';
 
 function GoogleIcon({ size = 20 }) {
   return (
@@ -257,20 +258,20 @@ function UserLoginInner() {
         <View style={styles.phoneHeaderBand}>
           {Platform.OS === 'web' ? (
             <img
-              src="/src/assets/illustrations/user-workspace.svg"
-              alt=""
+              src={userIllustration}
+              alt="User Workspace"
               style={{
-                width: 210,
-                height: 112,
+                width: 190,
+                height: 94,
                 objectFit: 'contain',
-                marginBottom: -2,
+                marginBottom: 2,
                 display: 'block'
               }}
             />
           ) : null}
           <View style={styles.phoneTitleRow}>
-            <Icon name="userCircle" size={22} color="#FFB020" strokeWidth={2.4} />
-            <Text style={styles.phoneTitleText}>User</Text>
+            <Icon name="userCircle" size={22} color="#FFFFFF" strokeWidth={2.4} />
+            <Text style={styles.phoneTitleText}>User Workspace</Text>
           </View>
         </View>
       ) : null}
@@ -300,7 +301,7 @@ function UserLoginInner() {
               <HBLogo size={56} />
               {Platform.OS === 'web' ? (
                 <img
-                  src="/src/assets/illustrations/user-workspace.svg"
+                  src={userIllustration}
                   alt="User workspace illustration"
                   style={{
                     width: 220,
@@ -663,17 +664,19 @@ const styles = StyleSheet.create({
     zIndex: 20
   },
   phoneBackBtn: {
-    top: 24,
-    left: 20,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    top: Platform.OS === 'web' ? 'max(40px, env(safe-area-inset-top, 40px))' : 40,
+    left: 18,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.22)'
+    borderColor: 'rgba(255, 255, 255, 0.3)'
   },
   phoneHeaderBand: {
-    height: '30%',
+    minHeight: 180,
+    paddingTop: Platform.OS === 'web' ? 'max(44px, env(safe-area-inset-top, 44px))' : 44,
+    paddingBottom: 24,
     backgroundColor: '#00B386',
     ...(Platform.OS === 'web'
       ? { backgroundImage: 'linear-gradient(135deg, #00D9A5 0%, #00B386 100%)' }
@@ -681,8 +684,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingBottom: 14
+    justifyContent: 'center'
   },
   phoneTitleRow: {
     flexDirection: 'row',

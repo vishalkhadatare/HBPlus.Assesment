@@ -102,8 +102,10 @@ function AdminShellContent({ onSignOut }) {
 
   return (
     <View style={styles.root}>
-      {/* 4px Deep-Teal Identity Strip (Section 3) */}
-      <View style={[styles.identityStrip, { backgroundColor: theme.identityStrip }]} />
+      {/* 4px Deep-Teal Identity Strip (Section 3 - Desktop only) */}
+      {isDesktop || isTablet ? (
+        <View style={[styles.identityStrip, { backgroundColor: theme.identityStrip }]} />
+      ) : null}
 
       {/* Main Container */}
       <View style={styles.mainContainer}>
@@ -218,7 +220,7 @@ function AdminShellContent({ onSignOut }) {
         {/* Content Area */}
         <View style={styles.contentColumn}>
           {/* Top Bar: Search / Brand, Status Dot, Notifications, Badge, Profile */}
-          <View style={styles.topBar}>
+          <View style={[styles.topBar, (!isDesktop && !isTablet) && styles.mobileTopBar]}>
             {!isDesktop && !isTablet ? (
               <View style={styles.mobileTopBrand}>
                 <HBLogo size={32} />
@@ -615,11 +617,81 @@ function AdminShellContent({ onSignOut }) {
             )}
 
             {activeTab === 'reports' && (
-              <SquaredCard style={styles.chartCardLarge}>
-                <Text style={styles.cardTitle}>Reports & Analytics</Text>
-                <Text style={styles.cardSub}>Historical presence trends and overtime metrics.</Text>
-                <SimpleCharts type="bar" height={220} />
-              </SquaredCard>
+              <View style={{ gap: 16 }}>
+                {/* Quick KPI stats */}
+                <View style={styles.kpiRow}>
+                  <SquaredCard style={styles.kpiCard}>
+                    <Text style={styles.kpiOverline}>OVERALL PRESENCE</Text>
+                    <View style={styles.kpiValRow}>
+                      <Text style={styles.kpiNumber}>99.4%</Text>
+                      <View style={[styles.kpiDeltaBadge, { backgroundColor: '#ECFDF5' }]}>
+                        <Text style={[styles.kpiDeltaText, { color: '#059669' }]}>SLA</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.kpiSub}>30-day verified attendance</Text>
+                  </SquaredCard>
+                  <SquaredCard style={styles.kpiCard}>
+                    <Text style={styles.kpiOverline}>PUNCTUALITY</Text>
+                    <View style={styles.kpiValRow}>
+                      <Text style={styles.kpiNumber}>98.2%</Text>
+                      <View style={[styles.kpiDeltaBadge, { backgroundColor: '#ECFDF5' }]}>
+                        <Text style={[styles.kpiDeltaText, { color: '#059669' }]}>+0.8%</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.kpiSub}>On-time shift arrival</Text>
+                  </SquaredCard>
+                  <SquaredCard style={styles.kpiCard}>
+                    <Text style={styles.kpiOverline}>GEOFENCE ADHERENCE</Text>
+                    <View style={styles.kpiValRow}>
+                      <Text style={styles.kpiNumber}>100%</Text>
+                      <View style={[styles.kpiDeltaBadge, { backgroundColor: '#ECFDF5' }]}>
+                        <Text style={[styles.kpiDeltaText, { color: '#059669' }]}>Verified</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.kpiSub}>0 location anomalies</Text>
+                  </SquaredCard>
+                </View>
+
+                {/* Main Trend Card */}
+                <SquaredCard style={styles.chartCardLarge}>
+                  <View style={styles.cardHeader}>
+                    <View>
+                      <Text style={styles.cardTitle}>Attendance Trend (30 Days)</Text>
+                      <Text style={styles.cardSub}>Historical presence trends and overtime metrics.</Text>
+                    </View>
+                    <View style={styles.chartTagPill}>
+                      <Text style={styles.chartTagText}>99.4% SLA</Text>
+                    </View>
+                  </View>
+                  <SimpleCharts type="bar" height={220} />
+                </SquaredCard>
+
+                {/* Department Health Card */}
+                <SquaredCard style={styles.tableCard}>
+                  <Text style={styles.cardTitle}>Department Attendance Health</Text>
+                  <Text style={styles.cardSub}>Live presence breakdown across active units</Text>
+                  <View style={{ marginTop: 14, gap: 10 }}>
+                    {[
+                      { name: 'Engineering', rate: '99%', count: '42 / 42 present', color: '#00B386' },
+                      { name: 'Product & Design', rate: '96%', count: '17 / 18 present', color: '#0284C7' },
+                      { name: 'Operations & Fitness', rate: '97%', count: '27 / 28 present', color: '#7C3AED' },
+                      { name: 'People & Admin', rate: '100%', count: '12 / 12 present', color: '#EA580C' }
+                    ].map((dept, i) => (
+                      <View key={i} style={[styles.approvalItem, { paddingVertical: 12 }]}>
+                        <View style={{ gap: 2 }}>
+                          <Text style={styles.approvalName}>{dept.name}</Text>
+                          <Text style={styles.approvalMeta}>{dept.count}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <View style={[styles.kpiDeltaBadge, { backgroundColor: '#ECFDF5' }]}>
+                            <Text style={[styles.kpiDeltaText, { color: '#059669' }]}>{dept.rate}</Text>
+                          </View>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </SquaredCard>
+              </View>
             )}
 
             {activeTab === 'audit' && (
@@ -642,26 +714,66 @@ function AdminShellContent({ onSignOut }) {
             )}
 
             {activeTab === 'settings' && (
-              <SquaredCard style={styles.tableCard}>
-                <Text style={styles.cardTitle}>System Settings & Domain Governance</Text>
-                <Text style={styles.cardSub}>Active restriction: @hbplus.fit accounts only.</Text>
-                <View style={{ marginTop: 16, gap: 12 }}>
-                  <View style={styles.settingRow}>
-                    <Text style={styles.settingLabel}>Domain Enforcement Rule</Text>
-                    <View style={styles.adminRolePill}>
-                      <Text style={styles.adminRolePillText}>STRICT (@hbplus.fit)</Text>
+              <View style={{ gap: 16 }}>
+                {/* Domain & Tenant Card */}
+                <SquaredCard style={styles.tableCard}>
+                  <View style={styles.cardHeader}>
+                    <View>
+                      <Text style={styles.cardTitle}>Domain Governance & Tenant Security</Text>
+                      <Text style={styles.cardSub}>Strict authentication restrictions and domain enforcement</Text>
+                    </View>
+                    <View style={styles.chartTagPill}>
+                      <Text style={styles.chartTagText}>Active</Text>
                     </View>
                   </View>
-                  <View style={styles.settingRow}>
-                    <Text style={styles.settingLabel}>Idle Session Timeout (Admin)</Text>
-                    <Text style={styles.settingVal}>30 Minutes</Text>
+                  <View style={{ marginTop: 14, gap: 12 }}>
+                    <View style={styles.settingRow}>
+                      <View style={{ gap: 2 }}>
+                        <Text style={styles.settingLabel}>Domain Enforcement Rule</Text>
+                        <Text style={styles.approvalMeta}>Restricts sign-ins strictly to corporate addresses</Text>
+                      </View>
+                      <View style={styles.adminRolePill}>
+                        <Text style={styles.adminRolePillText}>STRICT (@hbplus.fit)</Text>
+                      </View>
+                    </View>
+                    <View style={styles.settingRow}>
+                      <View style={{ gap: 2 }}>
+                        <Text style={styles.settingLabel}>SSL / TLS Certificate</Text>
+                        <Text style={styles.approvalMeta}>End-to-end encrypted transport layer</Text>
+                      </View>
+                      <View style={[styles.kpiDeltaBadge, { backgroundColor: '#ECFDF5' }]}>
+                        <Text style={[styles.kpiDeltaText, { color: '#059669' }]}>TLS 1.3 Active</Text>
+                      </View>
+                    </View>
                   </View>
-                  <View style={styles.settingRow}>
-                    <Text style={styles.settingLabel}>Idle Session Timeout (User)</Text>
-                    <Text style={styles.settingVal}>8 Hours</Text>
+                </SquaredCard>
+
+                {/* Session Security Card */}
+                <SquaredCard style={styles.tableCard}>
+                  <Text style={styles.cardTitle}>Session & Access Policies</Text>
+                  <Text style={styles.cardSub}>Idle timeout windows and token lifecycle governance</Text>
+                  <View style={{ marginTop: 14, gap: 12 }}>
+                    <View style={styles.settingRow}>
+                      <Text style={styles.settingLabel}>Idle Session Timeout (Admin)</Text>
+                      <Text style={styles.settingVal}>30 Minutes</Text>
+                    </View>
+                    <View style={styles.settingRow}>
+                      <Text style={styles.settingLabel}>Idle Session Timeout (User)</Text>
+                      <Text style={styles.settingVal}>8 Hours</Text>
+                    </View>
+                    <View style={styles.settingRow}>
+                      <Text style={styles.settingLabel}>Geofence Radius (HQ Campus)</Text>
+                      <Text style={styles.settingVal}>500 meters</Text>
+                    </View>
+                    <View style={styles.settingRow}>
+                      <Text style={styles.settingLabel}>Immutable Audit Trail</Text>
+                      <View style={[styles.kpiDeltaBadge, { backgroundColor: '#ECFDF5' }]}>
+                        <Text style={[styles.kpiDeltaText, { color: '#059669' }]}>Enabled (90 Days)</Text>
+                      </View>
+                    </View>
                   </View>
-                </View>
-              </SquaredCard>
+                </SquaredCard>
+              </View>
             )}
           </ScrollView>
 
@@ -898,6 +1010,19 @@ const styles = StyleSheet.create({
     zIndex: 10,
     width: '100%',
     maxWidth: '100%'
+  },
+  mobileTopBar: {
+    paddingTop: Platform.OS === 'web' ? 'max(42px, env(safe-area-inset-top, 42px))' : 42,
+    minHeight: Platform.OS === 'web' ? 'calc(58px + max(42px, env(safe-area-inset-top, 42px)))' : 100,
+    paddingBottom: 10,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2
   },
   searchBox: {
     flexDirection: 'row',
@@ -1353,7 +1478,7 @@ const styles = StyleSheet.create({
   },
   // Phone Bottom Bar
   phoneBottomBar: {
-    height: 64,
+    height: Platform.OS === 'web' ? 'calc(58px + max(12px, env(safe-area-inset-bottom, 12px)))' : 72,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
@@ -1365,7 +1490,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 90,
-    paddingBottom: Platform.OS === 'web' ? 'max(6px, env(safe-area-inset-bottom, 6px))' : 6,
+    paddingBottom: Platform.OS === 'web' ? 'max(12px, env(safe-area-inset-bottom, 12px))' : 12,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.05,

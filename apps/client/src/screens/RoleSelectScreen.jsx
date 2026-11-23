@@ -153,7 +153,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 36,
+    paddingTop: Platform.OS === 'web' ? 'max(48px, env(safe-area-inset-top, 48px))' : 48,
+    paddingBottom: Platform.OS === 'web' ? 'max(28px, env(safe-area-inset-bottom, 28px))' : 28,
     width: '100%'
   },
   gradientBg: {
@@ -169,8 +170,8 @@ const styles = StyleSheet.create({
   },
   gearBtn: {
     position: 'absolute',
-    top: Platform.OS === 'web' ? 24 : 48,
-    right: 24,
+    top: Platform.OS === 'web' ? 'max(40px, env(safe-area-inset-top, 40px))' : 40,
+    right: 20,
     width: 40,
     height: 40,
     borderRadius: 20,

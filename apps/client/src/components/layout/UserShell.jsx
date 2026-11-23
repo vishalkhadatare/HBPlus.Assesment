@@ -77,8 +77,10 @@ function UserShellContent({ onSignOut }) {
 
   return (
     <View style={styles.root}>
-      {/* 4px Amber Identity Strip across the top (Section 3) */}
-      <View style={[styles.identityStrip, { backgroundColor: theme.identityStrip }]} />
+      {/* 4px Amber Identity Strip across the top (Section 3 - Desktop only) */}
+      {isDesktop ? (
+        <View style={[styles.identityStrip, { backgroundColor: theme.identityStrip }]} />
+      ) : null}
 
       <View style={styles.mainLayout}>
         {/* DESKTOP: Light Sidebar (Translucent White, 240px, Airy) */}
@@ -161,7 +163,7 @@ function UserShellContent({ onSignOut }) {
         {/* Content Column (max 1100px on desktop) */}
         <View style={styles.contentColumn}>
           {/* Top Bar: Greeting Header + Avatar + Notification Bell */}
-          <View style={styles.topArea}>
+          <View style={[styles.topArea, !isDesktop && styles.mobileTopArea]}>
             <View style={styles.greetingCol}>
               <Text style={styles.greetingText}>Good morning, {firstName} 👋</Text>
               <Text style={styles.dateSubText}>
@@ -692,6 +694,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     maxWidth: '100%'
+  },
+  mobileTopArea: {
+    paddingTop: Platform.OS === 'web' ? 'max(42px, env(safe-area-inset-top, 42px))' : 42,
+    paddingBottom: 12,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    shadowColor: '#00775B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2
   },
   greetingCol: {
     gap: 4
