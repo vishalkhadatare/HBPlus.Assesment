@@ -1,0 +1,9 @@
+{
+  "appId": "fit.hbplus.secureaccess",
+  "appName": "HBPlus Access",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  }
+}

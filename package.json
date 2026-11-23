@@ -13,6 +13,8 @@
     "dev:client": "npm --prefix apps/client run web",
     "web": "npm --prefix apps/client run web",
     "android": "npm --prefix apps/client run android",
+    "build:apk": "build-apk.bat",
+    "open:android": "cd apps/client && npx @capacitor/cli open android",
     "ios": "npm --prefix apps/client run ios",
     "build:client": "npm --prefix apps/client run build",
     "test:server": "npm --prefix apps/server test",

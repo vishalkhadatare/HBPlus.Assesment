@@ -19,6 +19,11 @@ build/
 .expo/
 .next/
 out/
+*.apk
+.gradle/
+android/app/build/
+android/build/
+local.properties
 
 # Logs
 npm-debug.log*
