@@ -1,20 +1,24 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
+  TouchableOpacity,
   Platform,
+  useWindowDimensions,
   Animated
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth.js';
+import { RoleThemeProvider, useRoleTheme } from '../theme/roleThemes.js';
+import { CARD_RADIUS } from '../theme/shape.js';
 import HBLogo from '../components/brand/HBLogo.jsx';
 import Icon from '../components/ui/Icon.jsx';
+import SquaredCard from '../components/ui/SquaredCard.jsx';
+import SquaredInput from '../components/ui/SquaredInput.jsx';
+import SquaredButton from '../components/ui/SquaredButton.jsx';
 import { ROUTES } from '../navigation/navigationConfig.js';
 
-function GoogleIcon({ size = 18 }) {
+function GoogleIcon({ size = 20 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" style={{ flexShrink: 0 }}>
       <path
@@ -37,24 +41,44 @@ function GoogleIcon({ size = 18 }) {
   );
 }
 
-export function UserLoginScreen() {
+function UserLoginInner() {
   const { signInUserWithGoogle, signInUserWithPassword, navigate } = useAuth();
+  const theme = useRoleTheme();
+  const { width } = useWindowDimensions();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState(null);
 
+  // Soft, bouncy 320ms slide-up entrance animation (Section 3 & 4)
+  const slideAnim = useRef(new Animated.Value(36)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        damping: 15,
+        stiffness: 120,
+        useNativeDriver: true
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 320,
+        useNativeDriver: true
+      })
+    ]).start();
+  }, [slideAnim, opacityAnim]);
 
   const triggerShake = () => {
     Animated.sequence([
-      Animated.timing(shakeAnim, { toValue: -8, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 8, duration: 80, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -6, duration: 80, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 0, duration: 60, useNativeDriver: true })
+      Animated.timing(shakeAnim, { toValue: -8, duration: 40, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 8, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -5, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 40, useNativeDriver: true })
     ]).start();
   };
 
@@ -101,236 +125,203 @@ export function UserLoginScreen() {
   };
 
   return (
-    <View style={styles.root}>
-      {/* Background Soft Gradient */}
-      <View style={styles.gradientBg} pointerEvents="none" />
+    <View style={styles.container}>
+      {/* 4px Amber Identity Strip across the top (Section 3) */}
+      <View style={[styles.identityStrip, { backgroundColor: theme.identityStrip }]} />
 
-      {/* Top Bar with Back Button */}
-      <View style={styles.topBar}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => navigate(ROUTES.ROLE_SELECT)}
-          activeOpacity={0.7}
-          accessibilityLabel="Back"
+      {/* Soft decorative shape (large, 10% opacity amber/emerald circle) in top corner */}
+      <View style={styles.decorativeOrb} pointerEvents="none" />
+
+      {/* Back Button */}
+      <TouchableOpacity
+        style={styles.backBtn}
+        onPress={() => navigate(ROUTES.ROLE_SELECT)}
+        activeOpacity={0.8}
+        accessibilityLabel="Back to Role Select"
+      >
+        <Icon name="arrowLeft" size={18} color="#0F172A" />
+      </TouchableOpacity>
+
+      {/* Centered Single Card over warm mint-cream background (Section 4) */}
+      <View style={styles.centerArea}>
+        <Animated.View
+          style={[
+            styles.cardWrapper,
+            {
+              opacity: opacityAnim,
+              transform: [{ translateY: slideAnim }, { translateX: shakeAnim }]
+            }
+          ]}
         >
-          <Icon name="arrowLeft" size={20} color="#0F172A" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.contentWrapper}>
-        {/* Small Logo & Title */}
-        <View style={styles.headerArea}>
-          <HBLogo size={52} />
-          <Text style={styles.title}>User</Text>
-        </View>
-
-        {/* Login Card */}
-        <Animated.View style={[styles.card, { transform: [{ translateX: shakeAnim }] }]}>
-          {error ? (
-            <View style={styles.errorBox}>
-              <Icon name="alertTriangle" size={16} color="#DC2626" />
-              <Text style={styles.errorText}>{error}</Text>
+          {/* Centered Small Logo & Title with UserCircle Icon */}
+          <View style={styles.brandHeader}>
+            <HBLogo size={56} />
+            <View style={styles.titleRow}>
+              <Icon name="userCircle" size={24} color="#FFB020" strokeWidth={2.4} />
+              <Text style={styles.titleText}>User</Text>
             </View>
-          ) : null}
-
-          {/* Google Sign In Button */}
-          <TouchableOpacity
-            style={[styles.googleBtn, loadingGoogle && styles.btnDisabled]}
-            onPress={handleGoogleSignIn}
-            disabled={loadingGoogle || loading}
-            activeOpacity={0.85}
-          >
-            {loadingGoogle ? (
-              <ActivityIndicator color="#0F172A" size="small" />
-            ) : (
-              <>
-                <GoogleIcon size={18} />
-                <Text style={styles.googleBtnText}>Continue with Google</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          {/* Simple "or" Divider */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Email / Password Form */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Email</Text>
-            <View style={styles.inputContainer}>
-              <Icon name="mail" size={18} color="#94A3B8" style={styles.inputIcon} />
-              <TextInput
-                style={styles.textInput}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="employee@hbplus.fit"
-                placeholderTextColor="#94A3B8"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!loading && !loadingGoogle}
-              />
+            <View style={styles.userBadgePill}>
+              <Text style={styles.userBadgeText}>Workspace</Text>
             </View>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Password</Text>
-            <View style={styles.inputContainer}>
-              <Icon name="lock" size={18} color="#94A3B8" style={styles.inputIcon} />
-              <TextInput
-                style={[styles.textInput, { paddingRight: 40 }]}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="••••••••"
-                placeholderTextColor="#94A3B8"
-                secureTextEntry={!showPassword}
-                editable={!loading && !loadingGoogle}
-                onSubmitEditing={handleEmailSignIn}
-              />
-              <TouchableOpacity
-                style={styles.eyeBtn}
-                onPress={() => setShowPassword(!showPassword)}
-                activeOpacity={0.7}
-              >
-                <Icon
-                  name={showPassword ? 'eyeOff' : 'eye'}
-                  size={18}
-                  color="#94A3B8"
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
+          <SquaredCard style={styles.userCard}>
+            {error ? (
+              <View style={styles.errorBox}>
+                <Icon name="alertTriangle" size={16} color="#DC2626" />
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : null}
 
-          <TouchableOpacity
-            style={[styles.submitBtn, loading && styles.btnDisabled]}
-            onPress={handleEmailSignIn}
-            disabled={loading || loadingGoogle}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <Text style={styles.submitBtnText}>Sign in</Text>
-            )}
-          </TouchableOpacity>
+            {/* 1. Continue with Google Button first */}
+            <SquaredButton
+              title="Continue with Google"
+              variant="google"
+              icon={<GoogleIcon size={20} />}
+              onPress={handleGoogleSignIn}
+              loading={loadingGoogle}
+              disabled={loading}
+            />
+
+            {/* 2. Simple "or" Divider (1px line at ~10% opacity of role's colour) */}
+            <View style={styles.dividerRow}>
+              <View style={[styles.dividerLine, { backgroundColor: 'rgba(0, 179, 134, 0.15)' }]} />
+              <Text style={styles.dividerText}>or</Text>
+              <View style={[styles.dividerLine, { backgroundColor: 'rgba(0, 179, 134, 0.15)' }]} />
+            </View>
+
+            {/* 3. Email & Password Inputs */}
+            <SquaredInput
+              label="Email"
+              iconName="mail"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="employee@hbplus.fit"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              editable={!loading && !loadingGoogle}
+            />
+
+            <SquaredInput
+              label="Password"
+              iconName="lock"
+              value={password}
+              onChangeText={setPassword}
+              placeholder="••••••••"
+              secureTextEntry={true}
+              showPasswordToggle={true}
+              editable={!loading && !loadingGoogle}
+              onSubmitEditing={handleEmailSignIn}
+            />
+
+            {/* 4. Sign in Button (User Gradient) */}
+            <SquaredButton
+              title="Sign in"
+              onPress={handleEmailSignIn}
+              loading={loading}
+              disabled={loadingGoogle}
+              style={{ marginTop: 6 }}
+            />
+          </SquaredCard>
         </Animated.View>
       </View>
     </View>
   );
 }
 
+export function UserLoginScreen() {
+  return (
+    <RoleThemeProvider role="user">
+      <UserLoginInner />
+    </RoleThemeProvider>
+  );
+}
+
 const styles = StyleSheet.create({
-  root: {
+  container: {
     flex: 1,
-    backgroundColor: '#F7FBFA',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
+    backgroundColor: '#F5FBF7',
+    ...(Platform.OS === 'web'
+      ? { backgroundImage: 'linear-gradient(180deg, #F5FBF7 0%, #E6F6EE 100%)' }
+      : {}),
     position: 'relative'
   },
-  gradientBg: {
+  identityStrip: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
-    backgroundColor: '#F7FBFA',
-    ...(Platform.OS === 'web'
-      ? { backgroundImage: 'linear-gradient(180deg, #F7FBFA 0%, #E4F5EF 100%)' }
-      : {})
+    height: 4,
+    zIndex: 100
   },
-  topBar: {
+  decorativeOrb: {
     position: 'absolute',
-    top: Platform.OS === 'web' ? 24 : 48,
-    left: 24,
-    zIndex: 20
+    top: -120,
+    right: -100,
+    width: 380,
+    height: 380,
+    borderRadius: 190,
+    backgroundColor: 'rgba(255, 176, 32, 0.08)',
+    ...(Platform.OS === 'web' ? { filter: 'blur(50px)' } : {})
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    position: 'absolute',
+    top: 28,
+    left: 24,
+    width: 38,
+    height: 38,
+    borderRadius: CARD_RADIUS,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2
+    zIndex: 20
   },
-  contentWrapper: {
+  centerArea: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24
+  },
+  cardWrapper: {
     width: '100%',
-    maxWidth: 380,
-    alignItems: 'center',
-    zIndex: 10
+    maxWidth: 440,
+    alignItems: 'center'
   },
-  headerArea: {
+  brandHeader: {
     alignItems: 'center',
-    marginBottom: 28,
-    gap: 12
+    gap: 10,
+    marginBottom: 24
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  titleText: {
+    fontSize: 26,
+    fontWeight: '800',
     color: '#0F172A',
     letterSpacing: -0.3
   },
-  card: {
-    width: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 24,
+  userBadgePill: {
+    backgroundColor: '#FFF7E6',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 3,
-    gap: 16
-  },
-  errorBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
-    borderRadius: 12,
+    borderColor: 'rgba(255, 176, 32, 0.3)',
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8
+    paddingVertical: 4,
+    borderRadius: CARD_RADIUS
   },
-  errorText: {
-    flex: 1,
-    color: '#DC2626',
-    fontSize: 13,
-    fontWeight: '500'
+  userBadgeText: {
+    color: '#B57400',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase'
   },
-  googleBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    gap: 10,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1
-  },
-  googleBtnText: {
-    color: '#0F172A',
-    fontSize: 14,
-    fontWeight: '600'
+  userCard: {
+    width: '100%',
+    padding: 28,
+    gap: 16
   },
   dividerRow: {
     flexDirection: 'row',
@@ -340,67 +331,28 @@ const styles = StyleSheet.create({
   },
   dividerLine: {
     flex: 1,
-    height: 1,
-    backgroundColor: '#E2E8F0'
+    height: 1
   },
   dividerText: {
     fontSize: 13,
     color: '#94A3B8',
-    fontWeight: '500'
+    fontWeight: '600'
   },
-  inputGroup: {
-    gap: 6
-  },
-  inputLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#334155'
-  },
-  inputContainer: {
+  errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    backgroundColor: '#FEF2F2',
+    borderRadius: CARD_RADIUS,
     paddingHorizontal: 12,
-    height: 48
+    paddingVertical: 10,
+    gap: 8,
+    borderWidth: 0
   },
-  inputIcon: {
-    marginRight: 8
-  },
-  textInput: {
+  errorText: {
     flex: 1,
-    fontSize: 15,
-    color: '#0F172A',
-    height: '100%',
-    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {})
-  },
-  eyeBtn: {
-    position: 'absolute',
-    right: 12,
-    padding: 6
-  },
-  submitBtn: {
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#00B386',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
-    shadowColor: '#00B386',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 2
-  },
-  btnDisabled: {
-    opacity: 0.6
-  },
-  submitBtnText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600'
+    color: '#DC2626',
+    fontSize: 13,
+    fontWeight: '500'
   }
 });
 

@@ -1,135 +1,48 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Modal, Text, TouchableOpacity } from 'react-native';
 import { useAuth } from '../hooks/useAuth.js';
-import ModernAppLayout from '../components/layout/ModernAppLayout.jsx';
+import AdminShell from '../components/layout/AdminShell.jsx';
+import UserShell from '../components/layout/UserShell.jsx';
 import LoadingSpinner from '../components/common/LoadingSpinner.jsx';
 import ErrorMessage from '../components/common/ErrorMessage.jsx';
-
-// Modules
-import DashboardOverviewView from '../components/modules/DashboardOverviewView.jsx';
-import DirectoryView from '../components/modules/DirectoryView.jsx';
-import AttendanceView from '../components/modules/AttendanceView.jsx';
-import LeaveView from '../components/modules/LeaveView.jsx';
-import ShiftsView from '../components/modules/ShiftsView.jsx';
-import PayrollView from '../components/modules/PayrollView.jsx';
-import TasksView from '../components/modules/TasksView.jsx';
-import PerformanceView from '../components/modules/PerformanceView.jsx';
-import AnnouncementsView from '../components/modules/AnnouncementsView.jsx';
-import DocumentsView from '../components/modules/DocumentsView.jsx';
-import HelpdeskView from '../components/modules/HelpdeskView.jsx';
-import ReportsView from '../components/modules/ReportsView.jsx';
-import AdminSettingsView from '../components/modules/AdminSettingsView.jsx';
-import UiGalleryScreen from './UiGalleryScreen.jsx';
 import Icon from '../components/ui/Icon.jsx';
+import { CARD_RADIUS } from '../theme/shape.js';
 
 export function DashboardScreen() {
-  const { user, profile, role, isLoading, error, clearError, signOut } = useAuth();
-  const [activeModule, setActiveModule] = useState('dashboard');
+  const { user, profile, role, isLoading, error, clearError, signOut, isAdmin } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  // Normalized role string
-  const normalizedRole = (role || 'user').toLowerCase() === 'admin' ? 'Admin' : 'User';
-
+  // During auth resolution: never flash the other role's theme
   if (isLoading && !profile && !user) {
-    return <LoadingSpinner fullScreen message="Verifying secure access credentials..." />;
+    return (
+      <View style={styles.loadingNeutral}>
+        <LoadingSpinner message="Verifying credentials..." />
+      </View>
+    );
   }
 
-  const handleModuleSelect = (moduleId) => {
-    // Role guard: Only Admins can navigate to admin module
-    if (moduleId === 'admin' && normalizedRole !== 'Admin') {
-      setActiveModule('dashboard');
-      return;
-    }
-    setActiveModule(moduleId);
-  };
-
-  const renderActiveModule = () => {
-    switch (activeModule) {
-      case 'dashboard':
-        return (
-          <DashboardOverviewView
-            onNavigate={handleModuleSelect}
-            user={user}
-            profile={profile}
-            role={normalizedRole}
-          />
-        );
-      case 'directory':
-        return <DirectoryView role={normalizedRole} />;
-      case 'attendance':
-        return <AttendanceView role={normalizedRole} />;
-      case 'leave':
-        return <LeaveView role={normalizedRole} />;
-      case 'shifts':
-        return <ShiftsView role={normalizedRole} />;
-      case 'payroll':
-        return <PayrollView role={normalizedRole} />;
-      case 'tasks':
-        return <TasksView role={normalizedRole} />;
-      case 'performance':
-        return <PerformanceView role={normalizedRole} />;
-      case 'announcements':
-        return <AnnouncementsView role={normalizedRole} />;
-      case 'documents':
-        return <DocumentsView role={normalizedRole} />;
-      case 'helpdesk':
-        return <HelpdeskView role={normalizedRole} />;
-      case 'reports':
-        return <ReportsView role={normalizedRole} />;
-      case 'admin':
-        if (normalizedRole !== 'Admin') {
-          return (
-            <DashboardOverviewView
-              onNavigate={handleModuleSelect}
-              user={user}
-              profile={profile}
-              role={normalizedRole}
-            />
-          );
-        }
-        return (
-          <AdminSettingsView
-            user={user}
-            profile={profile}
-            role={normalizedRole}
-            onOpenGallery={() => setActiveModule('ui-gallery')}
-          />
-        );
-      case 'ui-gallery':
-        return <UiGalleryScreen onBack={() => setActiveModule('dashboard')} />;
-      default:
-        return (
-          <DashboardOverviewView
-            onNavigate={handleModuleSelect}
-            user={user}
-            profile={profile}
-            role={normalizedRole}
-          />
-        );
-    }
+  const handleSignOutConfirmed = async () => {
+    setShowLogoutConfirm(false);
+    await signOut();
   };
 
   return (
-    <ModernAppLayout
-      activeModule={activeModule}
-      onSelectModule={handleModuleSelect}
-      onSignOut={() => setShowLogoutConfirm(true)}
-      user={user}
-      profile={profile}
-      role={normalizedRole}
-    >
-      <View style={styles.contentWrapper}>
-        {error ? (
-          <View style={styles.errorContainer}>
-            <ErrorMessage message={error} onDismiss={clearError} />
-          </View>
-        ) : null}
+    <View style={styles.root}>
+      {error ? (
+        <View style={styles.errorOverlay}>
+          <ErrorMessage message={error} onDismiss={clearError} />
+        </View>
+      ) : null}
 
-        {renderActiveModule()}
-      </View>
+      {/* Render dedicated role shell */}
+      {isAdmin ? (
+        <AdminShell onSignOut={() => setShowLogoutConfirm(true)} />
+      ) : (
+        <UserShell onSignOut={() => setShowLogoutConfirm(true)} />
+      )}
 
-      {/* Logout Confirmation Sheet */}
-      {showLogoutConfirm ? (
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
         <Modal
           visible={showLogoutConfirm}
           transparent={true}
@@ -139,7 +52,7 @@ export function DashboardScreen() {
           <View style={styles.modalBackdrop}>
             <View style={styles.confirmCard}>
               <View style={styles.confirmIconTile}>
-                <Icon name="logOut" size={24} color="#F04438" />
+                <Icon name="logout" size={24} color="#EF4444" />
               </View>
               <Text style={styles.confirmTitle}>Confirm Sign Out</Text>
               <Text style={styles.confirmText}>
@@ -153,102 +66,110 @@ export function DashboardScreen() {
                 >
                   <Text style={styles.cancelBtnText}>Cancel</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
-                  style={styles.signOutBtn}
-                  onPress={() => {
-                    setShowLogoutConfirm(false);
-                    signOut();
-                  }}
+                  style={styles.confirmSignOutBtn}
+                  onPress={handleSignOutConfirmed}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.signOutBtnText}>Sign Out</Text>
+                  <Text style={styles.confirmSignOutText}>Sign Out</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         </Modal>
-      ) : null}
-    </ModernAppLayout>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  contentWrapper: {
+  root: {
     flex: 1,
-    minWidth: 0
+    backgroundColor: '#F7FBFA'
   },
-  errorContainer: {
-    marginBottom: 16
+  loadingNeutral: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F7FBFA'
+  },
+  errorOverlay: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    zIndex: 999
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(4, 16, 14, 0.65)',
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20
+    padding: 24
   },
   confirmCard: {
     width: '100%',
     maxWidth: 400,
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    borderRadius: CARD_RADIUS,
     padding: 24,
     alignItems: 'center',
-    gap: 12,
-    boxShadow: '0 20px 48px rgba(0,0,0,0.3)',
+    gap: 14,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
     elevation: 8
   },
   confirmIconTile: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#FEE4E2',
+    width: 48,
+    height: 48,
+    borderRadius: CARD_RADIUS,
+    backgroundColor: '#FEF2F2',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4
+    justifyContent: 'center'
   },
   confirmTitle: {
     fontSize: 18,
-    fontWeight: '800',
-    color: '#0A1A17'
+    fontWeight: '700',
+    color: '#0F172A'
   },
   confirmText: {
-    fontSize: 13.5,
-    color: '#51635E',
+    fontSize: 13,
+    color: '#64748B',
     textAlign: 'center',
-    lineHeight: 20
+    lineHeight: 18
   },
   confirmActionRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
     width: '100%',
-    marginTop: 8
+    marginTop: 6
   },
   cancelBtn: {
     flex: 1,
-    height: 46,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#DDE8E5',
+    height: 44,
+    borderRadius: CARD_RADIUS,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center'
   },
   cancelBtnText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#51635E'
+    color: '#475569'
   },
-  signOutBtn: {
+  confirmSignOutBtn: {
     flex: 1,
-    height: 46,
-    borderRadius: 14,
-    backgroundColor: '#F04438',
+    height: 44,
+    borderRadius: CARD_RADIUS,
+    backgroundColor: '#EF4444',
     alignItems: 'center',
     justifyContent: 'center'
   },
-  signOutBtnText: {
+  confirmSignOutText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#FFFFFF'
   }
 });

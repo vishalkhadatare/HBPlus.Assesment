@@ -14,6 +14,7 @@ import AnimatedLogo from '../components/brand/AnimatedLogo.jsx';
 import Icon from '../components/ui/Icon.jsx';
 import DiagnosticsPanel from '../components/common/DiagnosticsPanel.jsx';
 import { ROUTES } from '../navigation/navigationConfig.js';
+import { CARD_RADIUS } from '../theme/shape.js';
 
 export function RoleSelectScreen() {
   const { navigate } = useAuth();
@@ -189,22 +190,22 @@ const styles = StyleSheet.create({
     height: 72,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.78)',
+    ...(Platform.OS === 'web' ? { backdropFilter: 'blur(12px)' } : {}),
+    borderRadius: CARD_RADIUS,
     paddingHorizontal: 20,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderWidth: 0,
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 18,
+    elevation: 0,
     cursor: 'pointer'
   },
   adminIconTile: {
     width: 48,
     height: 48,
-    borderRadius: 14,
+    borderRadius: CARD_RADIUS,
     backgroundColor: 'rgba(0, 179, 134, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
   userIconTile: {
     width: 48,
     height: 48,
-    borderRadius: 14,
+    borderRadius: CARD_RADIUS,
     backgroundColor: 'rgba(255, 176, 32, 0.14)',
     alignItems: 'center',
     justifyContent: 'center',

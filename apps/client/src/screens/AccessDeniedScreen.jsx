@@ -10,6 +10,7 @@ import {
 import { useAuth } from '../hooks/useAuth.js';
 import Icon from '../components/ui/Icon.jsx';
 import { ROUTES } from '../navigation/navigationConfig.js';
+import { CARD_RADIUS } from '../theme/shape.js';
 
 export function AccessDeniedScreen() {
   const { rejectedEmail, denialReason, navigate } = useAuth();
@@ -99,26 +100,25 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    ...(Platform.OS === 'web' ? { backdropFilter: 'blur(12px)' } : {}),
+    borderRadius: CARD_RADIUS,
     padding: 28,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderWidth: 0,
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    elevation: 0,
     gap: 20
   },
   iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 60,
+    height: 60,
+    borderRadius: CARD_RADIUS,
     backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FEE2E2',
+    borderWidth: 0,
     alignItems: 'center',
     justifyContent: 'center'
   },
@@ -140,11 +140,10 @@ const styles = StyleSheet.create({
   },
   rejectedEmailBox: {
     backgroundColor: '#F8FAFC',
-    borderRadius: 10,
+    borderRadius: CARD_RADIUS,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0'
+    borderWidth: 0
   },
   rejectedEmailValue: {
     fontSize: 14,
@@ -159,15 +158,16 @@ const styles = StyleSheet.create({
   primaryBtn: {
     width: '100%',
     height: 48,
-    borderRadius: 12,
+    borderRadius: CARD_RADIUS,
     backgroundColor: '#00B386',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 0,
     shadowColor: '#00B386',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
-    elevation: 2
+    elevation: 0
   },
   primaryBtnText: {
     color: '#FFFFFF',
@@ -177,10 +177,12 @@ const styles = StyleSheet.create({
   secondaryBtn: {
     width: '100%',
     height: 44,
-    borderRadius: 12,
+    borderRadius: CARD_RADIUS,
     backgroundColor: '#F1F5F9',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    borderWidth: 0,
+    elevation: 0
   },
   secondaryBtnText: {
     color: '#475569',
