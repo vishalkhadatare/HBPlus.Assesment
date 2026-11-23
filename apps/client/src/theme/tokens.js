@@ -11,10 +11,12 @@ export const lightTheme = {
   primarySoft: '#E0F8F1',
   primaryBorder: '#B2EADB',
 
-  // 2025 Premium additions
+  // 2025 Premium Additions
   teal: '#14B8A6',
   tealDeep: '#0F766E',
   tealSoft: '#F0FDFA',
+
+  // Admin brand
   adminPrimary: '#C2410C',
   adminPrimaryLight: '#F97316',
   adminPrimaryGlow: 'rgba(194, 65, 12, 0.28)',
@@ -39,8 +41,9 @@ export const lightTheme = {
 
   // Typography
   text: '#0A1A17',
-  textMuted: '#51635E',
-  textSubtle: '#7E918C',
+  textSlate: '#0F172A',
+  textMuted: '#64748B',
+  textSubtle: '#94A3B8',
   textInverse: '#FFFFFF',
 
   // Semantic

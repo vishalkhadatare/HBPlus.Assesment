@@ -456,7 +456,7 @@ function UserLoginInner() {
           {/* Full-screen teal gradient background */}
           <View style={styles.phoneBg} pointerEvents="none" />
 
-          {/* Back button — floats over gradient */}
+          {/* Back button — pinned top left */}
           <TouchableOpacity
             style={styles.phoneBackBtn}
             onPress={() => navigate(ROUTES.ROLE_SELECT)}
@@ -466,33 +466,34 @@ function UserLoginInner() {
             <Icon name="arrowLeft" size={18} color="#FFFFFF" />
           </TouchableOpacity>
 
-          {/* Header area: illustration + title */}
-          <View style={styles.phoneHeader} pointerEvents="none">
-            {Platform.OS === 'web' ? (
-              <img
-                src={userIllustration}
-                alt="User Workspace"
-                style={{
-                  width: 180,
-                  height: 160,
-                  objectFit: 'contain',
-                  display: 'block'
-                }}
-              />
-            ) : null}
-            <View style={styles.phoneTitleRow}>
-              <Icon name="userCircle" size={22} color="#FFFFFF" strokeWidth={2.4} />
-              <Text style={styles.phoneTitleText}>User Workspace</Text>
-            </View>
-          </View>
-
-          {/* Floating card area that overlaps the gradient */}
+          {/* Unified ScrollView containing Header + Form Card */}
           <ScrollView
             style={styles.phoneScroll}
             contentContainerStyle={styles.phoneScrollContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
+            {/* Header area: illustration + title */}
+            <View style={styles.phoneHeader}>
+              {Platform.OS === 'web' ? (
+                <img
+                  src={userIllustration}
+                  alt="User Workspace"
+                  style={{
+                    width: mode === 'signup' ? 140 : 160,
+                    height: mode === 'signup' ? 100 : 120,
+                    objectFit: 'contain',
+                    display: 'block'
+                  }}
+                />
+              ) : null}
+              <View style={styles.phoneTitleRow}>
+                <Icon name="userCircle" size={20} color="#FFFFFF" strokeWidth={2.4} />
+                <Text style={styles.phoneTitleText}>User Workspace</Text>
+              </View>
+            </View>
+
+            {/* Floating form card */}
             <Animated.View
               style={[
                 styles.phoneCardWrapper,
@@ -718,24 +719,24 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: Platform.OS === 'web' ? 'max(40px, env(safe-area-inset-top, 40px))' : 40,
     left: 18,
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.22)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: 'rgba(255,255,255,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 30
+    zIndex: 50
   },
 
   /* ── Phone header (illustration + title) ── */
   phoneHeader: {
-    paddingTop: Platform.OS === 'web' ? 'max(88px, env(safe-area-inset-top, 88px))' : 88,
-    paddingBottom: 20,
+    paddingTop: Platform.OS === 'web' ? 'max(48px, env(safe-area-inset-top, 48px))' : 48,
+    paddingBottom: 14,
     alignItems: 'center',
-    gap: 10,
-    minHeight: '38%'
+    gap: 8,
+    width: '100%'
   },
   phoneTitleRow: {
     flexDirection: 'row',
@@ -744,9 +745,9 @@ const styles = StyleSheet.create({
   },
   phoneTitleText: {
     color: '#FFFFFF',
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '800',
-    letterSpacing: -0.4
+    letterSpacing: -0.3
   },
 
   /* ── Phone scrollable card area ── */
@@ -754,14 +755,14 @@ const styles = StyleSheet.create({
     flex: 1
   },
   phoneScrollContent: {
-    paddingHorizontal: 18,
-    paddingBottom: 40,
-    alignItems: 'center'
+    paddingHorizontal: 16,
+    paddingBottom: Platform.OS === 'web' ? 'max(36px, env(safe-area-inset-bottom, 36px))' : 36,
+    alignItems: 'center',
+    flexGrow: 1
   },
   phoneCardWrapper: {
     width: '100%',
-    maxWidth: 460,
-    marginTop: -32
+    maxWidth: 440
   },
 
   /* ── Shared form card ── */
@@ -910,7 +911,8 @@ const styles = StyleSheet.create({
 
   /* ── Signup-only fields ── */
   fieldWrapper: {
-    gap: 6
+    gap: 6,
+    width: '100%'
   },
   fieldLabel: {
     fontSize: 13,
@@ -925,10 +927,13 @@ const styles = StyleSheet.create({
     borderRadius: CARD_RADIUS,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    width: '100%'
   },
   emailLocalInput: {
     flex: 1,
+    minWidth: 0,
+    width: 0,
     height: '100%',
     paddingHorizontal: 12,
     borderWidth: 0,
@@ -946,24 +951,29 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     textAlignVertical: 'center',
-    lineHeight: 52
+    lineHeight: 52,
+    flexShrink: 0
   },
   phoneRow: {
     height: 52,
     flexDirection: 'row',
-    gap: 8
+    alignItems: 'center',
+    gap: 8,
+    width: '100%',
+    maxWidth: '100%'
   },
   countryButton: {
-    width: 112,
+    width: 96,
     height: 52,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
+    gap: 4,
     backgroundColor: '#F1F5F9',
     borderRadius: CARD_RADIUS,
     borderWidth: 1,
-    borderColor: '#E2E8F0'
+    borderColor: '#E2E8F0',
+    flexShrink: 0
   },
   countryCode: {
     color: '#334155',
@@ -972,6 +982,8 @@ const styles = StyleSheet.create({
   },
   phoneInput: {
     flex: 1,
+    minWidth: 0,
+    width: 0,
     height: 52,
     backgroundColor: '#F1F5F9',
     borderRadius: CARD_RADIUS,
@@ -980,7 +992,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     outlineStyle: 'none',
     color: '#0F172A',
-    fontSize: 15
+    fontSize: 15,
+    flexShrink: 1
   },
 
   /* ── Desktop layout ── */

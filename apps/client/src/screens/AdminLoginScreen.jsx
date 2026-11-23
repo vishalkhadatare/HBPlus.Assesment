@@ -31,21 +31,21 @@ function AdminLoginInner() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const slideAnim = useRef(new Animated.Value(32)).current;
+  // Crisp 200ms slide-up entrance animation (Section 3 & 4)
+  const slideAnim = useRef(new Animated.Value(24)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.spring(slideAnim, {
+      Animated.timing(slideAnim, {
         toValue: 0,
-        damping: 15,
-        stiffness: 120,
+        duration: 200,
         useNativeDriver: true
       }),
       Animated.timing(opacityAnim, {
         toValue: 1,
-        duration: 300,
+        duration: 200,
         useNativeDriver: true
       })
     ]).start();
@@ -87,93 +87,130 @@ function AdminLoginInner() {
     }
   };
 
-  /* ─── SHARED FORM CARD CONTENT ─── */
-  const FormCard = () => (
-    <SquaredCard style={styles.adminCard}>
-      {error ? (
-        <View style={styles.errorBox}>
-          <Icon name="alertTriangle" size={15} color="#DC2626" />
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      ) : null}
-
-      <View style={styles.cardHeaderArea}>
-        <Text style={styles.cardTitle}>Administrator Sign In</Text>
-        <Text style={styles.cardSubtitle}>
-          Enter your corporate credentials to access the central control room.
-        </Text>
-      </View>
-
-      <SquaredInput
-        label="Admin Email"
-        iconName="mail"
-        value={email}
-        onChangeText={setEmail}
-        placeholder="admin@hbplus.fit"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        editable={!loading}
-      />
-
-      <SquaredInput
-        label="Password"
-        iconName="lock"
-        value={password}
-        onChangeText={setPassword}
-        placeholder="••••••••"
-        secureTextEntry={true}
-        showPasswordToggle={true}
-        editable={!loading}
-        onSubmitEditing={handleAdminSignIn}
-      />
-
-      {/* Primary Orange Gradient Button */}
-      <TouchableOpacity
-        style={[
-          styles.signInBtn,
-          loading && styles.signInBtnDisabled
-        ]}
-        onPress={handleAdminSignIn}
-        activeOpacity={0.88}
-        disabled={loading}
-        accessibilityRole="button"
-        accessibilityLabel="Sign in as Administrator"
-      >
-        <Text style={styles.signInBtnText}>
-          {loading ? 'Authenticating…' : 'Sign in to Control Room →'}
-        </Text>
-      </TouchableOpacity>
-
-      {/* Governance & Security Note */}
-      <View style={styles.governanceNotice}>
-        <Icon name="shieldCheck" size={16} color="#C2410C" />
-        <Text style={styles.governanceText}>
-          Strict Domain Governance active • @hbplus.fit only
-        </Text>
-      </View>
-
-      {/* Switch to user portal */}
-      <View style={styles.switchRoleRow}>
-        <Text style={styles.switchRoleText}>Looking for employee workspace?</Text>
-        <TouchableOpacity
-          onPress={() => navigate(ROUTES.LOGIN_USER)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.switchRoleAction}>User Sign in</Text>
-        </TouchableOpacity>
-      </View>
-    </SquaredCard>
-  );
-
   return (
     <View style={styles.container}>
-      {/* ── PHONE LAYOUT (< 900px) ── */}
-      {!isDesktop ? (
-        <>
-          {/* Warm Coral-Orange Gradient Background */}
+      {/* 4px Deep-Teal Identity Strip across the top (Section 3) */}
+      <View style={[styles.identityStrip, { backgroundColor: theme.identityStrip }]} />
+
+      {/* DESKTOP SPLIT SCREEN (42% Control Panel / 58% Form Area) */}
+      {isDesktop ? (
+        <View style={styles.desktopContainer}>
+          {/* Left 42%: Deep-Teal/Midnight Panel */}
+          <View style={styles.desktopLeftPanel}>
+            {/* Abstract subtle grid pattern at 8% opacity */}
+            <View style={styles.abstractPattern} pointerEvents="none">
+              <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
+                <defs>
+                  <pattern id="adminGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(234, 88, 12, 0.06)" strokeWidth="1" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#adminGrid)" />
+                {/* Decorative shield outline */}
+                <path
+                  d="M120 180 L200 140 L280 180 L280 280 C280 340 200 400 200 400 C200 400 120 340 120 280 Z"
+                  fill="none"
+                  stroke="rgba(234, 88, 12, 0.05)"
+                  strokeWidth="2"
+                />
+              </svg>
+            </View>
+
+            {/* Back Button */}
+            <TouchableOpacity
+              style={styles.desktopBackBtn}
+              onPress={() => navigate(ROUTES.ROLE_SELECT)}
+              activeOpacity={0.8}
+              accessibilityLabel="Back to Role Select"
+            >
+              <Icon name="arrowLeft" size={18} color="#0F172A" />
+            </TouchableOpacity>
+
+            {/* Branding & Role Title */}
+            <View style={styles.desktopBrandBox}>
+              <HBLogo size={68} />
+              <View style={styles.roleTitleRow}>
+                <Icon name="shieldCheck" size={26} color="#FF7A1A" strokeWidth={2.4} />
+                <Text style={styles.desktopTitleText}>Admin</Text>
+              </View>
+              <View style={styles.controlPill}>
+                <Text style={styles.controlPillText}>Control Room</Text>
+              </View>
+              {Platform.OS === 'web' ? (
+                <img
+                  src={adminIllustration}
+                  alt="Secure administrator workspace illustration"
+                  style={{
+                    width: 'min(82%, 420px)',
+                    height: 220,
+                    objectFit: 'contain',
+                    marginTop: 8,
+                    display: 'block'
+                  }}
+                />
+              ) : null}
+            </View>
+          </View>
+
+          {/* Right 58%: Cool Mint-Slate Tint with Form Card */}
+          <View style={styles.desktopRightArea}>
+            <Animated.View
+              style={[
+                styles.formWrapper,
+                {
+                  opacity: opacityAnim,
+                  transform: [{ translateY: slideAnim }, { translateX: shakeAnim }]
+                }
+              ]}
+            >
+              <SquaredCard style={styles.adminCard}>
+                {error ? (
+                  <View style={styles.errorBox}>
+                    <Icon name="alertTriangle" size={16} color="#DC2626" />
+                    <Text style={styles.errorText}>{error}</Text>
+                  </View>
+                ) : null}
+
+                <SquaredInput
+                  label="Email"
+                  iconName="mail"
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="admin@hbplus.fit"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  editable={!loading}
+                />
+
+                <SquaredInput
+                  label="Password"
+                  iconName="lock"
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="••••••••"
+                  secureTextEntry={true}
+                  showPasswordToggle={true}
+                  editable={!loading}
+                  onSubmitEditing={handleAdminSignIn}
+                />
+
+                <SquaredButton
+                  title="Sign in"
+                  onPress={handleAdminSignIn}
+                  loading={loading}
+                  style={{ marginTop: 8 }}
+                />
+              </SquaredCard>
+            </Animated.View>
+          </View>
+        </View>
+      ) : (
+        /* PHONE LAYOUT: Unified ScrollView (No Cutoffs) */
+        <View style={styles.phoneContainer}>
+          {/* Full-screen warm coral gradient background */}
           <View style={styles.phoneBg} pointerEvents="none" />
 
-          {/* Floating Back Button with safe-area spacing */}
+          {/* Back Button pinned top-left */}
           <TouchableOpacity
             style={styles.phoneBackBtn}
             onPress={() => navigate(ROUTES.ROLE_SELECT)}
@@ -183,111 +220,83 @@ function AdminLoginInner() {
             <Icon name="arrowLeft" size={18} color="#FFFFFF" />
           </TouchableOpacity>
 
-          {/* Header area: illustration + title */}
-          <View style={styles.phoneHeader} pointerEvents="none">
-            {Platform.OS === 'web' ? (
-              <img
-                src={adminIllustration}
-                alt="Admin Control"
-                style={{
-                  width: 180,
-                  height: 150,
-                  objectFit: 'contain',
-                  display: 'block'
-                }}
-              />
-            ) : null}
-            <View style={styles.phoneTitleRow}>
-              <Icon name="shieldCheck" size={22} color="#FFFFFF" strokeWidth={2.4} />
-              <Text style={styles.phoneTitleText}>Admin Control</Text>
-            </View>
-          </View>
-
-          {/* Floating White Card Overlapping Gradient */}
+          {/* Unified ScrollView containing Header + Form Card */}
           <ScrollView
             style={styles.phoneScroll}
             contentContainerStyle={styles.phoneScrollContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <Animated.View
-              style={[
-                styles.phoneCardWrapper,
-                {
-                  opacity: opacityAnim,
-                  transform: [{ translateY: slideAnim }, { translateX: shakeAnim }]
-                }
-              ]}
-            >
-              <FormCard />
-            </Animated.View>
-          </ScrollView>
-        </>
-      ) : (
-        /* ── DESKTOP SPLIT SCREEN (>= 900px) ── */
-        <View style={styles.desktopContainer}>
-          {/* Left 42%: Coral-Orange Gradient Panel */}
-          <View style={styles.desktopLeftPanel}>
-            {/* Subtle Grid Overlay */}
-            <View style={styles.desktopPatternOverlay} pointerEvents="none">
-              <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
-                <defs>
-                  <pattern id="adminGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#adminGrid)" />
-              </svg>
-            </View>
-
-            {/* Desktop Back Button */}
-            <TouchableOpacity
-              style={styles.desktopBackBtn}
-              onPress={() => navigate(ROUTES.ROLE_SELECT)}
-              activeOpacity={0.8}
-              accessibilityLabel="Back to Role Select"
-            >
-              <Icon name="arrowLeft" size={18} color="#FFFFFF" />
-            </TouchableOpacity>
-
-            <View style={styles.desktopBrandBox}>
-              <HBLogo size={56} />
+            {/* Header area: illustration + title */}
+            <View style={styles.phoneHeader}>
               {Platform.OS === 'web' ? (
                 <img
                   src={adminIllustration}
-                  alt="Admin Control Room"
+                  alt="Admin Control"
                   style={{
-                    width: 'min(82%, 400px)',
-                    height: 220,
+                    width: 150,
+                    height: 110,
                     objectFit: 'contain',
                     display: 'block'
                   }}
                 />
               ) : null}
-              <View style={styles.desktopTitleRow}>
-                <Icon name="shieldCheck" size={26} color="#FFFFFF" strokeWidth={2.4} />
-                <Text style={styles.desktopTitleText}>Admin Control</Text>
-              </View>
-              <View style={styles.desktopBadgePill}>
-                <Text style={styles.desktopBadgeText}>Central Governance</Text>
+              <View style={styles.phoneTitleRow}>
+                <Icon name="shieldCheck" size={20} color="#FFFFFF" strokeWidth={2.4} />
+                <Text style={styles.phoneTitleText}>Admin Control</Text>
               </View>
             </View>
-          </View>
 
-          {/* Right 58%: Warm Cream Form Area */}
-          <View style={styles.desktopRightArea}>
+            {/* Form Card */}
             <Animated.View
               style={[
-                styles.desktopFormWrapper,
+                styles.phoneFormWrapper,
                 {
                   opacity: opacityAnim,
                   transform: [{ translateY: slideAnim }, { translateX: shakeAnim }]
                 }
               ]}
             >
-              <FormCard />
+              <SquaredCard style={styles.adminCard}>
+                {error ? (
+                  <View style={styles.errorBox}>
+                    <Icon name="alertTriangle" size={16} color="#DC2626" />
+                    <Text style={styles.errorText}>{error}</Text>
+                  </View>
+                ) : null}
+
+                <SquaredInput
+                  label="Email"
+                  iconName="mail"
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="admin@hbplus.fit"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  editable={!loading}
+                />
+
+                <SquaredInput
+                  label="Password"
+                  iconName="lock"
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="••••••••"
+                  secureTextEntry={true}
+                  showPasswordToggle={true}
+                  editable={!loading}
+                  onSubmitEditing={handleAdminSignIn}
+                />
+
+                <SquaredButton
+                  title="Sign in"
+                  onPress={handleAdminSignIn}
+                  loading={loading}
+                  style={{ marginTop: 8 }}
+                />
+              </SquaredCard>
             </Animated.View>
-          </View>
+          </ScrollView>
         </View>
       )}
     </View>
@@ -305,196 +314,34 @@ export function AdminLoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF7ED'
+    backgroundColor: '#FAF6F2',
+    position: 'relative'
   },
-
-  /* ── PHONE LAYOUT ── */
-  phoneBg: {
+  identityStrip: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: '46%',
-    backgroundColor: '#C2410C',
-    ...(Platform.OS === 'web'
-      ? {
-          backgroundImage:
-            'linear-gradient(180deg, #C2410C 0%, #EA580C 40%, #F97316 75%, #FFF7ED 100%)'
-        }
-      : {})
+    height: 4,
+    zIndex: 100
   },
-  phoneBackBtn: {
-    position: 'absolute',
-    top: Platform.OS === 'web' ? 'max(42px, env(safe-area-inset-top, 42px))' : 42,
-    left: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 30
-  },
-  phoneHeader: {
-    paddingTop: Platform.OS === 'web' ? 'max(46px, env(safe-area-inset-top, 46px))' : 46,
-    paddingBottom: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10
-  },
-  phoneTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 8
-  },
-  phoneTitleText: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.3
-  },
-  phoneScroll: {
-    flex: 1,
-    zIndex: 20
-  },
-  phoneScrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: Platform.OS === 'web' ? 'max(36px, env(safe-area-inset-bottom, 36px))' : 36,
-    alignItems: 'center'
-  },
-  phoneCardWrapper: {
-    width: '100%',
-    maxWidth: 440
-  },
-
-  /* ── CARD & FORM ── */
-  adminCard: {
-    width: '100%',
-    padding: 24,
-    gap: 16,
-    borderRadius: 24,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#C2410C',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.08,
-    shadowRadius: 24,
-    elevation: 4
-  },
-  cardHeaderArea: {
-    gap: 4,
-    marginBottom: 4
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#0F172A',
-    letterSpacing: -0.3
-  },
-  cardSubtitle: {
-    fontSize: 13,
-    color: '#64748B',
-    lineHeight: 18
-  },
-  errorBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    gap: 10
-  },
-  errorText: {
-    fontSize: 13,
-    color: '#DC2626',
-    flex: 1,
-    fontWeight: '500'
-  },
-  signInBtn: {
-    height: 50,
-    borderRadius: 16,
-    backgroundColor: '#C2410C',
-    ...(Platform.OS === 'web'
-      ? {
-          backgroundImage: 'linear-gradient(135deg, #F97316 0%, #C2410C 100%)',
-          boxShadow: '0 8px 20px -4px rgba(194, 65, 12, 0.35)'
-        }
-      : {}),
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 6
-  },
-  signInBtnDisabled: {
-    opacity: 0.65
-  },
-  signInBtnText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 0.2
-  },
-  governanceNotice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#FFF7ED',
-    borderWidth: 1,
-    borderColor: '#FFEDD5',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12
-  },
-  governanceText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#C2410C'
-  },
-  switchRoleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingTop: 6
-  },
-  switchRoleText: {
-    fontSize: 13,
-    color: '#64748B'
-  },
-  switchRoleAction: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#C2410C'
-  },
-
-  /* ── DESKTOP SPLIT SCREEN ── */
+  // Desktop Split Screen
   desktopContainer: {
     flex: 1,
-    flexDirection: 'row'
+    flexDirection: 'row',
+    height: '100%'
   },
   desktopLeftPanel: {
     width: '42%',
-    backgroundColor: '#C2410C',
-    ...(Platform.OS === 'web'
-      ? {
-          backgroundImage:
-            'linear-gradient(160deg, #9A3412 0%, #C2410C 45%, #EA580C 100%)'
-        }
-      : {}),
-    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRightWidth: 1,
+    borderRightColor: '#E2E8F0',
     alignItems: 'center',
+    justifyContent: 'center',
     position: 'relative',
-    paddingHorizontal: 40
+    padding: 40
   },
-  desktopPatternOverlay: {
+  abstractPattern: {
     position: 'absolute',
     top: 0,
     left: 0,
@@ -503,44 +350,44 @@ const styles = StyleSheet.create({
   },
   desktopBackBtn: {
     position: 'absolute',
-    top: 32,
-    left: 32,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    top: 36,
+    left: 36,
+    width: 38,
+    height: 38,
+    borderRadius: CARD_RADIUS,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 20
   },
   desktopBrandBox: {
     alignItems: 'center',
-    gap: 14,
-    maxWidth: 420
+    gap: 16,
+    zIndex: 10
   },
-  desktopTitleRow: {
+  roleTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10
   },
   desktopTitleText: {
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.5
+    color: '#0F172A',
+    letterSpacing: -0.4
   },
-  desktopBadgePill: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  controlPill: {
+    backgroundColor: '#FFF7ED',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.35)',
-    paddingHorizontal: 14,
+    borderColor: '#FED7AA',
+    paddingHorizontal: 12,
     paddingVertical: 5,
-    borderRadius: 999
+    borderRadius: CARD_RADIUS
   },
-  desktopBadgeText: {
-    color: '#FFFFFF',
+  controlPillText: {
+    color: '#EA580C',
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -548,15 +395,97 @@ const styles = StyleSheet.create({
   },
   desktopRightArea: {
     width: '58%',
-    backgroundColor: '#FFF7ED',
+    backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'flex-start',
     paddingLeft: 60,
     paddingRight: 40
   },
-  desktopFormWrapper: {
+  formWrapper: {
     width: '100%',
     maxWidth: 440
+  },
+  adminCard: {
+    width: '100%',
+    padding: 24,
+    gap: 16
+  },
+  // Phone Layout
+  phoneContainer: {
+    flex: 1,
+    backgroundColor: '#FFF7ED',
+    position: 'relative'
+  },
+  phoneBg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    ...(Platform.OS === 'web'
+      ? { backgroundImage: 'linear-gradient(170deg, #C2410C 0%, #EA580C 40%, #FFF7ED 100%)' }
+      : { backgroundColor: '#C2410C' })
+  },
+  phoneBackBtn: {
+    position: 'absolute',
+    top: Platform.OS === 'web' ? 'max(40px, env(safe-area-inset-top, 40px))' : 40,
+    left: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 50
+  },
+  phoneHeader: {
+    paddingTop: Platform.OS === 'web' ? 'max(48px, env(safe-area-inset-top, 48px))' : 48,
+    paddingBottom: 14,
+    alignItems: 'center',
+    gap: 8,
+    width: '100%'
+  },
+  phoneTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  phoneTitleText: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.3
+  },
+  phoneScroll: {
+    flex: 1
+  },
+  phoneScrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: Platform.OS === 'web' ? 'max(36px, env(safe-area-inset-bottom, 36px))' : 36,
+    alignItems: 'center',
+    flexGrow: 1
+  },
+  phoneFormWrapper: {
+    width: '100%',
+    maxWidth: 440
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    borderRadius: CARD_RADIUS,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+    borderWidth: 0
+  },
+  errorText: {
+    flex: 1,
+    color: '#DC2626',
+    fontSize: 13,
+    fontWeight: '500'
   }
 });
 
