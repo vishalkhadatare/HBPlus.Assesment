@@ -8,7 +8,7 @@
 [![React Native](https://img.shields.io/badge/React_Native_for_Web-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://necolas.github.io/react-native-web/)
 [![Firebase](https://img.shields.io/badge/Firebase_Auth_%26_Firestore-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
-[![Jest](https://img.shields.io/badge/Jest_Tests-48_Passed-C21325?style=for-the-badge&logo=jest&logoColor=white)](https://jestjs.io/)
+[![Jest](https://img.shields.io/badge/Jest_Tests-53_Passed-C21325?style=for-the-badge&logo=jest&logoColor=white)](https://jestjs.io/)
 
 <br/>
 
@@ -19,6 +19,9 @@
 | **[HBPlus on Netlify](https://vectorvault99.netlify.app/)** | **[Download HBPlus-Access.apk](https://github.com/vishalkhadatare/HBPlus.Assesment/raw/main/HBPlus-Access.apk)** | **[vishalkhadatare/HBPlus.Assesment](https://github.com/vishalkhadatare/HBPlus.Assesment)** |
 
 ---
+
+> ### 📱 **[👉 Click Here to Download Android APK (HBPlus-Access.apk)](https://github.com/vishalkhadatare/HBPlus.Assesment/raw/main/HBPlus-Access.apk)**
+> Standalone Android application (~5.8 MB) built with Capacitor and Gradle, ready to install directly on any Android smartphone or emulator.
 
 </div>
 
