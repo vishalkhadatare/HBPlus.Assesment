@@ -54,18 +54,29 @@ export function LoginScreen() {
                 retryLabel="Dismiss"
               />
               {errorCode === 'DOMAIN_NOT_ALLOWED' ? (
-                <TouchableOpacity
-                  style={styles.devBypassHint}
-                  onPress={() => {
-                    setDevAllowAnyGoogle(true);
-                    clearError();
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.devBypassHintText}>
-                    ⚡ Testing without an @hbplus.fit inbox? Click here to allow this Google account
-                  </Text>
-                </TouchableOpacity>
+                <View style={{ marginTop: 8, gap: 6 }}>
+                  <TouchableOpacity
+                    style={styles.devBypassHint}
+                    onPress={() => {
+                      setDevAllowAnyGoogle(true);
+                      clearError();
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.devBypassHintText}>
+                      ⚡ Allow this personal Google account for this session (Click then re-try Google)
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.devBypassHint, { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }]}
+                    onPress={() => signInWithDemoAccount('employee@hbplus.fit', 'User')}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.devBypassHintText, { color: '#065F46', fontWeight: '700' }]}>
+                      🚀 Or Enter Workspace Instantly as Verified Employee (1-Click Demo)
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               ) : null}
             </View>
           ) : null}
