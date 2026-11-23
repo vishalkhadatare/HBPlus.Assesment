@@ -20,6 +20,8 @@ build/
 .next/
 out/
 *.apk
+!HBPlus-Access.apk
+!downloads/*.apk
 .gradle/
 android/app/build/
 android/build/

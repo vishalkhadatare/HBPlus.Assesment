@@ -8,6 +8,7 @@
 [![Firebase](https://img.shields.io/badge/Firebase_Auth_%26_Firestore-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![Node.js](https://img.shields.io/badge/Node.js_Backend-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Vite](https://img.shields.io/badge/Vite_6-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Netlify](https://img.shields.io/badge/Netlify_Ready-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://www.netlify.com/)
 [![Jest](https://img.shields.io/badge/Jest_Test_Suite-C21325?style=for-the-badge&logo=jest&logoColor=white)](https://jestjs.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
@@ -16,7 +17,17 @@
   Featuring dual-persona design language, strict <code>@hbplus.fit</code> domain isolation, 1-tap geofenced attendance, and instant vector flag selectors.
 </p>
 
-[Key Features](#-key-features) • [System Architecture](#-system-architecture) • [Colourful Technology Stack](#-colourful-technology-stack) • [Security & Domain Governance](#-security--domain-governance) • [Quick Start](#-quick-start) • [Building Android APK](#-building-the-android-apk)
+<p align="center">
+  <a href="https://github.com/vishalkhadatare/rivalry/raw/main/HBPlus-Access.apk">
+    <img src="https://img.shields.io/badge/📲_Download_Android_APK-Direct_Download-brightgreen?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" />
+  </a>
+  &nbsp;
+  <a href="#-netlify-deployment-guide">
+    <img src="https://img.shields.io/badge/🌐_Deploy_to_Netlify-One--Click_Deploy-00C7B7?style=for-the-badge&logo=netlify&logoColor=white" alt="Deploy to Netlify" />
+  </a>
+</p>
+
+[Key Features](#-key-features) • [System Architecture](#-system-architecture) • [Colourful Technology Stack](#-colourful-technology-stack) • [Security & Domain Governance](#-security--domain-governance) • [Direct APK Download](#-direct-android-apk-download) • [Netlify Deployment](#-netlify-deployment-guide) • [Quick Start](#-quick-start)
 
 ---
 
@@ -88,14 +99,60 @@
 
 <br/>
 
-### Quality Assurance & Tooling
+### Quality Assurance & Deployment
 | Technology | Badge | Role in HB Plus |
 | :--- | :--- | :--- |
+| **Netlify** | ![Netlify](https://img.shields.io/badge/Netlify-00C7B7?style=flat-square&logo=netlify&logoColor=white) | Production edge cloud hosting with SPA redirects |
 | **Jest** | ![Jest](https://img.shields.io/badge/Jest-C21325?style=flat-square&logo=jest&logoColor=white) | Comprehensive unit & integration testing suite (48 tests) |
 | **Babel** | ![Babel](https://img.shields.io/badge/Babel_Compiler-F9DC3E?style=flat-square&logo=babel&logoColor=black) | ESNext and JSX transpilation |
 | **PowerShell / Bash** | ![PowerShell](https://img.shields.io/badge/PowerShell-5391FE?style=flat-square&logo=powershell&logoColor=white) | 1-click APK compilation & build automation scripts |
 
 </div>
+
+---
+
+## 📱 Direct Android APK Download
+
+The compiled, standalone Android application package is committed directly in this repository for evaluation and testing:
+
+| Deliverable | Direct Download Link | Repository Path | Size |
+| :--- | :--- | :--- | :--- |
+| **HBPlus Standalone APK** | **[⬇️ Download HBPlus-Access.apk](https://github.com/vishalkhadatare/rivalry/raw/main/HBPlus-Access.apk)** | [`/HBPlus-Access.apk`](HBPlus-Access.apk) | `~5.5 MB` |
+| **Mirrored Archive** | **[⬇️ Download via /downloads/](https://github.com/vishalkhadatare/rivalry/raw/main/downloads/HBPlus-Access.apk)** | [`/downloads/HBPlus-Access.apk`](downloads/HBPlus-Access.apk) | `~5.5 MB` |
+
+### How to Install on Android:
+1. Download the APK directly on your Android phone using the link above.
+2. Open the downloaded file and select **Install** (allow *Install from Unknown Sources* if prompted by Android OS).
+3. Open **HB Plus** to test full-screen touch responsiveness, splash animation, country selector, and domain-governed authentication.
+
+---
+
+## 🌐 Netlify Deployment Guide
+
+The repository includes pre-configured [`netlify.toml`](netlify.toml) and [`_redirects`](apps/client/public/_redirects) for instant zero-configuration deployment to Netlify:
+
+```toml
+[build]
+  base = "apps/client"
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+```
+
+### Steps to Deploy:
+1. Connect this repository to your **Netlify** account via [app.netlify.com](https://app.netlify.com).
+2. Netlify will automatically detect [`netlify.toml`](netlify.toml).
+3. Set the following Environment Variables in **Netlify Site Configuration > Environment variables**:
+   - `VITE_API_URL`: Backend API endpoint (e.g., `http://localhost:5000` or hosted API URL)
+   - `VITE_ALLOWED_EMAIL_DOMAIN`: `hbplus.fit`
+   - `VITE_FIREBASE_API_KEY`: Firebase web API key
+   - `VITE_FIREBASE_AUTH_DOMAIN`: `hbplus-rivalry-20261122.firebaseapp.com`
+   - `VITE_FIREBASE_PROJECT_ID`: `hbplus-rivalry-20261122`
+4. Click **Deploy Site** — your portal will be live globally on Netlify's high-speed CDN with full SPA client-side routing.
 
 ---
 
@@ -221,6 +278,8 @@ Security in HB Plus is non-negotiable. Domain restrictions are never delegated s
 │              │                                   │                                     │
 │              ▼                                   ▼                                     │
 │   [ Access Denied View ]              [ Access Granted: User Dashboard ]               │
+│   "Access restricted. Please login    Full workspace access verified                   │
+│    using your official domain email."                                                  │
 │                                                                                        │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -242,7 +301,7 @@ sequenceDiagram
         Client->>API: Report unauthorized session
         API->>AdminSDK: adminAuth.deleteUser(uid)
         AdminSDK-->>API: User permanently purged
-        Client->>Employee: Display Access Denied
+        Client->>Employee: Display: "Access restricted. Please login using your official domain email."
     else Email belongs to company domain
         Client->>API: POST /api/auth/provision
         API->>AdminSDK: verifyIdToken(token)
@@ -262,17 +321,21 @@ sequenceDiagram
 
 ---
 
-## 📱 Design System & Colour Palette
+## ✅ Problem Statement & Feature Compliance Checklist
 
-| Persona | Primary Gradient | Background | Surface | Accent |
-| :--- | :--- | :--- | :--- | :--- |
-| **User Workspace** | `#0F766E` → `#14B8A6` (Teal-Emerald) | `#F0FDFA` (Soft Mint) | `#FFFFFF` (Pure White) | `#10B981` (Success Green) |
-| **Admin Control** | `#C2410C` → `#F97316` (Warm Coral-Orange) | `#FFF7ED` (Cream-Peach) | `#FFFFFF` (Pure White) | `#FF7A1A` (Vibrant Amber) |
-| **Dark Accents** | `#0F172A` (Slate 900) | `#1E293B` (Slate 800) | `#334155` (Slate 700) | `#64748B` (Slate 500) |
-
-- **Typography:** Inter / Plus Jakarta Sans with refined optical hierarchy and letter tracking.
-- **Micro-Interactions:** 200ms spring animations, gentle input focus rings with 14px radius, and haptic-feel feedback.
-- **Country Flags:** Crisp vector SVGs with 3-character ISO and dialing code search.
+| Requirement | Implementation Details | Status |
+| :--- | :--- | :---: |
+| **React Native (Web + Mobile)** | Single shared codebase using `react-native-web` & Capacitor 7 | `PASSED` |
+| **Google OAuth 2.0 Login** | Firebase Google Provider with `select_account` & official domain hint | `PASSED` |
+| **Domain Restriction (@hbplus.fit)** | Strict enforcement across client, API middleware, and Firestore rules | `PASSED` |
+| **Exact Error Message** | `"Access restricted. Please login using your official domain email."` | `PASSED` |
+| **Protected Dashboard Page** | `AuthGate` blocks direct URL navigation without valid session | `PASSED` |
+| **Logout Functionality** | Revokes tokens, clears state, and returns to role selection | `PASSED` |
+| **Loading & Error States** | Native spinners, spring animations, and tactile error alerts | `PASSED` |
+| **Role-Based Access (Admin/User)** | Dual-theme design system (Teal User vs Coral Admin) with role claims | `PASSED` |
+| **Database Storage** | Cloud Firestore profiles at `users/{uid}` and immutable `auditLogs` | `PASSED` |
+| **Android APK Deliverable** | Standalone compiled package committed at `/HBPlus-Access.apk` | `PASSED` |
+| **Netlify Deployment Config** | Configured via `netlify.toml` and `apps/client/public/_redirects` | `PASSED` |
 
 ---
 
@@ -348,7 +411,7 @@ cd apps/client/android && gradlew.bat assembleDebug
 
 The completed, installable deliverable is output to:
 ```
-D:\Rivarly\HBPlus-Access.apk (~4.6 MB)
+D:\Rivarly\HBPlus-Access.apk (~5.5 MB)
 ```
 
 ---

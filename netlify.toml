@@ -1,0 +1,37 @@
+# Netlify Configuration for HBPlus Cross-Platform Portal
+
+[build]
+  base = "apps/client"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  VITE_API_URL = "http://localhost:5000"
+  VITE_ALLOWED_EMAIL_DOMAIN = "hbplus.fit"
+  VITE_FIREBASE_API_KEY = "AIzaSyDBpiydAHXbyfClkfjMqvePoqrS9vM17X8"
+  VITE_FIREBASE_AUTH_DOMAIN = "hbplus-rivalry-20261122.firebaseapp.com"
+  VITE_FIREBASE_PROJECT_ID = "hbplus-rivalry-20261122"
+  VITE_FIREBASE_STORAGE_BUCKET = "hbplus-rivalry-20261122.firebasestorage.app"
+  VITE_FIREBASE_MESSAGING_SENDER_ID = "64669850819"
+  VITE_FIREBASE_APP_ID = "1:64669850819:web:40dd8789175ae794501676"
+
+# Single-Page Application (SPA) routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Security & Cache Headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
